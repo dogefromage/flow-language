@@ -1,0 +1,21 @@
+{
+    "name": "@fluss/language",
+    "version": "1.0.0",
+    "description": "",
+    "types": "lib/types/index.d.ts",
+    "module": "lib/esm/index.js",
+    "main": "lib/cjs/index.js",
+    "scripts": {
+        "dev": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json --watch",
+        "build": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json"
+    },
+    "dependencies": {
+        "lodash": "^4.17.21"
+    },
+    "author": "zebrapig",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/lodash": "^4.14.195",
+        "typescript": "5.0.2"
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "name": "flow-typescript",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "MIT",
+    "scripts": {
+        "dev-editor": "cd packages/editor && pnpm run dev",
+        "dev-language": "cd packages/language && pnpm run dev",
+        "dev-test": "cd packages/test && pnpm run dev",
+        "dev": "concurrently npm:dev-*"
+    }
+}

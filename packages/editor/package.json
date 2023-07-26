@@ -1,0 +1,37 @@
+{
+    "name": "@fluss/editor",
+    "version": "1.0.0",
+    "description": "",
+    "main": "lib/index.js",
+    "scripts": {
+        "dev": "tsc --watch",
+        "build": "tsc"
+    },
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "@fluss/interactive": "workspace:^",
+        "@fluss/language": "workspace:^",
+        "@react-hook/resize-observer": "^1.2.6",
+        "@reduxjs/toolkit": "^1.9.5",
+        "@uiw/react-color": "^1.3.3",
+        "immer": "*",
+        "lodash": "^4.17.21",
+        "react": "^18.2.0",
+        "react-redux": "^8.1.0",
+        "react-reflex": "^4.1.0",
+        "redux-logger": "^3.0.6",
+        "styled-components": "^5.3.5",
+        "threejs-math": "^0.147.0",
+        "uuid": "^9.0.0"
+    },
+    "devDependencies": {
+        "@types/lodash": "^4.14.195",
+        "@types/react": "^18.0.37",
+        "@types/react-dom": "^18.0.11",
+        "@types/redux-logger": "^3.0.9",
+        "@types/styled-components": "^5.1.26",
+        "@types/uuid": "^9.0.2",
+        "typescript": "^5.0.2"
+    }
+}

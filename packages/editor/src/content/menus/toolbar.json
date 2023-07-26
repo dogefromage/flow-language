@@ -1,0 +1,18 @@
+{
+    "$schema": "../schemas/menu.json",
+    "type": "inline",
+    "list": [
+        {
+            "name": "Edit",
+            "key": "edit",
+            "type": "expand",
+            "sublist": {
+                "type": "floating",
+                "list": [
+                    {  "type": "command", "key": "undo", "name": "Undo", "command": "global.undo" },
+                    {  "type": "command", "key": "redo", "name": "Redo", "command": "global.redo" }
+                ]
+            }
+        }
+    ]
+}
