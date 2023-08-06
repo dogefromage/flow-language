@@ -9,7 +9,12 @@ export class TypeSystemException extends Error {
     constructor(
         public data: TypeSystemExceptionData
     ) {
-        super('Uncaught TypeSystemException');
+        const msg = [
+            'Uncaught TypeSystemException:',
+            data.message,
+            data.path.nodes.map(n => n.key).join()
+        ].join('\n');
+        super(msg);
     }
 }
 

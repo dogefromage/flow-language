@@ -3,11 +3,12 @@ import { ReflexContainer, ReflexElement, ReflexSplitter } from 'react-reflex';
 import FlowEditorView from './FlowEditorView';
 import FlowInspectorView from './FlowInspectorView';
 import PageOutlinerView from './PageOutlinerView';
+import ConsoleView from './ConsoleView';
 
 const LayoutViewRoot = () => {
     return (
         <ReflexContainer orientation='vertical'>
-            <ReflexElement minSize={160} size={350}>
+            <ReflexElement minSize={200} size={300}>
                 <PageOutlinerView panelId={'outliner'} />
             </ReflexElement>
             <ReflexSplitter />
@@ -18,9 +19,13 @@ const LayoutViewRoot = () => {
                     </ReflexElement>
                     <ReflexSplitter />
                     <ReflexElement minSize={200} size={300}>
-                        <FlowInspectorView panelId={'inspector'} />
+                        <ConsoleView panelId={'console'} />
                     </ReflexElement>
                 </ReflexContainer>
+            </ReflexElement>
+            <ReflexSplitter />
+            <ReflexElement minSize={200} size={300}>
+                <FlowInspectorView panelId={'inspector'} />
             </ReflexElement>
         </ReflexContainer>
     );

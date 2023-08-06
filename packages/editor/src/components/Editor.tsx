@@ -11,7 +11,6 @@ import KeyboardCommandListener from './KeyboardCommandListener';
 import LayoutRoot from './LayoutRoot';
 import { MenuPortalMount } from './MenuPortalMount';
 import Validator from './Validator';
-import DocumentStreamer from './DocumentStreamer';
 
 interface EditorProps {
 
@@ -34,7 +33,6 @@ const Editor = ({}: PropsWithChildren<EditorProps>) => {
                 <MenuPortalMount />
                 <DragzonePortalMount />
                 {/* DATA */}
-                {/* <DocumentStreamer /> */}
             </ThemeProvider>
         </Provider>
     );

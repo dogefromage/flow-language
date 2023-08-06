@@ -12,10 +12,12 @@
     "dependencies": {
         "@fluss/interactive": "workspace:^",
         "@fluss/language": "workspace:^",
+        "@fluss/shared": "workspace:^",
         "@hocuspocus/provider": "^2.2.3",
         "@react-hook/resize-observer": "^1.2.6",
         "@reduxjs/toolkit": "^1.9.5",
         "@uiw/react-color": "^1.3.3",
+        "comlink": "^4.4.1",
         "immer": "*",
         "lodash": "^4.17.21",
         "react": "^18.2.0",

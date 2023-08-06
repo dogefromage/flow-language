@@ -16,72 +16,84 @@ export const inferGenerics = (
     path: TypeTreePath,
     X: TypeSpecifier,
     G: TypeSpecifier,
-    free: Set<string>,
+    map: InstantiationConstraints,
     env: FlowEnvironment,
 ): InstantiationConstraints => {
-    if (typeof G === 'string' && free.has(G)) {
-        return { [G]: X };
+    if (typeof G === 'string' && map[G] != null) {
+        return combineInstantiationConstraints(map, { [G]: X });
     }
 
     X = resolveTypeAlias(path, X, env);
     G = resolveTypeAlias(path, G, env);
 
     if (X.type !== G.type) {
-        return {}; // cannot infer type if objects dont match, ignore
+        return map; // cannot infer type if objects dont match, ignore
     }
 
     const pathWithType = path.add({ key: X.type, formatting: 'type' });
     switch (X.type) {
         case 'list':
-            return inferGenerics(path, X.element, (G as ListTypeSpecifier).element, free, env);
+            return inferGenerics(path, X.element, (G as ListTypeSpecifier).element, map, env);
         case 'tuple':
-            return inferGenericsTuple(pathWithType, X, G as TupleTypeSpecifier, free, env);
+            return inferGenericsTuple(pathWithType, X, G as TupleTypeSpecifier, map, env);
         case 'map':
-            return inferGenericsMap(pathWithType, X, G as MapTypeSpecifier, free, env);
+            return inferGenericsMap(pathWithType, X, G as MapTypeSpecifier, map, env);
         case 'function':
-            return inferGenericsFunction(pathWithType, X, G as FunctionTypeSpecifier, free, env);
+            return inferGenericsFunction(pathWithType, X, G as FunctionTypeSpecifier, map, env);
         case 'missing':
         case 'primitive':
         case 'unknown':
-            return {};
+            return map;
         default:
             throw new Error(`Unknown type "${(X as any).type}"`);
     }
 }
 
 function inferGenericsFunction(path: TypeTreePath,
-    X: FunctionTypeSpecifier, G: FunctionTypeSpecifier, free: Set<string>, env: FlowEnvironment): InstantiationConstraints {
-    return {
-        ...inferGenerics(path.add({ key: 'output', formatting: 'property' }), X.output, G.output, free, env),
-        ...inferGenerics(path.add({ key: 'parameter', formatting: 'property' }), X.parameter, G.parameter, free, env),
-    };
+    X: FunctionTypeSpecifier, G: FunctionTypeSpecifier, map: InstantiationConstraints, env: FlowEnvironment): InstantiationConstraints {
+
+    return [
+        inferGenerics(path.add({ key: 'parameter', formatting: 'property' }), X.parameter, G.parameter, map, env),
+        inferGenerics(path.add({ key: 'output', formatting: 'property' }), X.output, G.output, map, env),
+    ].reduce(combineInstantiationConstraints, map);
 }
-function inferGenericsTuple(path: TypeTreePath, X: TupleTypeSpecifier, G: TupleTypeSpecifier, free: Set<string>, env: FlowEnvironment): InstantiationConstraints {
-    let accumulator: InstantiationConstraints = {};
+function inferGenericsTuple(path: TypeTreePath, X: TupleTypeSpecifier, G: TupleTypeSpecifier, map: InstantiationConstraints, env: FlowEnvironment): InstantiationConstraints {
     const sharedLength = Math.min(X.elements.length, G.elements.length);
     for (let i = 0; i < sharedLength; i++) {
         const propPath = path.add({ key: i.toString(), formatting: 'property' });
-        const propInference = inferGenerics(propPath, X.elements[i], G.elements[i], free, env);
-        accumulator = { ...propInference, ...accumulator };
+        const propInference = inferGenerics(propPath, X.elements[i], G.elements[i], map, env);
+        map = combineInstantiationConstraints(map, propInference);
     }
-    return accumulator;
+    return map;
 }
-function inferGenericsMap(path: TypeTreePath, X: MapTypeSpecifier, G: MapTypeSpecifier, free: Set<string>, env: FlowEnvironment): InstantiationConstraints {
+function inferGenericsMap(path: TypeTreePath, X: MapTypeSpecifier, G: MapTypeSpecifier, map: InstantiationConstraints, env: FlowEnvironment): InstantiationConstraints {
     const gottenKeys = new Set(Object.keys(X.elements));
-    let accumulator: InstantiationConstraints = {};
     for (const [key, type] of Object.entries(G.elements)) {
         const propPath = path.add({ key, formatting: 'property' });
         const gottenType = X.elements[key];
         if (gottenType == null) {
             continue; // dunno
         }
-        const propInference = inferGenerics(propPath, gottenType, type, free, env);
-        accumulator = { ...propInference, ...accumulator };
+        const propInference = inferGenerics(propPath, gottenType, type, map, env);
+        map = combineInstantiationConstraints(map, propInference);
         gottenKeys.delete(key);
     }
-    return accumulator;
+    return map;
 }
 
+function combineInstantiationConstraints(older: InstantiationConstraints, newer: InstantiationConstraints) {
+    const combined: InstantiationConstraints = { ...older };
+    for (const key of Object.keys(newer)) {
+        const prev = combined[key];
+        if (prev == null || typeof prev === 'string') {
+            continue;
+        }
+        if (prev.type === 'missing' || prev.type === 'unknown') {
+            combined[key] = newer[key];
+        }
+    }
+    return combined;
+}
 
 
 export function applyInstantiationConstraints(

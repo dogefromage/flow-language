@@ -1,0 +1,18 @@
+{
+  "name": "@fluss/shared",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/index.js",
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "tsc"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@fluss/language": "workspace:^"
+  },
+  "devDependencies": {
+    "emittery": "^1.0.1"
+  }
+}

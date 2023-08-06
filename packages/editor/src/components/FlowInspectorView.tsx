@@ -1,13 +1,15 @@
-import React, { PropsWithChildren } from 'react';
-import PanelBody from './PanelBody';
+import React from 'react';
+import { PanelHeaderDiv, PanelHeadingH } from '../styles/common';
 import { ViewProps } from '../types';
-import { PanelHeading } from '../styles/common';
+import PanelBody from './PanelBody';
 
 const FlowInspectorView = (viewProps: ViewProps) => {
 
     return (
         <PanelBody viewProps={viewProps}>
-            <PanelHeading>Inspector</PanelHeading>
+            <PanelHeaderDiv>
+                <PanelHeadingH>Inspector</PanelHeadingH>
+            </PanelHeaderDiv>
         </PanelBody>
     );
 }

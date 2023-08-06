@@ -1,7 +1,14 @@
 
 export * from './types';
-export { validateDocument } from './validation/validateDocument';
-export { interpretDocument } from './interpreter';
+export { 
+    validateDocument 
+} from './validation/validateDocument';
+
+export { 
+    interpretDocument, 
+    InterpreterConfig, 
+    InterpretationException 
+} from './interpreter';
 
 export {
     collectTotalEnvironmentContent,

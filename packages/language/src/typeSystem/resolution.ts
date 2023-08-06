@@ -30,7 +30,7 @@ export function resolveTypeAlias(
     if (!envType) {
         throw new TypeSystemException({
             type: 'unknown-reference', 
-            message: `Could not find any type for the alias '${X}'`,
+            message: `Could not find any type for the alias '${X}'.`,
             path: namedPath,
         });
     }

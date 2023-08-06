@@ -18,6 +18,12 @@ const defaultTheme: DefaultTheme = {
             },
             defaultTitle: '#111',
         },
+        console: {
+            accents: {
+                error: '#ed5050',
+                warn: '#eadf4e'
+            }
+        },
         jointStyles: {
             boolean:   { fillColor: '#44adb3', borderColor: 'transparent' },
             number:    { fillColor: '#347dcf', borderColor: 'transparent' },

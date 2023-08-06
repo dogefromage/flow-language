@@ -4,11 +4,12 @@
     "main": "index.js",
     "license": "MIT",
     "scripts": {
+        "dev-app": "cd packages/app && pnpm run dev",
         "dev-editor": "cd packages/editor && pnpm run dev",
+        "dev-shared": "cd packages/shared && pnpm run dev",
         "dev-language": "cd packages/language && pnpm run dev",
-        "dev-test": "cd packages/test && pnpm run dev",
-        "dev-consumer": "cd packages/consumer && pnpm run dev",
-        "dev-hocuspocus": "cd packages/hocuspocus && pnpm run dev",
+        "_dev-consumer": "cd packages/consumer && pnpm run dev",
+        "_dev-hocuspocus": "cd packages/hocuspocus && pnpm run dev",
         "_dev-signaling": "cd ./node_modules/.pnpm/y-webrtc@10.2.5/node_modules/y-webrtc && pnpm run start",
         "dev": "concurrently npm:dev-*"
     }

@@ -60,7 +60,7 @@ export function validateDocument(document: FlowDocument): DocumentContext {
         if (!flow) {
             continue;
         }
-        const flowSyntaxContent = generateFlowSyntaxLayer(flow.inputs, flow.outputs);
+        const flowSyntaxContent = generateFlowSyntaxLayer(flow.generics, flow.inputs, flow.outputs);
         const flowSyntaxEnv = pushContent(currentEnvironment, flowSyntaxContent);
         const flowContext = validateFlowGraph(flow, flowSyntaxEnv);
         result.flowContexts[flowId] = flowContext;
@@ -83,6 +83,7 @@ const flowSignatureContent = memFreeze(
 
 const generateFlowSyntaxLayer = memFreeze(generateFlowSyntaxLayerInitial);
 function generateFlowSyntaxLayerInitial(
+    generics: string[],
     flowInputs: InputRowSignature[],
     flowOutputs: OutputRowSignature[],
 ): FlowEnvironmentContent {
@@ -91,7 +92,7 @@ function generateFlowSyntaxLayerInitial(
         name: 'Input',
         description: null,
         attributes: { category: 'In/Out' },
-        generics: [],
+        generics,
         inputs: [],
         outputs: flowInputs.map(o => ({
             id: o.id,
@@ -106,7 +107,7 @@ function generateFlowSyntaxLayerInitial(
         name: 'Output',
         description: null,
         attributes: { category: 'In/Out' },
-        generics: [],
+        generics,
         inputs: flowOutputs.map(o => ({
             id: o.id,
             label: o.label,

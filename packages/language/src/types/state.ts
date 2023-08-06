@@ -56,3 +56,5 @@ export interface FlowDocument {
     flows: Obj<FlowGraph>;
     config: FlowDocumentConfig;
 }
+
+export const MAIN_FLOW_ID = 'main';

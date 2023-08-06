@@ -6,7 +6,7 @@ import { ViewProps, ViewTypes } from '../types';
 import { useBindPanelState } from '../utils/panelManager';
 import PanelBody from './PanelBody';
 import PageOutlinerList from './PageOutlinerList';
-import { PanelHeading } from '../styles/common';
+import { PanelHeaderDiv, PanelHeadingH } from '../styles/common';
 
 const PageOutlinerView = (viewProps: PropsWithChildren<ViewProps>) => {
     const { panelId } = viewProps;
@@ -19,7 +19,9 @@ const PageOutlinerView = (viewProps: PropsWithChildren<ViewProps>) => {
 
     return (
         <PanelBody viewProps={viewProps}>
-            <PanelHeading>Outliner</PanelHeading>
+            <PanelHeaderDiv>
+                <PanelHeadingH>Outliner</PanelHeadingH>
+            </PanelHeaderDiv>
             <PageOutlinerList panelId={panelId} />
         </PanelBody>
     );

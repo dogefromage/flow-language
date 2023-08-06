@@ -3,6 +3,7 @@ import 'styled-components';
 import { DataTypes, SelectionStatus } from '.';
 import { EdgeColor } from '@marble/language';
 import { TypeSpecifier } from '@fluss/language';
+import { ConsumerOutput } from '@fluss/shared';
 
 export interface JointStyle {
     color: string;
@@ -22,6 +23,9 @@ declare module 'styled-components' {
                 nodeColor: string;
                 edgeColors: Record<EdgeColor, string>;
                 defaultTitle: string;
+            }
+            console: {
+                accents: Record<ConsumerOutput['accent'], string>;
             }
             jointStyles: Record<string, {
                 borderColor: string;

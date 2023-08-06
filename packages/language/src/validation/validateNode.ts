@@ -5,7 +5,7 @@ import { TypeSystemException, TypeSystemExceptionData, TypeTreePath } from "../t
 import { generateDefaultValue } from "../typeSystem/generateDefaultValue";
 import { applyInstantiationConstraints, inferGenerics } from "../typeSystem/generics";
 import { assertElementOfType } from "../typeSystem/validateElement";
-import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, InitializerValue, InputRowSignature, MapTypeSpecifier, RowState, TypeSpecifier } from "../types";
+import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, InitializerValue, InputRowSignature, InstantiationConstraints, MapTypeSpecifier, RowState, TypeSpecifier } from "../types";
 import { FlowNodeContext, RowContext } from "../types/context";
 import { assertTruthy } from "../utils";
 import { memFreeze, memoList } from "../utils/functional";
@@ -41,7 +41,9 @@ export function validateNode(
     const argumentTypeSignature = createMapType(incomingTypeMap);
     const signatureFunctionType = getSignatureFunctionType(templateSignature);
 
-    const freeGenerics = new Set(templateSignature.generics);
+    const freeGenerics: InstantiationConstraints = Object.fromEntries(
+        templateSignature.generics.map(key => [ key, createUnknownType() ])
+    );
     const constraints = inferGenerics(new TypeTreePath(),
         argumentTypeSignature, signatureFunctionType.parameter, freeGenerics, env);
 
