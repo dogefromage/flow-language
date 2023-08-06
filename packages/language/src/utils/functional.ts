@@ -40,7 +40,7 @@ import { crudeHash, hashIntSequence } from './hashing';
 //     return memoized;
 // };
 
-export function memoizeMulti<F extends (...args: any[]) => any>(fn: F) {
+export function memFreeze<F extends (...args: any[]) => any>(fn: F) {
     const memoized = (...args: any[]) => {
         const key = hashIntSequence(args.map(a => crudeHash(a)));
         const cache = memoized.cache;
@@ -48,6 +48,7 @@ export function memoizeMulti<F extends (...args: any[]) => any>(fn: F) {
             return cache.get(key)
         }
         const result = fn(...args);
+        deepFreeze(result);
         cache.set(key, result);
         return result;
     }
@@ -66,15 +67,15 @@ export function freezeResult<F extends (...args: any[]) => any>(fn: F) {
 
 export const always = <T>(v: T) => () => v;
 
-export const memoObjectByFlatEntries = memoizeMulti(
-    <T extends (string | any)>(...flatEntries: T[]) => {
-        type V = T extends string ? never : T;
-        const res: Obj<V> = {};
+export const memoObjectByFlatEntries = memFreeze(
+    <T extends Exclude<any, string>>(...flatEntries: (T | string)[]) => {
+        // type V = T extends string ? never : T;
+        const res: Obj<T> = {};
         assertTruthy(flatEntries.length % 2 == 0);
         for (let i = 0; i < flatEntries.length; i += 2) {
             const [key, value] = flatEntries.slice(i);
             assertTruthy(typeof key === 'string');
-            res[key as string] = value as V;
+            res[key as string] = value as T;
         }
         return res;
     }
@@ -85,4 +86,4 @@ export function memoObject<T extends any>(obj: Obj<T>): Obj<T> {
     return memoObjectByFlatEntries(...flatEntries);
 } 
 
-export const memoList = memoizeMulti(<T>(...items: T[]) => items);
+export const memoList = memFreeze(<T>(...items: T[]) => items);

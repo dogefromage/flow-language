@@ -1,4 +1,4 @@
-import { FlowEnvironment, InputRowSignature, ListInputRowSignature, OutputRowSignature, RowContext, SimpleInputRowSignature, VariableInputRowSignature } from "@fluss/language";
+import * as lang from "@fluss/language";
 import React from "react";
 import { FlowNodeRowNameP } from "../styles/flowStyles";
 import { Vec2 } from "../types";
@@ -6,18 +6,19 @@ import FlowJoint from "./FlowJoint";
 import FlowNodeRow from "./FlowNodeRow";
 import FlowNodeRowInitializer from "./FlowNodeRowInitializer";
 
-export type RowComponentProps<R extends InputRowSignature | OutputRowSignature> = {
+export type RowComponentProps<R extends lang.InputRowSignature | lang.OutputRowSignature> = {
     panelId: string;
     flowId: string;
     nodeId: string;
     row: R;
-    context: RowContext | undefined;
-    env: FlowEnvironment;
+    context: lang.RowContext | undefined;
+    type: lang.TypeSpecifier;
+    env: lang.FlowEnvironment;
     getClientNodePos: () => Vec2;
 }
 
-export const FlowOutputRow = (props: RowComponentProps<OutputRowSignature>) => {
-    const { panelId, flowId, nodeId, row, getClientNodePos, context, env } = props;
+export const FlowOutputRow = (props: RowComponentProps<lang.OutputRowSignature>) => {
+    const { panelId, flowId, nodeId, row, getClientNodePos, context, type, env } = props;
 
     return (
         <FlowNodeRow
@@ -26,7 +27,7 @@ export const FlowOutputRow = (props: RowComponentProps<OutputRowSignature>) => {
             <FlowJoint
                 panelId={panelId}
                 flowId={flowId}
-                rowContext={context}
+                type={type}
                 location={{
                     direction: 'output',
                     nodeId,
@@ -44,22 +45,22 @@ export const FlowOutputRow = (props: RowComponentProps<OutputRowSignature>) => {
     );
 }
 
-export const FlowInputRowSwitch = (props: RowComponentProps<InputRowSignature>) => {
+export const FlowInputRowSwitch = (props: RowComponentProps<lang.InputRowSignature>) => {
     switch (props.row.rowType) {
         case 'input-simple':
-            return <FlowInputRowSimple {...props as RowComponentProps<SimpleInputRowSignature>} />
+            return <FlowInputRowSimple {...props as RowComponentProps<lang.SimpleInputRowSignature>} />
         case 'input-variable':
-            return <FlowInputRowVariable {...props as RowComponentProps<VariableInputRowSignature>} />
+            return <FlowInputRowVariable {...props as RowComponentProps<lang.VariableInputRowSignature>} />
         case 'input-list':
-            return <FlowInputRowList {...props as RowComponentProps<ListInputRowSignature>} />
+            return <FlowInputRowList {...props as RowComponentProps<lang.ListInputRowSignature>} />
         default:
             console.error(`unknown row type ${(props.row as any).rowType}`);
             return null;
     }
 }
 
-export const FlowInputRowSimple = (props: RowComponentProps<SimpleInputRowSignature>) => {
-    const { panelId, flowId, nodeId, row, getClientNodePos, context, env } = props;
+export const FlowInputRowSimple = (props: RowComponentProps<lang.SimpleInputRowSignature>) => {
+    const { panelId, flowId, nodeId, row, getClientNodePos, context, type, env } = props;
 
     return (
         <FlowNodeRow
@@ -68,7 +69,7 @@ export const FlowInputRowSimple = (props: RowComponentProps<SimpleInputRowSignat
             <FlowJoint
                 panelId={panelId}
                 flowId={flowId}
-                rowContext={context}
+                type={type}
                 location={{
                     direction: 'input',
                     nodeId,
@@ -87,15 +88,15 @@ export const FlowInputRowSimple = (props: RowComponentProps<SimpleInputRowSignat
     );
 }
 
-export const FlowInputRowVariable = (props: RowComponentProps<VariableInputRowSignature>) => {
-    const { panelId, flowId, nodeId, row, getClientNodePos, context, env } = props;
+export const FlowInputRowVariable = (props: RowComponentProps<lang.VariableInputRowSignature>) => {
+    const { panelId, flowId, nodeId, row, getClientNodePos, context, type, env } = props;
 
     return (
         <FlowNodeRow context={context}>
             <FlowJoint
                 panelId={panelId}
                 flowId={flowId}
-                rowContext={context}
+                type={type}
                 location={{
                     direction: 'input',
                     nodeId,
@@ -110,12 +111,13 @@ export const FlowInputRowVariable = (props: RowComponentProps<VariableInputRowSi
                 nodeId={nodeId}
                 row={row}
                 context={context}
+                type={type}
             />
         </FlowNodeRow >
     );
 }
 
-export const FlowInputRowList = (props: RowComponentProps<ListInputRowSignature>) => {
+export const FlowInputRowList = (props: RowComponentProps<lang.ListInputRowSignature>) => {
     const { panelId, flowId, nodeId, row, getClientNodePos, context } = props;
 
     return (

@@ -1,5 +1,5 @@
 import { FlowSignatureId, InputRowSignature, OutputRowSignature } from "./signatures";
-import { InitializerValue } from "./typeSpecifiers";
+import { InitializerValue } from "./typeSystem";
 import { Obj, Vec2 } from "./utilTypes";
 
 export interface InputJointLocation {
@@ -37,6 +37,7 @@ export interface FlowGraph {
     id: string;
     name: string;
     nodes: Obj<FlowNode>;
+    generics: string[];
     inputs: InputRowSignature[];
     outputs: OutputRowSignature[];
     idCounter: number;
@@ -45,4 +46,13 @@ export interface FlowGraph {
 export interface FlowEntryPoint {
     id: string;
     entryFlowId: string;
+}
+
+export interface FlowDocumentConfig {
+    entryFlows: Record<string, FlowEntryPoint>;
+}
+
+export interface FlowDocument {
+    flows: Obj<FlowGraph>;
+    config: FlowDocumentConfig;
 }

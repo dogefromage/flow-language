@@ -1,9 +1,13 @@
+import { createPrimitiveType } from "../typeSystem"
 import { FlowEnvironmentContent } from "../types"
 
 export const primitiveTypes = {
-    number:  Symbol('number'),
-    string:  Symbol('string'),
-    boolean: Symbol('boolean'),
+    number:  createPrimitiveType('number'),
+    string:  createPrimitiveType('string'),
+    boolean: createPrimitiveType('boolean'),
+    // number:  Symbol('number'),
+    // string:  Symbol('string'),
+    // boolean: Symbol('boolean'),
 }
 
 export const baseTypes: FlowEnvironmentContent['types'] = {

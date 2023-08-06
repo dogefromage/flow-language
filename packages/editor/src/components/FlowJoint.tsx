@@ -1,26 +1,27 @@
+import { useDraggable, useDroppable } from '@fluss/interactive';
 import * as lang from '@fluss/language';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { flowsAddLink } from '../slices/flowsSlice';
 import { flowEditorSetRelativeClientJointPosition, flowEditorSetStateDraggingLink, flowEditorSetStateNeutral, selectFlowEditorPanelActionState } from '../slices/panelFlowEditorSlice';
 import { FlowJointDiv } from '../styles/flowStyles';
-import { getJointLocationKey } from '../utils/flows';
-import { useDraggable, useDroppable } from '@fluss/interactive';
-import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { Vec2 } from '../types';
+import { getJointLocationKey } from '../utils/flows';
+import { getTypeSpecifierStyleTag } from '../utils/color';
 
 interface Props {
     panelId: string;
     flowId: string;
     env: lang.FlowEnvironment;
+    type: lang.TypeSpecifier;
     location: lang.JointLocation;
-    rowContext?: lang.RowContext;
     getClientNodePos: () => Vec2;
 }
 
 export const DRAG_JOIN_DND_TAG = `drag-join`;
 const JOINT_DIV_CLASS = `joint-target`;
 
-const FlowJoint = ({ panelId, flowId, location, env, rowContext, getClientNodePos }: Props) => {
+const FlowJoint = ({ panelId, flowId, location, env, type, getClientNodePos }: Props) => {
     const dispatch = useAppDispatch();
     const actionState = useAppSelector(selectFlowEditorPanelActionState(panelId));
 
@@ -32,7 +33,7 @@ const FlowJoint = ({ panelId, flowId, location, env, rowContext, getClientNodePo
                 panelId,
                 draggingContext: {
                     fromJoint: location,
-                    dataType: rowContext?.specifierResolved || null,
+                    dataType: type || lang.createUnknownType(),
                     environment: env,
                 }
             }));
@@ -89,10 +90,13 @@ const FlowJoint = ({ panelId, flowId, location, env, rowContext, getClientNodePo
         }));
     }, []);
 
+    const dataTypeTag = getTypeSpecifierStyleTag(type, env)
+
     return (
         <FlowJointDiv
             $direction={location.direction}
-            $dataType={rowContext?.specifierReference}
+            $dataTypeTag={dataTypeTag}
+            // $dataType={type || lang.createUnknownType()}
             {...drag.handlers}
             {...drop.handlers}
             onMouseDown={e => e.stopPropagation()}

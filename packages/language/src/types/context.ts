@@ -1,24 +1,24 @@
+import { TypeSystemExceptionData } from '../typeSystem/exceptionHandling';
+import { FlowSignature } from './signatures';
 import {
+    FlowDocument,
     FlowGraph,
     FlowNode,
     InputJointLocation,
     OutputJointLocation,
     RowState
-    } from './state';
-import { FlowSignature } from './signatures';
-import { InitializerValue, MapTypeSpecifier, TypeSpecifier } from './typeSpecifiers';
+} from './state';
+import { FunctionTypeSpecifier, InitializerValue, MapTypeSpecifier, TypeSpecifier } from './typeSystem';
 import { Obj } from './utilTypes';
-
 
 export type FlowEnvironment = {
     parent: FlowEnvironment | null;
     content: FlowEnvironmentContent;
 }
 export interface FlowEnvironmentContent {
-    signatures: Obj<FlowSignature>;
-    types: Obj<TypeSpecifier>;
+    signatures?: Obj<FlowSignature>;
+    types?: Obj<TypeSpecifier>;
 }
-
 
 export type EdgeColor = 'normal' | 'redundant' | 'cyclic';
 
@@ -29,9 +29,10 @@ export interface FlowEdge {
     color: EdgeColor;
 }
 
-export interface ProjectContext {
-    ref: Obj<FlowGraph>;
+export interface DocumentContext {
+    ref: FlowDocument;
     problems: ProjectProblem[];
+    childProblemCount: number;
     flowContexts: Obj<FlowGraphContext>;
     topologicalFlowOrder: string[];
     entryPointDependencies: Obj<string[]>;
@@ -40,6 +41,7 @@ export interface ProjectContext {
 export interface FlowGraphContext {
     ref: FlowGraph;
     problems: FlowProblem[];
+    childProblemCount: number;
     nodeContexts: Obj<FlowNodeContext>;
     edges: Obj<FlowEdge>;
     flowSignature: FlowSignature;
@@ -51,18 +53,22 @@ export interface FlowGraphContext {
 export interface FlowNodeContext {
     ref: FlowNode;
     problems: NodeProblem[];
+    childProblemCount: number;
     rowContexts: Obj<RowContext>;
     templateSignature: FlowSignature | null;
-    outputSpecifier: MapTypeSpecifier | null;
+    specifier: FunctionTypeSpecifier | null;
     isUsed: boolean;
+}
+
+export interface GenericTypeInference {
+    name: string;
+    resolvedSpecifier: TypeSpecifier;
 }
 
 export interface RowContext {
     ref?: RowState;
     displayValue?: InitializerValue;
     problems: RowProblem[];
-    specifierReference?: string;
-    specifierResolved: Exclude<TypeSpecifier, string>;
 }
 
 
@@ -107,19 +113,22 @@ interface InvalidSignature {
 interface RequiredParameter {
     type: 'required-parameter';
 }
-interface IncompatibleType {
-    type: 'incompatible-type';
+interface IncompatibleArgumentType {
+    type: 'incompatible-argument-type';
     connectionIndex: number;
-    typeProblemPath: string[];
-    typeProblemMessage: string;
+    typeProblem: TypeSystemExceptionData;
 }
+// interface InvalidRowType {
+//     type: 'invalid-row-type';
+//     typeProblem: TypeSystemExceptionData;
+// }
 interface InvalidValue {
     type: 'invalid-value';
-    typeProblemPath: string[];
-    typeProblemMessage: string;
+    typeProblem: TypeSystemExceptionData;
 }
 export type RowProblem = 
     | InvalidSignature
     | RequiredParameter
-    | IncompatibleType
+    | IncompatibleArgumentType
+    // | InvalidRowType
     | InvalidValue

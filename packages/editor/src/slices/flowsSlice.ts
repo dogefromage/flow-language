@@ -6,6 +6,7 @@ import { useCallback } from "react";
 import { RootState } from "../redux/store";
 import { FlowsSliceState, UndoAction, Vec2, defaultFlows } from "../types";
 import { getBasePowers } from "../utils/math";
+import { selectDocument } from "../redux/stateHooks";
 enableMapSet();
 
 function getFlow(s: Draft<FlowsSliceState>, a: { payload: { flowId: string } }) {
@@ -102,6 +103,7 @@ export const flowsSlice = createSlice({
             const flow: FlowGraph = {
                 id,
                 name: a.payload.name,
+                generics: [],
                 inputs: a.payload.signature.inputs,
                 outputs: a.payload.signature.outputs,
                 nodes: {
@@ -328,7 +330,7 @@ export const {
     // reorderRows: flowsReorderRows,
 } = flowsSlice.actions;
 
-export const selectFlows = (state: RootState) => state.recorded.present.project.flows;
+export const selectFlows = (state: RootState) => selectDocument(state).flows;
 
 export const selectSingleFlow = (flowId: string) =>
     useCallback((state: RootState) => // memoize selector IMPORTANT

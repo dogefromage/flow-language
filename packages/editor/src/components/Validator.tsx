@@ -1,9 +1,7 @@
-import { validateProject } from '@fluss/language';
+import * as lang from '@fluss/language';
 import { PropsWithChildren, useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
+import { selectDocument, useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { validationSetResult } from '../slices/contextSlice';
-import { selectFlows } from '../slices/flowsSlice';
-import { DEFAULT_ENTRY_POINTS } from '../types';
 
 interface ValidatorProps {
 
@@ -11,14 +9,18 @@ interface ValidatorProps {
 
 const Validator = ({}: PropsWithChildren<ValidatorProps>) => {
     const dispatch = useAppDispatch();
-    const flows = useAppSelector(selectFlows);
+    const document = useAppSelector(selectDocument);
     
     useEffect(() => {
-        const projectContext = validateProject(flows, DEFAULT_ENTRY_POINTS);
+        try {
+            const projectContext = lang.validateDocument(document);
 
-        dispatch(validationSetResult({
-            context: projectContext,
-        }));
+            dispatch(validationSetResult({
+                context: projectContext,
+            }));
+        } catch (e) {
+            console.error(e);
+        }
     });
 
     return null;

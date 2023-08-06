@@ -3,5 +3,5 @@ import { AppDispatch, RootState } from "./store";
 
 export const useAppDispatch = () => useDispatch<AppDispatch>()
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
-export const selectProject = (state: RootState) => state.recorded.present.project;
+export const selectDocument = (state: RootState) => state.document;
 export const selectPanels = (state: RootState) => state.panels;

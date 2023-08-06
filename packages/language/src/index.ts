@@ -1,6 +1,7 @@
 
 export * from './types';
-export { validateProject } from './core/validateProject';
+export { validateDocument } from './validation/validateDocument';
+export { interpretDocument } from './interpreter';
 
 export {
     collectTotalEnvironmentContent,
@@ -9,9 +10,13 @@ export {
 } from './core/environment';
 
 export {
-    types
-} from './core/typeStructure';
+    createUnknownType,
+} from './typeSystem';
 
 export {
-    areTypesCompatible,
-} from './core/compareTypes';
+    tryResolveTypeAlias,
+} from './typeSystem/resolution';
+
+export {
+    isSubsetType as areTypesCompatible,
+} from './typeSystem/comparison';

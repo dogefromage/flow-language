@@ -81,7 +81,7 @@ export const FlowNodeRowNameP = styled.p<{
 
 export const FlowJointDiv = styled.div<{
     $direction: 'input' | 'output';
-    $dataType?: string;
+    $dataTypeTag: string;
     $isHovering: boolean;
 }>`
     position: absolute;
@@ -102,14 +102,18 @@ export const FlowJointDiv = styled.div<{
 
 
     div {
-        width: 10px;
-        height: 10px;
+        width: 14px;
+        height: 14px;
         
-        transition: transform 50ms;
+        transition: transform 50ms, border 150ms, background-color 150ms;
         border: solid 2px #00000033;
-        background-color: ${({ theme, $dataType }) => $dataType && theme.colors.dataTypes[$dataType] || 'white'};
+        ${({ theme, $dataTypeTag }) => css`
+            border: solid 2px ${theme.colors.jointStyles[$dataTypeTag].borderColor};
+            background-color: ${theme.colors.jointStyles[$dataTypeTag].fillColor};
+        `}
+        
 
-        ${({ $isHovering: isHovering }) => isHovering && `transform: scale(1.3);`}
+        ${({ $isHovering }) => $isHovering && `transform: scale(1.3);`}
 
         border-radius: 100%;
     }

@@ -13,19 +13,19 @@ interface Props {
     nodeId: string;
     row: lang.VariableInputRowSignature;
     context: lang.RowContext | undefined;
+    type: lang.TypeSpecifier | undefined;
 }
 
-const FlowNodeRowInitializer = ({ flowId, nodeId, row, context }: Props) => {
+const FlowNodeRowInitializer = ({ flowId, nodeId, row, context, type }: Props) => {
     // display value should be set if nothing is connected
     if (context && context.displayValue != null) {
-        const { specifierResolved } = context;
-        if (typeof specifierResolved === 'symbol') {
+        if (typeof type === 'object' && type.type === 'primitive') {
             const props: InitializerProps = {
                 flowId, nodeId, rowId: row.id,
                 name: row.label,
                 value: context.displayValue,
             }
-            switch (specifierResolved.description) {
+            switch (type.name) {
                 case 'number':
                     return <NumberInitializer {...props} />;
                 case 'boolean':

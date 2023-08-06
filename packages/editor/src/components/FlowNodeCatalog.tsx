@@ -37,7 +37,7 @@ const FlowNodeCatalog = ({ panelId }: Props) => {
             return;
         }
         const envContent = collectTotalEnvironmentContent(graphValidation?.flowEnvironment);
-        return Array.from(Object.values(envContent.signatures));
+        return Array.from(Object.values(envContent.signatures || []));
     }, [graphValidation?.flowEnvironment]);
 
     const menuShape = useMemo(() => {

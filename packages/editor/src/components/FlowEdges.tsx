@@ -48,7 +48,7 @@ const FlowEdgeGroup = styled.g<{ color: EdgeColor, key: string }>`
         fill: none;
         stroke: ${({ color, theme }) => theme.colors.flowEditor.edgeColors[color]};
         stroke-width: 3px;
-        transition: stroke-width 50ms, stroke 100ms;
+        transition: stroke-width 50ms, stroke 150ms;
         pointer-events: none;
     }
 

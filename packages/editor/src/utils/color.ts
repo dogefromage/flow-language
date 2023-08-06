@@ -1,5 +1,6 @@
+import { FlowEnvironment, TypeSpecifier } from "@fluss/language";
 import { ColorTuple } from "../types";
-
+import * as lang from '@fluss/language';
 
 export function colorTupleToHex(rgb: ColorTuple) {
 
@@ -18,4 +19,17 @@ export function hexToColorTuple(hex: string): ColorTuple {
     const [ _, r, g, b ] = match;
     const tuple = [ r, g, b ].map(v => parseInt(v, 16) / 255.0);
     return tuple as ColorTuple;
+}
+
+
+
+export function getTypeSpecifierStyleTag(X: TypeSpecifier, env: FlowEnvironment) {
+    X = lang.tryResolveTypeAlias(X, env)!;
+    if (X == null) {
+        return 'unknown';
+    }
+    if (X.type === 'primitive') {
+        return X.name;
+    }
+    return X.type;
 }

@@ -2,15 +2,15 @@ import React from 'react';
 import { FlowNodeNameWrapper, FlowNodeRowNameP } from '../styles/flowStyles';
 import { Vec2 } from '../types';
 import { FlowInputRowSwitch, FlowOutputRow } from './FlowNodeRowComponents';
-import { FlowNodeContext, FlowSignature, FlowEnvironment } from '@fluss/language';
+import * as lang from '@fluss/language';
 
 interface Props {
     panelId: string;
     flowId: string;
-    context: FlowNodeContext;
-    signature: FlowSignature;
+    context: lang.FlowNodeContext;
+    signature: lang.FlowSignature;
     getClientNodePos: () => Vec2;
-    env: FlowEnvironment;
+    env: lang.FlowEnvironment;
 }
 
 const FlowNodeContent = ({ panelId, flowId, context, signature, getClientNodePos, env }: Props) => {
@@ -20,6 +20,8 @@ const FlowNodeContent = ({ panelId, flowId, context, signature, getClientNodePos
         nodeId: context.ref.id, 
         getClientNodePos 
     };
+    const inputType = context.specifier?.parameter;
+    const outputType = context.specifier?.output;
 
     return (<>
         <FlowNodeNameWrapper
@@ -28,7 +30,7 @@ const FlowNodeContent = ({ panelId, flowId, context, signature, getClientNodePos
             <FlowNodeRowNameP
                 $align='left'
                 $bold={true}
-                $color={'black'}
+                // $color={'black'}
             >
                 {signature.name}
             </FlowNodeRowNameP>
@@ -39,6 +41,7 @@ const FlowNodeContent = ({ panelId, flowId, context, signature, getClientNodePos
                     {...commonProps}
                     key={output.id}
                     row={output}
+                    type={outputType?.elements[output.id] || lang.createUnknownType()}
                     context={context.rowContexts[output.id]}
                     env={env}
                 />
@@ -50,6 +53,7 @@ const FlowNodeContent = ({ panelId, flowId, context, signature, getClientNodePos
                     {...commonProps}
                     key={input.id}
                     row={input}
+                    type={inputType?.elements[input.id] || lang.createUnknownType()}
                     context={context.rowContexts[input.id]}
                     env={env}
                 />

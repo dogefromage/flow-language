@@ -2,6 +2,12 @@
 import 'styled-components';
 import { DataTypes, SelectionStatus } from '.';
 import { EdgeColor } from '@marble/language';
+import { TypeSpecifier } from '@fluss/language';
+
+export interface JointStyle {
+    color: string;
+    fill: boolean;
+}
 
 declare module 'styled-components' {
     export interface DefaultTheme {
@@ -17,7 +23,10 @@ declare module 'styled-components' {
                 edgeColors: Record<EdgeColor, string>;
                 defaultTitle: string;
             }
-            dataTypes: Record<string, string>;
+            jointStyles: Record<string, {
+                borderColor: string;
+                fillColor: string;
+            }>;
             selectionStatus: {
                 [ S in SelectionStatus ]?: string;
             }

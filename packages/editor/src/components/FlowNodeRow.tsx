@@ -1,5 +1,5 @@
 import { RowContext } from '@fluss/language';
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect } from 'react';
 import styled, { css } from 'styled-components';
 import { FlowNodeRowDiv } from '../styles/flowStyles';
 

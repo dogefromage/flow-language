@@ -1,17 +1,23 @@
 import { AnyAction, configureStore, Dispatch, Middleware, ThunkDispatch } from "@reduxjs/toolkit";
 import { CurriedGetDefaultMiddleware } from "@reduxjs/toolkit/dist/getDefaultMiddleware";
+import _ from "lodash";
 import rootReducer from "./rootReducer";
-import { UndoAction } from "../types";
+import * as Y from 'yjs';
+import { bind } from "redux-yjs-bindings";
+import { HocuspocusProvider } from "@hocuspocus/provider";
+import { WebrtcProvider } from "y-webrtc";
 import { createLogger } from "redux-logger";
+import { UndoAction } from "../types";
 
 function generateMiddleware(getDefaultMiddleWare: CurriedGetDefaultMiddleware) {
     const middleware: Middleware[] = [
             ...getDefaultMiddleWare({
                 serializableCheck: {
                     ignoredPaths: [
-                        'recorded.present.context',
-                        'recorded.past',
-                        'recorded.future',
+                        // 'document.present.context',
+                        // 'document.past',
+                        // 'document.future',
+                        'context',
                         'panelManager',
                         'panels',
                         'commands',
@@ -22,32 +28,46 @@ function generateMiddleware(getDefaultMiddleWare: CurriedGetDefaultMiddleware) {
             }),
         ];
 
-    middleware.push(createLogger({
-        collapsed: true,
-        actionTransformer: (action: UndoAction) => {
-            if (action.payload?.undo != null) {
-                console.log("[Undo] " + action.payload.undo.desc);
-            }
-            return action;
-        }
-    }));
+    // middleware.push(createLogger({
+    //     collapsed: true,
+    //     actionTransformer: (action: UndoAction) => {
+    //         if (action.payload?.undo != null) {
+    //             console.log("[Undo] " + action.payload.undo.desc);
+    //         }
+    //         return action;
+    //     }
+    // }));
 
     return middleware;
 }
 
-export function initStore() {
-    // const ydoc = new Y.Doc();
-    // const provider = new WebrtcProvider('a0ed1463-e951-45bd-af02-794a050299c9 ', ydoc, { password: 'pw' } as any);
-
+export const initStore = _.memoize(() => {
     const store = configureStore({
         reducer: rootReducer,
         middleware: generateMiddleware,
-    })
+    });
 
-    // bind(ydoc, store, 'todos');
+    const yDoc = new Y.Doc();
+    const provider = new HocuspocusProvider({
+        url: "ws://127.0.0.1:1234",
+        name: "example-document",
+        document: yDoc,
+    });
+
+    // const provider = new WebrtcProvider('flow-typescript-test-room', yDoc, {
+    //     signaling: [ 'ws://localhost:4444' ],
+    // });
+    bind(yDoc, store, 'document');
+
+    // provider.awareness.setLocalState({
+    //     name: Math.random(),
+    // })
+    // provider.awareness.on('update', () => {
+    //     console.log(provider.awareness.getStates());
+    // })
 
     return store;
-}
+});
 
 export type RootState = ReturnType<typeof rootReducer>
 

@@ -1,4 +1,5 @@
 import { combineReducers } from "@reduxjs/toolkit";
+import { enhanceReducer } from "redux-yjs-bindings";
 import commandsReducer from "../slices/commandsSlice";
 import contextMenuReducer from "../slices/contextMenuSlice";
 import contextReducer from "../slices/contextSlice";
@@ -10,16 +11,20 @@ import panelManagerReducer from "../slices/panelManagerSlice";
 import pageOutlinerPanelsReducer from "../slices/panelPageOutlinerSlice";
 import { ViewTypes } from "../types";
 import undoableEnhancer from "./undoableEnhancer";
+import configReducer from "../slices/configSlice";
+
+const documentReducer = combineReducers({
+    flows: flowsReducer,
+    config: configReducer,
+});
 
 const rootReducer = combineReducers({
-    recorded: undoableEnhancer(
-        combineReducers({
-            project: combineReducers({
-                flows: flowsReducer,
-            }),
-            context: contextReducer,
-        }),
-    ),
+    // content: undoableEnhancer(combineReducers({
+    //     document: documentReducer,
+    //     context: contextReducer,
+    // })),
+    document: enhanceReducer(documentReducer),
+    context: contextReducer,
     editor: editorReducer,
     panels: combineReducers({
         [ViewTypes.FlowEditor]: flowEditorPanelsReducer,

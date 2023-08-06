@@ -16,12 +16,18 @@ const defaultTheme: DefaultTheme = {
                 redundant: '#c9c9c944',
                 cyclic: '#ba2a09',
             },
-            defaultTitle: '#c5c5c5',
+            defaultTitle: '#111',
         },
-        dataTypes: {
-            'boolean': '#44adb3',
-            'number': '#347dcf',
-            'string': '#9249e6',
+        jointStyles: {
+            boolean:   { fillColor: '#44adb3', borderColor: 'transparent' },
+            number:    { fillColor: '#347dcf', borderColor: 'transparent' },
+            string:    { fillColor: '#9249e6', borderColor: 'transparent' },
+            unknown:   { fillColor: 'transparent', borderColor: '#aaa' },
+            missing:   { fillColor: 'transparent', borderColor: '#aaa' },
+            function:  { fillColor: '#ff55ff', borderColor: 'transparent' },
+            map:       { fillColor: '#ff55ff', borderColor: 'transparent' },
+            list:      { fillColor: '#ff55ff', borderColor: 'transparent' },
+            tuple:     { fillColor: '#ff55ff', borderColor: 'transparent' },
         },
         selectionStatus: {
             [SelectionStatus.Selected]:        '#c4a149',

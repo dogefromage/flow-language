@@ -106,14 +106,14 @@ const FlowNodeElement = ({ panelId, flowId, context, getPanelState, selectionSta
             onContextMenu={() => ensureSelection()} // context will be triggered further down in tree
             ref={wrapperRef}
             // debugOutlineColor={color}
-            onDoubleClick={e => {
-                const signatureId = context.templateSignature?.id;
-                dispatch(flowEditorPanelsPushFlowId({
-                    panelId,
-                    flowId: signatureId!,
-                }));
-                e.stopPropagation();
-            }}
+            // onDoubleClick={e => {
+            //     const signatureId = context.templateSignature?.id;
+            //     dispatch(flowEditorPanelsPushFlowId({
+            //         panelId,
+            //         flowId: signatureId!,
+            //     }));
+            //     e.stopPropagation();
+            // }}
         >
             {
                 context.templateSignature ? (
