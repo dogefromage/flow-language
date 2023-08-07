@@ -14,7 +14,6 @@ const Validator = ({}: PropsWithChildren<ValidatorProps>) => {
     useEffect(() => {
         try {
             const projectContext = lang.validateDocument(document);
-
             dispatch(validationSetResult({
                 context: projectContext,
             }));

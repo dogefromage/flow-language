@@ -8,14 +8,14 @@ const varNumberRow = (tag: string, defaultValue = 0): InputRowSignature => ({
     rowType: 'input-variable',
     id: tag,
     label: upperFirst(tag),
-    dataType: 'number',
+    specifier: 'number',
     defaultValue,
 });
 const outNumberRow = (tag: string): OutputRowSignature => ({
     rowType: 'output',
     id: tag,
     label: upperFirst(tag),
-    dataType: 'number',
+    specifier: 'number',
 });
 
 localDefinitions.push({
@@ -67,13 +67,13 @@ localDefinitions.push({
         inputs: [{
             id: 'input',
             label: 'Input',
-            dataType: 'T',
+            specifier: 'T',
             rowType: 'input-simple',
         }],
         outputs: [{
             id: 'output',
             label: 'Output',
-            dataType: 'T',
+            specifier: 'T',
             rowType: 'output',
         }],
     },
@@ -90,24 +90,24 @@ localDefinitions.push({
         inputs: [{
             id: 't',
             label: 'Condition',
-            dataType: 'boolean',
+            specifier: 'boolean',
             rowType: 'input-variable',
             defaultValue: true,
         }, {
             id: 'x1',
             label: 'Match True',
-            dataType: 'T',
+            specifier: 'T',
             rowType: 'input-simple',
         }, {
             id: 'x2',
             label: 'Match False',
-            dataType: 'T',
+            specifier: 'T',
             rowType: 'input-simple',
         }],
         outputs: [{
             id: 'y',
             label: 'Choice',
-            dataType: 'T',
+            specifier: 'T',
             rowType: 'output',
         }],
     },
@@ -124,14 +124,14 @@ localDefinitions.push({
         inputs: [{
             id: 'x',
             label: 'Boolean',
-            dataType: 'boolean',
+            specifier: 'boolean',
             rowType: 'input-variable',
             defaultValue: false,
         }],
         outputs: [{
             id: 'y',
             label: 'Output',
-            dataType: 'boolean',
+            specifier: 'boolean',
             rowType: 'output',
         }],
     },
@@ -147,14 +147,14 @@ localDefinitions.push({
         inputs: [{
             id: 'x',
             label: 'String',
-            dataType: 'string',
+            specifier: 'string',
             rowType: 'input-variable',
             defaultValue: '',
         }],
         outputs: [{
             id: 'y',
             label: 'Output',
-            dataType: 'string',
+            specifier: 'string',
             rowType: 'output',
         }],
     },
@@ -174,7 +174,7 @@ localDefinitions.push({
         outputs: [{
             id: 'y',
             label: 'Output',
-            dataType: 'boolean',
+            specifier: 'boolean',
             rowType: 'output',
         }],
     },

@@ -10,6 +10,7 @@ const FlowInspectorView = (viewProps: ViewProps) => {
             <PanelHeaderDiv>
                 <PanelHeadingH>Inspector</PanelHeadingH>
             </PanelHeaderDiv>
+            {/* <FlowInspectorContent /> */}
         </PanelBody>
     );
 }

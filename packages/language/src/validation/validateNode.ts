@@ -33,7 +33,7 @@ export function validateNode(
                 incomingTypeMap[input.id] = connectedTypes[0] || createMissingType();
                 break;
             case 'input-variable':
-                incomingTypeMap[input.id] = connectedTypes[0] || input.dataType;
+                incomingTypeMap[input.id] = connectedTypes[0] || input.specifier;
                 break;
         }
     }
@@ -89,12 +89,12 @@ function getSignatureFunctionType(signature: FlowSignature) {
     return createFunctionType(
         createMapType(
             Object.fromEntries(
-                signature.inputs.map(s => [s.id, s.dataType])
+                signature.inputs.map(s => [s.id, s.specifier])
             )
         ),
         createMapType(
             Object.fromEntries(
-                signature.outputs.map(s => [s.id, s.dataType])
+                signature.outputs.map(s => [s.id, s.specifier])
             )
         )
     );

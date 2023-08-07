@@ -27,7 +27,7 @@ export interface RowState {
 
 export interface FlowNode {
     id: string;
-    name?: string;
+    label?: string;
     position: Vec2;
     rowStates: Obj<RowState>;
     signature: FlowSignatureId;

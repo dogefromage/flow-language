@@ -14,17 +14,15 @@ const RenameFieldDiv = styled.div`
 
     &:hover,
     &:has(form > input:focus) {
-        background-color: var(--color-1);
-        color: unset;
+        font-style: italic;
     }
-
     form {
         input {
-            color: black;
             background-color: unset;
             border: none;
             outline: none;
             width: 100%;
+            font-style: inherit;
         }
     }
 `;
@@ -33,19 +31,23 @@ interface Props {
     value: string;
     onChange: (newValue: string) => void;
     disabled?: boolean;
+    allowEmpty?: boolean;
 }
 
-const FormRenameField = ({ value, onChange, disabled }: Props) => {
+const FormRenameField = ({ value, onChange, disabled, allowEmpty }: Props) => {
 
     const inputRef = useRef<HTMLInputElement>(null);
-    
-    const [ localValue, setLocalValue ] = useState('');
-    
+
+    const [localValue, setLocalValue] = useState('');
+
     useEffect(() => {
         setLocalValue(value);
-    }, [ value ]);
+    }, [value]);
 
     const submit = () => {
+        if (!allowEmpty && localValue.length == 0) {
+            return;
+        }
         onChange(localValue);
         inputRef.current?.blur();
     }
@@ -71,10 +73,11 @@ const FormRenameField = ({ value, onChange, disabled }: Props) => {
                     size={localValue.length || 1}
                     disabled={disabled}
                 />
-            </form> {
+            </form> 
+            {/* {
                 !disabled &&
                 <MaterialSymbol $size={16}>edit</MaterialSymbol>
-            }
+            } */}
         </RenameFieldDiv>
     );
 }

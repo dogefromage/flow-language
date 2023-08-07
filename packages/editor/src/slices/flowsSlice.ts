@@ -1,18 +1,20 @@
-import { AnonymousFlowSignature, FlowGraph, FlowNode, FlowSignatureId, InitializerValue, InputJointLocation, JointLocation, OutputJointLocation } from "@fluss/language";
+import * as lang from "@fluss/language";
 import { createSlice } from "@reduxjs/toolkit";
 import { Draft, enableMapSet } from "immer";
-import _ from "lodash";
+import _, { difference } from "lodash";
 import { useCallback } from "react";
 import { RootState } from "../redux/store";
 import { FlowsSliceState, UndoAction, Vec2, defaultFlows } from "../types";
 import { getBasePowers } from "../utils/math";
 import { selectDocument } from "../redux/stateHooks";
+import { v4 as uuidv4 } from "uuid";
+import { RowBlueprint } from "../types/flowRows";
 enableMapSet();
 
 function getFlow(s: Draft<FlowsSliceState>, a: { payload: { flowId: string } }) {
     const g = s[a.payload.flowId];
     if (!g) return console.error(`Flow with id ${a.payload.flowId} not found`);
-    return g as any as FlowGraph;
+    return g as any as lang.FlowGraph;
 }
 
 function getNode(s: Draft<FlowsSliceState>, a: { payload: { flowId: string, nodeId: string } }) {
@@ -21,7 +23,7 @@ function getNode(s: Draft<FlowsSliceState>, a: { payload: { flowId: string, node
     return n;
 }
 
-function removeConnectionsToNodes(g: FlowGraph, nodes: Set<string>) {
+function removeConnectionsToNodes(g: lang.FlowGraph, nodes: Set<string>) {
     for (const node of Object.values(g.nodes)) {
         for (const [rowId, rowState] of Object.entries(node.rowStates)) {
             for (let i = rowState.connections.length - 1; i >= 0; i--) {
@@ -70,11 +72,7 @@ function removeConnectionsToNodes(g: FlowGraph, nodes: Set<string>) {
 //     }
 // }
 
-// export function generateNodeId(index: number) {
-//     return index.toString(36);
-// }
-
-export function generateNodeId(index: number) {
+function generateAlphabeticalId(index: number) {
     const token = getBasePowers(index, 26)
         .reverse()
         .map(x => String.fromCharCode('a'.charCodeAt(0) + x))
@@ -84,6 +82,18 @@ export function generateNodeId(index: number) {
 
 const initialState: FlowsSliceState = { ...defaultFlows };
 
+function pushPort<T extends { id: string }>(ports: T[], port: T) {
+    for (let i = 0; true; i++) {
+        let id = i.toString(36);
+        if (ports.find(p => p.id == id)) {
+            continue;
+        }
+        port.id = id;
+        ports.push(port);
+        return;
+    }
+}
+
 export const flowsSlice = createSlice({
     name: 'flows',
     initialState,
@@ -91,24 +101,29 @@ export const flowsSlice = createSlice({
         create: (s, a: UndoAction<{
             name: string;
             flowId?: string;
-            signature: AnonymousFlowSignature,
+            signature: lang.AnonymousFlowSignature,
         }>) => {
-            const id = a.payload.flowId || _.snakeCase(a.payload.name);
-            if (!/^\w+$/.test(id)) {
-                throw new Error(`Invalid characters in id`);
+            let id = a.payload.flowId;
+            if (id == null) {
+                do {
+                    id = uuidv4();
+                } while (s[id] != null);
+            } else {
+                if (!/^\w+$/.test(id)) {
+                    return console.error(`Invalid characters in id '${id}'`);
+                }
+                if (s[id!] != null) {
+                    return console.error(`Flow with id '${id}' already exists!`);
+                }
             }
-            if (s[id] != null) {
-                throw new Error(`Flow with id ${id} already exists!`);
-            }
-            const flow: FlowGraph = {
+
+            const flow: lang.FlowGraph = {
+                ...a.payload.signature,
                 id,
                 name: a.payload.name,
-                generics: [],
-                inputs: a.payload.signature.inputs,
-                outputs: a.payload.signature.outputs,
                 nodes: {
-                    a: { id: 'a', signature: 'input', position: { x: 400, y: 200 }, rowStates: {} },
-                    b: { id: 'b', signature: 'output', position: { x: 1000, y: 200 }, rowStates: {} },
+                    a: { id: 'a', signature: lang.getInternalId('input'), position: { x: 400, y: 200 }, rowStates: {} },
+                    b: { id: 'b', signature: lang.getInternalId('output'), position: { x: 1000, y: 200 }, rowStates: {} },
                 },
                 idCounter: 2,
             }
@@ -122,11 +137,11 @@ export const flowsSlice = createSlice({
         remove: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string }>) => {
             delete s[a.payload.flowId];
         },
-        addNode: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, signatureId: FlowSignatureId, position: Vec2, rowStates?: FlowNode['rowStates'] }>) => {
+        addNode: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, signatureId: lang.FlowSignatureId, position: Vec2, rowStates?: lang.FlowNode['rowStates'] }>) => {
             const g = getFlow(s, a);
             if (!g) return;
-            const node: FlowNode = {
-                id: generateNodeId(g.idCounter++),
+            const node: lang.FlowNode = {
+                id: generateAlphabeticalId(g.idCounter++),
                 signature: a.payload.signatureId,
                 rowStates: a.payload.rowStates || {},
                 position: a.payload.position,
@@ -159,7 +174,7 @@ export const flowsSlice = createSlice({
                 node.position.y += a.payload.delta.y;
             }
         },
-        setRowValue: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, nodeId: string, rowId: string, rowValue: InitializerValue }>) => {
+        setRowValue: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, nodeId: string, rowId: string, rowValue: lang.InitializerValue }>) => {
             const g = getFlow(s, a);
             if (!g) return;
             const node = g.nodes[a.payload.nodeId];
@@ -173,7 +188,7 @@ export const flowsSlice = createSlice({
         },
         addLink: (s: Draft<FlowsSliceState>, a: UndoAction<{
             flowId: string,
-            locations: [JointLocation, JointLocation],
+            locations: [lang.JointLocation, lang.JointLocation],
         }>) => {
             const g = getFlow(s, a);
             if (!g) return;
@@ -182,16 +197,16 @@ export const flowsSlice = createSlice({
                 if (location.nodeId === '*') {
                     return {
                         ...location,
-                        nodeId: generateNodeId(g.idCounter - 1),
+                        nodeId: generateAlphabeticalId(g.idCounter - 1),
                     };
                 }
                 return location;
             });
 
             const inputLocation = resolvedLocations
-                .find(l => l.direction === 'input') as InputJointLocation | undefined;
+                .find(l => l.direction === 'input') as lang.InputJointLocation | undefined;
             const outputLocation = resolvedLocations
-                .find(l => l.direction === 'output') as OutputJointLocation | undefined;
+                .find(l => l.direction === 'output') as lang.OutputJointLocation | undefined;
             if (!inputLocation || !outputLocation) {
                 return console.error(`Must provide both input and output location.`);
             }
@@ -218,24 +233,29 @@ export const flowsSlice = createSlice({
                 outputId: outputLocation.rowId,
             }
         },
-        removeEdge: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, input: InputJointLocation }>) => {
+        removeEdge: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, input: lang.InputJointLocation }>) => {
             const g = getFlow(s, a);
             if (!g) return;
             const { nodeId, rowId, jointIndex } = a.payload.input;
             g.nodes[nodeId]?.rowStates[rowId]?.connections.splice(jointIndex, 1);
         },
-        // addCustomRow: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', rowAndDataType: RowDataTypeCombination }>) => {
-        //     const g = getFlow(s, a);
-        //     if (!g) return;
-        //     // prefix r so it can be a variable name
-        //     const id = "r_" + generateAlphabeticalId(g.idCounter++); 
-        //     if (a.payload.direction === 'in') {
-        //         g.inputs.push(createBlankRow(id, a.payload.rowAndDataType) as InputRowT);
-        //     } else {
-        //         g.outputs.push(createBlankRow(id, a.payload.rowAndDataType) as OutputRowT);
-        //     }
-        //     g.version++;
-        // },
+        addPort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', blueprint: RowBlueprint }>) => {
+            const g = getFlow(s, a);
+            if (!g) return;
+            
+            const port = {
+                id: '',
+                label: 'New Row',
+                specifier: a.payload.blueprint.specifier,
+                rowType: a.payload.blueprint.rowType,
+            };
+
+            if (a.payload.direction === 'in') {
+                g.inputs.push(port as lang.InputRowSignature);
+            } else {
+                g.outputs.push(port as lang.OutputRowSignature);
+            }
+        },
         // addDefaultRow: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', defaultRow: InputRowT | OutputRowT }>) => {
         //     const g = getFlow(s, a);
         //     if (!g) return;
@@ -252,59 +272,65 @@ export const flowsSlice = createSlice({
         //     }
         //     g.version++;
         // },
-        // replaceRow: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', rowId: string, rowAndDataType: RowDataTypeCombination }>) => {
-        //     const g = getFlow(s, a);
-        //     if (!g) return;
+        replacePort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', portId: string, blueprint: RowBlueprint }>) => {
+            const g = getFlow(s, a);
+            if (!g) return;
 
-        //     const rows: RowT[] = a.payload.direction === 'in' ? g.inputs : g.outputs;
-        //     const index = rows.findIndex(row => row.id === a.payload.rowId);
-        //     const newRow = createBlankRow(a.payload.rowId, a.payload.rowAndDataType);
-        //     newRow.name = rows[index].name; // manual name copy
-        //     rows.splice(index, 1, newRow);
-        //     g.version++;
-        // },
-        // updateRow: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', rowId: string, newState: Partial<RowT> }>) => {
-        //     const g = getFlow(s, a);
-        //     if (!g) return;
+            if (a.payload.direction === 'in') {
+                const index = g.inputs.findIndex(i => i.id === a.payload.portId);
+                
+            } else {
 
-        //     const rows: RowT[] = a.payload.direction === 'in' ? g.inputs : g.outputs;
-        //     const row = rows.find(row => row.id === a.payload.rowId);
-        //     if (!row) {
-        //         return console.error(`Row not found`);
-        //     }
-        //     Object.assign(row, a.payload.newState);
-        //     g.version++;
-        // },
-        // removeRow: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', rowId: string }>) => {
-        //     const g = getFlow(s, a);
-        //     if (!g) return;
-        //     const filter = (row: RowT) => row.id != a.payload.rowId;
-        //     if (a.payload.direction === 'in') {
-        //         g.inputs = g.inputs.filter(filter);
-        //     } else {
-        //         g.outputs = g.outputs.filter(filter);
-        //     }
-        //     g.version++;
-        // },
-        // reorderRows: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', newOrder: string[] }>) => {
-        //     const g = getFlow(s, a);
-        //     if (!g) return;
-        //     // get
-        //     const rows: RowT[] = a.payload.direction === 'in' ? g.inputs : g.outputs;
-        //     // map
-        //     const newRows = a.payload.newOrder
-        //         .map(rowId => rows.find(row => row.id === rowId));
-        //     if (!newRows.every(row => row != null)) {
-        //         console.error('Invalid row ids passed');
-        //     }
-        //     // put
-        //     if (a.payload.direction === 'in') {
-        //         g.inputs = newRows as InputRowT[];
-        //     } else {
-        //         g.outputs = newRows as OutputRowT[];
-        //     }
-        //     g.version++;
-        // },
+            }
+            const ports: RowT[] = a.payload.direction === 'in' ? g.inputs : g.outputs;
+            const index = rows.findIndex(row => row.id === a.payload.portId);
+            const newRow = createBlankRow(a.payload.portId, a.payload.rowAndDataType);
+            newRow.name = rows[index].name; // manual name copy
+            rows.splice(index, 1, newRow);
+            g.version++;
+        },
+        updatePort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', rowId: string, newState: Partial<RowT> }>) => {
+            const g = getFlow(s, a);
+            if (!g) return;
+
+            const rows: RowT[] = a.payload.direction === 'in' ? g.inputs : g.outputs;
+            const row = rows.find(row => row.id === a.payload.rowId);
+            if (!row) {
+                return console.error(`Row not found`);
+            }
+            Object.assign(row, a.payload.newState);
+            g.version++;
+        },
+        removePort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', rowId: string }>) => {
+            const g = getFlow(s, a);
+            if (!g) return;
+            const filter = (row: RowT) => row.id != a.payload.rowId;
+            if (a.payload.direction === 'in') {
+                g.inputs = g.inputs.filter(filter);
+            } else {
+                g.outputs = g.outputs.filter(filter);
+            }
+            g.version++;
+        },
+        reorderPorts: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', newOrder: string[] }>) => {
+            const g = getFlow(s, a);
+            if (!g) return;
+            // get
+            const rows: RowT[] = a.payload.direction === 'in' ? g.inputs : g.outputs;
+            // map
+            const newRows = a.payload.newOrder
+                .map(rowId => rows.find(row => row.id === rowId));
+            if (!newRows.every(row => row != null)) {
+                console.error('Invalid row ids passed');
+            }
+            // put
+            if (a.payload.direction === 'in') {
+                g.inputs = newRows as InputRowT[];
+            } else {
+                g.outputs = newRows as OutputRowT[];
+            }
+            g.version++;
+        },
     }
 });
 
@@ -322,12 +348,11 @@ export const {
     removeEdge: flowsRemoveEdge,
     setRowValue: flowsSetRowValue,
     // // META
-    // addCustomRow: flowsAddCustomRow,
-    // addDefaultRow: flowsAddDefaultRow,
-    // updateRow: flowsUpdateRow,
-    // removeRow: flowsRemoveRow,
-    // replaceRow: flowsReplaceRow,
-    // reorderRows: flowsReorderRows,
+    // addPort: flowsAddPort,
+    // updatePort: flowsUpdatePort,
+    // removePort: flowsRemovePort,
+    // replacePort: flowsReplacePort,
+    // reorderPorts: flowsReorderPorts,
 } = flowsSlice.actions;
 
 export const selectFlows = (state: RootState) => selectDocument(state).flows;
