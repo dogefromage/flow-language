@@ -8,7 +8,7 @@ import {
     OutputJointLocation,
     RowState
 } from './state';
-import { FunctionTypeSpecifier, InitializerValue, MapTypeSpecifier, TypeSpecifier } from './typeSystem';
+import { FunctionTypeSpecifier, InitializerValue, TypeSpecifier } from './typeSystem';
 import { Obj } from './utilTypes';
 
 export type FlowEnvironment = {
@@ -31,29 +31,30 @@ export interface FlowEdge {
 
 export interface DocumentContext {
     ref: FlowDocument;
-    problems: ProjectProblem[];
-    childProblemCount: number;
+    problems: DocumentProblem[];
+    criticalSubProblems: number;
     flowContexts: Obj<FlowGraphContext>;
-    topologicalFlowOrder: string[];
-    entryPointDependencies: Obj<string[]>;
+    // topologicalFlowOrder: string[];
+    // entryPointDependencies: Obj<string[]>;
+    environment: FlowEnvironment;
 }
 
 export interface FlowGraphContext {
     ref: FlowGraph;
     problems: FlowProblem[];
-    childProblemCount: number;
+    criticalSubProblems: number;
     nodeContexts: Obj<FlowNodeContext>;
     edges: Obj<FlowEdge>;
     flowSignature: FlowSignature;
     flowEnvironment: FlowEnvironment;
-    dependencies: string[];
     sortedUsedNodes: string[];
+    // dependencies: string[];
 }
 
 export interface FlowNodeContext {
     ref: FlowNode;
     problems: NodeProblem[];
-    childProblemCount: number;
+    criticalSubProblems: number;
     rowContexts: Obj<RowContext>;
     templateSignature: FlowSignature | null;
     specifier: FunctionTypeSpecifier | null;
@@ -72,17 +73,19 @@ export interface RowContext {
 }
 
 
-interface CyclicFlows {
-    type: 'cyclic-flows';
-    cycles: string[][];
-}
-interface MissingTopFlow {
-    type: 'missing-top-flow';
-    id: string;
-}
-export type ProjectProblem =
-    | CyclicFlows
-    | MissingTopFlow
+// interface CyclicFlows {
+//     type: 'cyclic-flows';
+//     cycles: string[][];
+// }
+// interface MissingTopFlow {
+//     type: 'missing-top-flow';
+//     id: string;
+// }
+
+export type DocumentProblem =
+    never
+    // | CyclicFlows
+    // | MissingTopFlow
 
 interface CyclicNodes {
     type: 'cyclic-nodes';
@@ -130,5 +133,4 @@ export type RowProblem =
     | InvalidSignature
     | RequiredParameter
     | IncompatibleArgumentType
-    // | InvalidRowType
     | InvalidValue

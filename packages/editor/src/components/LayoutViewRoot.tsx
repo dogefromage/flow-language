@@ -8,7 +8,7 @@ import ConsoleView from './ConsoleView';
 const LayoutViewRoot = () => {
     return (
         <ReflexContainer orientation='vertical'>
-            <ReflexElement minSize={200} size={300}>
+            <ReflexElement minSize={200} size={160}>
                 <PageOutlinerView panelId={'outliner'} />
             </ReflexElement>
             <ReflexSplitter />
@@ -18,13 +18,13 @@ const LayoutViewRoot = () => {
                         <FlowEditorView panelId={'editor'} />
                     </ReflexElement>
                     <ReflexSplitter />
-                    <ReflexElement minSize={200} size={300}>
+                    <ReflexElement minSize={200} size={160}>
                         <ConsoleView panelId={'console'} />
                     </ReflexElement>
                 </ReflexContainer>
             </ReflexElement>
             <ReflexSplitter />
-            <ReflexElement minSize={200} size={300}>
+            <ReflexElement minSize={200} size={160}>
                 <FlowInspectorView panelId={'inspector'} />
             </ReflexElement>
         </ReflexContainer>

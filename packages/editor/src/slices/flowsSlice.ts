@@ -239,98 +239,98 @@ export const flowsSlice = createSlice({
             const { nodeId, rowId, jointIndex } = a.payload.input;
             g.nodes[nodeId]?.rowStates[rowId]?.connections.splice(jointIndex, 1);
         },
-        addPort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', blueprint: RowBlueprint }>) => {
-            const g = getFlow(s, a);
-            if (!g) return;
-            
-            const port = {
-                id: '',
-                label: 'New Row',
-                specifier: a.payload.blueprint.specifier,
-                rowType: a.payload.blueprint.rowType,
-            };
-
-            if (a.payload.direction === 'in') {
-                g.inputs.push(port as lang.InputRowSignature);
-            } else {
-                g.outputs.push(port as lang.OutputRowSignature);
-            }
-        },
-        // addDefaultRow: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', defaultRow: InputRowT | OutputRowT }>) => {
+        // addPort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', blueprint: RowBlueprint }>) => {
         //     const g = getFlow(s, a);
         //     if (!g) return;
+            
+        //     const port = {
+        //         id: '',
+        //         label: 'New Row',
+        //         specifier: a.payload.blueprint.specifier,
+        //         rowType: a.payload.blueprint.rowType,
+        //     };
+
         //     if (a.payload.direction === 'in') {
-        //         if (g.inputs.find(row => row.id === a.payload.defaultRow.id)) {
-        //             return; // only one instance
-        //         }
-        //         g.inputs.push(a.payload.defaultRow as InputRowT);
+        //         g.inputs.push(port as lang.InputRowSignature);
         //     } else {
-        //         if (g.outputs.find(row => row.id === a.payload.defaultRow.id)) {
-        //             return; // only one instance
-        //         }
-        //         g.outputs.push(a.payload.defaultRow as OutputRowT);
+        //         g.outputs.push(port as lang.OutputRowSignature);
+        //     }
+        // },
+        // // addDefaultRow: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', defaultRow: InputRowT | OutputRowT }>) => {
+        // //     const g = getFlow(s, a);
+        // //     if (!g) return;
+        // //     if (a.payload.direction === 'in') {
+        // //         if (g.inputs.find(row => row.id === a.payload.defaultRow.id)) {
+        // //             return; // only one instance
+        // //         }
+        // //         g.inputs.push(a.payload.defaultRow as InputRowT);
+        // //     } else {
+        // //         if (g.outputs.find(row => row.id === a.payload.defaultRow.id)) {
+        // //             return; // only one instance
+        // //         }
+        // //         g.outputs.push(a.payload.defaultRow as OutputRowT);
+        // //     }
+        // //     g.version++;
+        // // },
+        // replacePort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', portId: string, blueprint: RowBlueprint }>) => {
+        //     const g = getFlow(s, a);
+        //     if (!g) return;
+
+        //     if (a.payload.direction === 'in') {
+        //         const index = g.inputs.findIndex(i => i.id === a.payload.portId);
+                
+        //     } else {
+
+        //     }
+        //     const ports: RowT[] = a.payload.direction === 'in' ? g.inputs : g.outputs;
+        //     const index = rows.findIndex(row => row.id === a.payload.portId);
+        //     const newRow = createBlankRow(a.payload.portId, a.payload.rowAndDataType);
+        //     newRow.name = rows[index].name; // manual name copy
+        //     rows.splice(index, 1, newRow);
+        //     g.version++;
+        // },
+        // updatePort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', rowId: string, newState: Partial<RowT> }>) => {
+        //     const g = getFlow(s, a);
+        //     if (!g) return;
+
+        //     const rows: RowT[] = a.payload.direction === 'in' ? g.inputs : g.outputs;
+        //     const row = rows.find(row => row.id === a.payload.rowId);
+        //     if (!row) {
+        //         return console.error(`Row not found`);
+        //     }
+        //     Object.assign(row, a.payload.newState);
+        //     g.version++;
+        // },
+        // removePort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', rowId: string }>) => {
+        //     const g = getFlow(s, a);
+        //     if (!g) return;
+        //     const filter = (row: RowT) => row.id != a.payload.rowId;
+        //     if (a.payload.direction === 'in') {
+        //         g.inputs = g.inputs.filter(filter);
+        //     } else {
+        //         g.outputs = g.outputs.filter(filter);
         //     }
         //     g.version++;
         // },
-        replacePort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', portId: string, blueprint: RowBlueprint }>) => {
-            const g = getFlow(s, a);
-            if (!g) return;
-
-            if (a.payload.direction === 'in') {
-                const index = g.inputs.findIndex(i => i.id === a.payload.portId);
-                
-            } else {
-
-            }
-            const ports: RowT[] = a.payload.direction === 'in' ? g.inputs : g.outputs;
-            const index = rows.findIndex(row => row.id === a.payload.portId);
-            const newRow = createBlankRow(a.payload.portId, a.payload.rowAndDataType);
-            newRow.name = rows[index].name; // manual name copy
-            rows.splice(index, 1, newRow);
-            g.version++;
-        },
-        updatePort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', rowId: string, newState: Partial<RowT> }>) => {
-            const g = getFlow(s, a);
-            if (!g) return;
-
-            const rows: RowT[] = a.payload.direction === 'in' ? g.inputs : g.outputs;
-            const row = rows.find(row => row.id === a.payload.rowId);
-            if (!row) {
-                return console.error(`Row not found`);
-            }
-            Object.assign(row, a.payload.newState);
-            g.version++;
-        },
-        removePort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', rowId: string }>) => {
-            const g = getFlow(s, a);
-            if (!g) return;
-            const filter = (row: RowT) => row.id != a.payload.rowId;
-            if (a.payload.direction === 'in') {
-                g.inputs = g.inputs.filter(filter);
-            } else {
-                g.outputs = g.outputs.filter(filter);
-            }
-            g.version++;
-        },
-        reorderPorts: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', newOrder: string[] }>) => {
-            const g = getFlow(s, a);
-            if (!g) return;
-            // get
-            const rows: RowT[] = a.payload.direction === 'in' ? g.inputs : g.outputs;
-            // map
-            const newRows = a.payload.newOrder
-                .map(rowId => rows.find(row => row.id === rowId));
-            if (!newRows.every(row => row != null)) {
-                console.error('Invalid row ids passed');
-            }
-            // put
-            if (a.payload.direction === 'in') {
-                g.inputs = newRows as InputRowT[];
-            } else {
-                g.outputs = newRows as OutputRowT[];
-            }
-            g.version++;
-        },
+        // reorderPorts: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', newOrder: string[] }>) => {
+        //     const g = getFlow(s, a);
+        //     if (!g) return;
+        //     // get
+        //     const rows: RowT[] = a.payload.direction === 'in' ? g.inputs : g.outputs;
+        //     // map
+        //     const newRows = a.payload.newOrder
+        //         .map(rowId => rows.find(row => row.id === rowId));
+        //     if (!newRows.every(row => row != null)) {
+        //         console.error('Invalid row ids passed');
+        //     }
+        //     // put
+        //     if (a.payload.direction === 'in') {
+        //         g.inputs = newRows as InputRowT[];
+        //     } else {
+        //         g.outputs = newRows as OutputRowT[];
+        //     }
+        //     g.version++;
+        // },
     }
 });
 

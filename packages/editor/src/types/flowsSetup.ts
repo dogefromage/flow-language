@@ -13,7 +13,7 @@ export const mainSignature: lang.AnonymousFlowSignature = {
         id: 'value',
         label: 'Value',
         rowType: 'output',
-        dataType: 'T',
+        specifier: 'T',
     }],
 }
 

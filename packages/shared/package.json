@@ -13,6 +13,7 @@
     "@fluss/language": "workspace:^"
   },
   "devDependencies": {
-    "emittery": "^1.0.1"
+    "emittery": "^1.0.1",
+    "typescript": "5.0.2"
   }
 }

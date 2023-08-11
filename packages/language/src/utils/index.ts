@@ -16,12 +16,14 @@ export function wrapDefined<T>(...items: T[]) {
     return items.filter(item => item != null) as NonNullable<T>[];
 }
 
-export function deepFreeze(obj: any) {
-    if (typeof obj !== 'object') {
+export function deepFreeze<T extends any>(obj: T): void {
+    if (typeof obj !== 'object' || obj == null) {
         return;
     }
     Object.keys(obj).forEach((prop) => {
+        // @ts-ignore
         if (typeof obj[prop] === "object" && !Object.isFrozen(obj[prop])) {
+            // @ts-ignore
             deepFreeze(obj[prop]);
         }
     });
