@@ -49,7 +49,7 @@ export interface FlowEntryPoint {
 }
 
 export interface FlowDocumentConfig {
-    entryFlows: Record<string, FlowEntryPoint>;
+    // entryFlows: Record<string, FlowEntryPoint>;
 }
 
 export interface FlowDocument {

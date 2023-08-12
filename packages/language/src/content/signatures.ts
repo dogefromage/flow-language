@@ -22,46 +22,59 @@ localDefinitions.push({
     signature: {
         id: 'add',
         name: 'Add',
-        attributes: {},
+        attributes: { category: 'Basic' },
         description: null,
         generics: [],
         inputs: [varNumberRow('a'), varNumberRow('b')],
         outputs: [outNumberRow('sum')],
     },
-    interpretation: ({ a, b }) => ({ sum: a + b }),
+    interpretation: args => ({ sum: args.a + args.b }),
 });
 
 localDefinitions.push({
     signature: {
         id: 'multiply',
         name: 'Multiply',
-        attributes: {},
+        attributes: { category: 'Basic' },
         description: null,
         generics: [],
         inputs: [varNumberRow('a', 1), varNumberRow('b', 1)],
         outputs: [outNumberRow('product')],
     },
-    interpretation: ({ a, b }) => ({ product: a * b }),
+    interpretation: args => ({ product: args.a * args.b }),
 });
 
 localDefinitions.push({
     signature: {
         id: 'sine',
         name: 'Sine',
-        attributes: { color: '#b32248' },
+        attributes: { category: 'Basic', color: '#b32248' },
         description: null,
         generics: [],
         inputs: [varNumberRow('angle', 0)],
         outputs: [outNumberRow('sine')],
     },
-    interpretation: ({ angle }) => ({ sine: Math.sin(angle) }),
+    interpretation: args => ({ sine: Math.sin(args.angle) }),
+});
+
+localDefinitions.push({
+    signature: {
+        id: 'random',
+        name: 'Random [0,1)',
+        attributes: { category: 'Basic', color: '#b32248' },
+        description: null,
+        generics: [],
+        inputs: [],
+        outputs: [outNumberRow('value')],
+    },
+    interpretation: args => ({ value: Math.random() }),
 });
 
 localDefinitions.push({
     signature: {
         id: 'generic_passthrough',
         name: 'Generic Passthrough',
-        attributes: {},
+        attributes: { category: 'Basic' },
         description: null,
         generics: [ 'T' ],
         inputs: [{
@@ -77,14 +90,14 @@ localDefinitions.push({
             rowType: 'output',
         }],
     },
-    interpretation: ({ input }) => ({ output: input }),
+    interpretation: args => ({ output: args.input }),
 });
 
 localDefinitions.push({
     signature: {
         id: 'choose',
         name: 'Choose',
-        attributes: {},
+        attributes: { category: 'Basic' },
         description: null,
         generics: [ 'T' ],
         inputs: [{
@@ -111,14 +124,37 @@ localDefinitions.push({
             rowType: 'output',
         }],
     },
-    interpretation: ({ t, x1, x2 }) => ({ y: t ? x1 : x2 }),
+    interpretation: args => ({ y: args.t ? args.x1 : args.x2 }),
 });
 
 localDefinitions.push({
     signature: {
+        id: 'number',
+        name: 'Number',
+        attributes: { category: 'Basic' },
+        description: null,
+        generics: [],
+        inputs: [{
+            id: 'x',
+            label: 'Number',
+            specifier: 'number',
+            rowType: 'input-variable',
+            defaultValue: 0,
+        }],
+        outputs: [{
+            id: 'y',
+            label: 'Output',
+            specifier: 'number',
+            rowType: 'output',
+        }],
+    },
+    interpretation: args => ({ y: args.x }),
+});
+localDefinitions.push({
+    signature: {
         id: 'boolean',
         name: 'Boolean',
-        attributes: {},
+        attributes: { category: 'Basic' },
         description: null,
         generics: [],
         inputs: [{
@@ -135,13 +171,13 @@ localDefinitions.push({
             rowType: 'output',
         }],
     },
-    interpretation: ({ x }) => ({ y: x }),
+    interpretation: args => ({ y: args.x }),
 });
 localDefinitions.push({
     signature: {
         id: 'string',
         name: 'String',
-        attributes: {},
+        attributes: { category: 'Basic' },
         description: null,
         generics: [],
         inputs: [{
@@ -158,13 +194,13 @@ localDefinitions.push({
             rowType: 'output',
         }],
     },
-    interpretation: ({ x }) => ({ y: x }),
+    interpretation: args => ({ y: args.x }),
 })
 localDefinitions.push({
     signature: {
         id: 'greater',
         name: 'Greater Than',
-        attributes: {},
+        attributes: { category: 'Basic' },
         description: null,
         generics: [],
         inputs: [
@@ -178,13 +214,44 @@ localDefinitions.push({
             rowType: 'output',
         }],
     },
-    interpretation: ({ a, b }) => ({ y: a > b }),
+    interpretation: args => ({ y: args.a > args.b }),
 })
+
+localDefinitions.push({
+    signature: {
+        id: 'log_a',
+        name: 'Log A',
+        attributes: { category: 'Dev', color: '#b32248' },
+        description: null,
+        generics: [],
+        inputs: [],
+        outputs: [outNumberRow('zero')],
+    },
+    interpretation: args => {
+        console.log('A');
+        return { zero: 0 };
+    },
+});
+localDefinitions.push({
+    signature: {
+        id: 'log_b',
+        name: 'Log B',
+        attributes: { category: 'Dev', color: '#b32248' },
+        description: null,
+        generics: [],
+        inputs: [],
+        outputs: [outNumberRow('zero')],
+    },
+    interpretation: args => {
+        console.log('B');
+        return { zero: 0 };
+    },
+});
 
 // const test: FlowSignature = {
 //     id: 'test',
 //     name: 'Test',
-//     attributes: {},
+//     attributes: { category: 'Basic' },
 //     description: null,
 //     inputs: [ 
 //         varNumberRow('Number'),

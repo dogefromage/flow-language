@@ -48,15 +48,17 @@ export const initStore = _.memoize(() => {
     });
 
     const yDoc = new Y.Doc();
-    const provider = new HocuspocusProvider({
-        url: "ws://127.0.0.1:1234",
-        name: "example-document",
-        document: yDoc,
-    });
+
+    // const provider = new HocuspocusProvider({
+    //     url: "ws://127.0.0.1:1234",
+    //     name: "example-document",
+    //     document: yDoc,
+    // });
 
     // const provider = new WebrtcProvider('flow-typescript-test-room', yDoc, {
     //     signaling: [ 'ws://localhost:4444' ],
     // });
+    
     bind(yDoc, store, 'document');
 
     // provider.awareness.setLocalState({

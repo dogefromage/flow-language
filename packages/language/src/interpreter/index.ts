@@ -1,78 +1,103 @@
 import { baseInterpretations } from "../content/signatures";
-import { assertElementOfType } from "../typeSystem/validateElement";
-import { DocumentContext, FlowSignature, InitializerValue, MAIN_FLOW_ID } from "../types";
-import { NodeValueMap } from "../types/local";
-import { assertDef } from "../utils";
+import { DocumentContext, FlowGraphContext, FlowSignature, InitializerValue, MAIN_FLOW_ID } from "../types";
+import { ValueMap } from "../types/local";
+import { assertDef, assertTruthy } from "../utils";
 
 export interface InterpreterConfig {
-    args: NodeValueMap;
+    args: ValueMap;
+    skipValidation?: boolean;
 }
 
 export function interpretDocument(doc: DocumentContext, config: InterpreterConfig) {
+    if (!config.skipValidation) {
+        assertValidDocument(doc, config);
+    }
+    const mainFlow = doc.flowContexts[MAIN_FLOW_ID];
+    const mainArgs: ValueMap = {};
 
-    assertValidDocument(doc, config);
-    const flow = doc.flowContexts[MAIN_FLOW_ID];
-    const flowArgs = {};
-    
-    const outputValueMap = new Map<string, Record<string, InitializerValue>>();
+    const outputMap = interpretFlow(doc, mainFlow, mainArgs);
 
-    for (const nodeId of flow.sortedUsedNodes) {
+    return {
+        returnValue: outputMap!.value,
+    };
+}
+
+function interpretFlow(doc: DocumentContext, flow: FlowGraphContext, flowArgs: ValueMap) {
+    const memoizedOutputs = new Map<string, Record<string, InitializerValue>>();
+
+    function interpretNode(nodeId: string): ValueMap {
         const node = flow.nodeContexts[nodeId];
         const signature = node.templateSignature!;
 
-        // collect inputs
-        const inputArgs: Record<string, InitializerValue> = {};
-
-        for (const input of signature.inputs) {
-            const rowContext = node.rowContexts[input.id];
-            if (rowContext.ref?.connections.length) {
-                // add support for multiple connections
-                const firstConnection = rowContext.ref.connections[0];
-                const transportedValue = outputValueMap.get(firstConnection.nodeId)?.[firstConnection.outputId];
-                inputArgs[input.id] = assertDef(transportedValue, 'Value missing or misplaced.');
-            } else {
-                inputArgs[input.id] = assertDef(rowContext.displayValue);
-            }
+        const memoed = memoizedOutputs.get(nodeId);
+        if (memoed != null) {
+            return memoed;
         }
 
-        // process node
-        const returnVal = interpretSignature(signature, inputArgs, flowArgs);
-        outputValueMap.set(node.ref.id, returnVal);
+        const inputProxy = new Proxy({} as ValueMap, {
+            get(_, inputId: string) {
+                const rowContext = node.rowContexts[inputId];
+                const connections = rowContext.ref?.connections || [];
+                if (connections.length > 0) {
+                    assertTruthy(connections.length < 2, "Multiple connections not implemented.");
+                    const firstConnection = connections[0];
+                    const prevNodeOutput = interpretNode(firstConnection.nodeId);
+                    const transportedValue = prevNodeOutput[firstConnection.outputId];
+                    return assertDef(transportedValue, 'Value missing or misplaced.');
+                } else {
+                    return assertDef(rowContext.displayValue, 'No input connected but not display value found.');
+                }
+            }
+        });
+        
+        const returnVal = interpretSignature(doc, signature, inputProxy, flowArgs);
+        memoizedOutputs.set(node.ref.id, returnVal);
+        return returnVal;
     }
-    
-    const outputValue = outputValueMap
-        .get(flow.sortedUsedNodes.at(-1)!)
-        ?.['value'];
 
-    return {
-        returnValue: outputValue,
-    }
+    const lastNodeId = flow.sortedUsedNodes.at(-1)!;
+    return interpretNode(lastNodeId);
 }
 
 function interpretSignature(
-    signature: FlowSignature, 
-    nodeArgs: NodeValueMap, 
-    flowArgs: NodeValueMap,
-): NodeValueMap {
+    doc: DocumentContext,
+    signature: FlowSignature,
+    nodeArgs: ValueMap,
+    flowArgs: ValueMap,
+): ValueMap {
 
     if (signature.id === '@@input') {
-        return flowArgs;
+        const vals: ValueMap = {};
+        for (const output of signature.outputs) {
+            vals[output.id] = flowArgs[output.id];
+        }
+        return vals;
     }
     if (signature.id === '@@output') {
-        return nodeArgs;
+        const vals: ValueMap = {};
+        for (const input of signature.inputs) {
+            vals[input.id] = nodeArgs[input.id];
+        }
+        return vals;
+    }
+
+    const signatureFlow = doc.flowContexts[signature.id];
+    if (signatureFlow != null) {
+        return interpretFlow(doc, signatureFlow, nodeArgs);
     }
 
     const localInterpretation = baseInterpretations[signature.id];
-    if (!localInterpretation) {
-        throw new InterpretationException(`Could not find an interpretation for signature ${signature.id}.`);
+    if (localInterpretation != null) {
+        return localInterpretation(nodeArgs, flowArgs);
     }
-    return localInterpretation(nodeArgs, flowArgs);
+
+    throw new InterpretationException(`Could not find an interpretation for signature ${signature.id}.`);
 }
 
 export class InterpretationException extends Error {}
 
 function assertValidDocument(doc: DocumentContext, config: InterpreterConfig) {
-    const totalProblemCount = doc.problems.length + doc.childProblemCount;
+    const totalProblemCount = doc.problems.length + doc.criticalSubProblems;
     if (totalProblemCount > 0) {
         throw new InterpretationException(`Document contains ${totalProblemCount} problem(s).`);
     }

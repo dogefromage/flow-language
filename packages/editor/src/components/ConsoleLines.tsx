@@ -17,12 +17,13 @@ const ConsoleDiv = styled.div`
 
 const ConsolePre = styled.pre<{ $accent?: ConsumerOutput['accent'] }>`
     display: inline;
-    text-shadow: 0 0 10px #c5d0ff33;
     font-size: 18px;
     font-family: monospace;
     user-select: text;
 
-    ${({ $accent, theme }) => $accent && `color: ${theme.colors.console.accents[$accent]};` }
+    ${({ $accent, theme }) => $accent && `
+        color: ${theme.colors.console.accents[$accent]};
+    ` }
 `;
 
 interface ConsoleLinesProps {

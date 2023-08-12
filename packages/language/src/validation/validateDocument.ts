@@ -1,83 +1,82 @@
 import { baseEnvironmentContent } from "../content/baseEnvironment";
 import { createEnvironment, pushContent } from "../core/environment";
 import { FlowDocument, FlowEnvironmentContent, FlowSignature, InputRowSignature, OutputRowSignature, getInternalId } from "../types";
-import { DocumentContext, FlowGraphContext } from "../types/context";
+import { DocumentContext, FlowGraphContext, DocumentProblem } from "../types/context";
+import { Obj } from "../types/utilTypes";
 import { deepFreeze } from "../utils";
-import DependencyGraph from "../utils/DependencyGraph";
 import { memFreeze } from "../utils/functional";
-import { collectFlowDependencies, validateFlowGraph } from "./validateFlowGraph";
+import { getFlowSignature, validateFlowGraph } from "./validateFlowGraph";
 
 export function validateDocument(document: FlowDocument): DocumentContext {
     const { 
         flows: rawFlowMap, 
-        config: { entryFlows }
+        config: { /* entryFlows */ }
     } = document;
+
+    const flowContexts: Obj<FlowGraphContext> = {};
+    const problems: DocumentProblem[] = [];
+    let environment = createEnvironment(baseEnvironmentContent);
+    let criticalSubProblems = 0;
     
+    // const signatureDeps = new DependencyGraph<string>();
+    // for (const flow of Object.values(rawFlowMap)) {
+    //     const flowDependencies = collectFlowDependencies(flow);
+    //     signatureDeps.addDependencies(flow.id, flowDependencies);
+    //     // add every dependency, also built-in ones
+    // }
+
+    // const topSortResult = signatureDeps.sortTopologically();
+    // if (topSortResult.cycles.length) {
+    //     result.problems.push({
+    //         type: 'cyclic-flows',
+    //         cycles: topSortResult.cycles,
+    //     });
+    // }
+    // result.topologicalFlowOrder = topSortResult.bottomToTopDependencies;
+
+    // for (const [entryId, entryPoint] of Object.entries(entryFlows)) {
+    //     const topFlow = rawFlowMap[entryPoint.entryFlowId];
+    //     if (topFlow == null) {
+    //         result.problems.push({
+    //             type: 'missing-top-flow',
+    //             id: entryPoint.entryFlowId,
+    //         });
+    //     } else {
+    //         const depsRecursive = signatureDeps.findDependenciesRecursive(entryPoint.entryFlowId);
+    //         result.entryPointDependencies[entryId] = [...depsRecursive];
+    //     }
+    // }
+
+    const flowsAnyOrder = Object.values(rawFlowMap);
+
+    const signatureContent = makeFlowSignaturesContent(
+        ...flowsAnyOrder.map(getFlowSignature)
+    );
+    environment = pushContent(environment, signatureContent);
+
+    for (const flow of flowsAnyOrder) {
+        const flowSyntaxContent = generateFlowSyntaxLayer(flow.generics, flow.inputs, flow.outputs);
+        const flowSyntaxEnv = pushContent(environment, flowSyntaxContent);
+        const flowContext = validateFlowGraph(flow, flowSyntaxEnv);
+        flowContexts[flow.id] = flowContext;
+        criticalSubProblems += flowContext.problems.length + flowContext.criticalSubProblems;
+    }
+
     const result: DocumentContext = {
         ref: document,
-        flowContexts: {},
-        problems: [],
-        childProblemCount: 0,
-        topologicalFlowOrder: [],
-        entryPointDependencies: {},
-    }
-
-    const signatureDeps = new DependencyGraph<string>();
-
-    for (const flow of Object.values(rawFlowMap)) {
-        const flowDependencies = collectFlowDependencies(flow);
-        signatureDeps.addDependencies(flow.id, flowDependencies);
-        // add every dependency, also built-in ones
-    }
-
-    const topSortResult = signatureDeps.sortTopologically();
-    if (topSortResult.cycles.length) {
-        result.problems.push({
-            type: 'cyclic-flows',
-            cycles: topSortResult.cycles,
-        });
-    }
-    result.topologicalFlowOrder = topSortResult.bottomToTopDependencies;
-
-
-    for (const [entryId, entryPoint] of Object.entries(entryFlows)) {
-        const topFlow = rawFlowMap[entryPoint.entryFlowId];
-        if (topFlow == null) {
-            result.problems.push({
-                type: 'missing-top-flow',
-                id: entryPoint.entryFlowId,
-            });
-        } else {
-            const depsRecursive = signatureDeps.findDependenciesRecursive(entryPoint.entryFlowId);
-            result.entryPointDependencies[entryId] = [...depsRecursive];
-        }
-    }
-
-    let currentEnvironment = createEnvironment(baseEnvironmentContent);
-
-    for (const flowId of topSortResult.bottomToTopDependencies) {
-        const flow = rawFlowMap[flowId];
-        if (!flow) {
-            continue;
-        }
-        const flowSyntaxContent = generateFlowSyntaxLayer(flow.generics, flow.inputs, flow.outputs);
-        const flowSyntaxEnv = pushContent(currentEnvironment, flowSyntaxContent);
-        const flowContext = validateFlowGraph(flow, flowSyntaxEnv);
-        result.flowContexts[flowId] = flowContext;
-        result.childProblemCount += flowContext.problems.length + flowContext.childProblemCount;
-
-        // extend environment
-        currentEnvironment = pushContent(currentEnvironment, flowSignatureContent(flowContext))
-    }
-
+        flowContexts, 
+        problems,
+        criticalSubProblems,
+        environment,
+    };
     deepFreeze(result);
     return result;
 };
 
-const flowSignatureContent = memFreeze(
-    (flowContext: FlowGraphContext): FlowEnvironmentContent => ({
-        signatures: { [flowContext.ref.id]: flowContext.flowSignature },
-        types: {},
+const makeFlowSignaturesContent = memFreeze(
+    (...signatureList: FlowSignature[]): FlowEnvironmentContent => ({
+        signatures: Object.fromEntries(signatureList.map(s => [ s.id, s ])),
+        types: {}, // maybe generate return types or something
     })
 );
 

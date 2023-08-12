@@ -58,8 +58,6 @@ const FlowNodeCatalog = ({ panelId }: Props) => {
             anchor={catalogState.location.clientPosition}
         />
     );
-
-    return null;
 }
 
 export default FlowNodeCatalog;

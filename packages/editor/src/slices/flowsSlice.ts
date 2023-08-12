@@ -285,18 +285,19 @@ export const flowsSlice = createSlice({
         // addDefaultRow: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', defaultRow: InputRowT | OutputRowT }>) => {
         //     const g = getFlow(s, a);
         //     if (!g) return;
+            
+        //     const port = {
+        //         id: '',
+        //         label: 'New Row',
+        //         specifier: a.payload.blueprint.specifier,
+        //         rowType: a.payload.blueprint.rowType,
+        //     };
+
         //     if (a.payload.direction === 'in') {
-        //         if (g.inputs.find(row => row.id === a.payload.defaultRow.id)) {
-        //             return; // only one instance
-        //         }
-        //         g.inputs.push(a.payload.defaultRow as InputRowT);
+        //         g.inputs.push(port as lang.InputRowSignature);
         //     } else {
-        //         if (g.outputs.find(row => row.id === a.payload.defaultRow.id)) {
-        //             return; // only one instance
-        //         }
-        //         g.outputs.push(a.payload.defaultRow as OutputRowT);
+        //         g.outputs.push(port as lang.OutputRowSignature);
         //     }
-        //     g.version++;
         // },
         updatePort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', portId: string, newState: Partial<RowSignature> }>) => {
             const g = getFlow(s, a);

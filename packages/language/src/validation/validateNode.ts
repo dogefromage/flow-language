@@ -107,7 +107,7 @@ const noSignatureContext = memFreeze(
             type: 'missing-signature',
             signature: node.signature,
         }],
-        childProblemCount: 0,
+        criticalSubProblems: 0,
         specifier: null,
         templateSignature: null,
         rowContexts: {},
@@ -127,7 +127,7 @@ const bundleNodeContext = memFreeze((
     const result: FlowNodeContext = {
         ref: node,
         problems: [],
-        childProblemCount: 0,
+        criticalSubProblems: 0,
         templateSignature,
         specifier,
         rowContexts: {},
@@ -137,13 +137,13 @@ const bundleNodeContext = memFreeze((
     for (let i = 0; i < templateSignature.inputs.length; i++) {
         const rowContext = inputContexts[i];
         result.rowContexts[templateSignature.inputs[i].id] = rowContext;
-        result.childProblemCount += rowContext.problems.length;
+        result.criticalSubProblems += rowContext.problems.length;
     }
     assertTruthy(templateSignature.outputs.length === outputContexts.length);
     for (let i = 0; i < templateSignature.outputs.length; i++) {
         const rowContext = outputContexts[i];
         result.rowContexts[templateSignature.outputs[i].id] = rowContext;
-        result.childProblemCount += rowContext.problems.length;
+        result.criticalSubProblems += rowContext.problems.length;
     }
     return result;
 });

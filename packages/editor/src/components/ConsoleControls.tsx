@@ -34,6 +34,7 @@ const ConsoleControls = ({ onSignal, state }: PropsWithChildren<ConsoleControlsP
     return (<>
         <ControlsWrapper>
             <MaterialSymbol onClick={() => onSignal('run')} $button $color={start} $size={24}>skip_next</MaterialSymbol>
+            <MaterialSymbol onClick={() => onSignal('force-run')} $button $color={start} $size={20}>warning</MaterialSymbol>
             {/* <MaterialSymbol $button $color={start} $size={20}>bug_report</MaterialSymbol>
             <MaterialSymbol $button $color={control} $weight={600}>step</MaterialSymbol>
             <MaterialSymbol $button $color={control} $size={22}>step_out</MaterialSymbol>

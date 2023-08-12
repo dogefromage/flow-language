@@ -1,6 +1,5 @@
 import * as lang from '@fluss/language';
 import { ConsumerInputSignal, ConsumerState, DocumentConsumer } from '@fluss/shared';
-// import OfflineWorker from './offlineInterpreter?worker';
 import { wrap } from 'comlink';
 
 type State = ConsumerState 
@@ -29,6 +28,9 @@ export class OfflineConsumer extends DocumentConsumer {
             case 'run':
                 this.runInterpreter();
                 return;
+            case 'force-run':
+                this.runInterpreter(true);
+                return;
             case 'abort':
                 this.abortInterpreter();
                 return;
@@ -36,7 +38,7 @@ export class OfflineConsumer extends DocumentConsumer {
         throw new Error(`Input signal not implemented '${input}'`);
     }
 
-    private async runInterpreter() {
+    private async runInterpreter(forceRun = false) {
         if (!this.document) {
             return console.error(`No document set.`);
         }
@@ -52,7 +54,10 @@ export class OfflineConsumer extends DocumentConsumer {
 
         const { validateAndInterpret } = wrap<import('./interpreterWorker').InterpreterWorker>(worker);
         try {
-            const result = await validateAndInterpret(this.document, { args: {} });
+            const result = await validateAndInterpret(this.document, { 
+                skipValidation: forceRun, 
+                args: {} 
+            });
             this.emit('output', result);
         }
         finally {

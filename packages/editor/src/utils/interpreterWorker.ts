@@ -9,14 +9,18 @@ function validateAndInterpret(document: lang.FlowDocument, config: lang.Interpre
         return {
             data: result.returnValue?.toString() + '\n',
         }
-    } catch (e) {
-        if (e instanceof lang.InterpretationException) {
-            return {
-                data: e.toString() + '\n',
-                accent: 'error',
-            };
-        }
-        throw e;
+    } catch (e: any) {
+        return {
+            data: e.toString() + '\n',
+            accent: 'error',
+        };
+        // if (e instanceof lang.InterpretationException) {
+        //     return {
+        //         data: e.toString() + '\n',
+        //         accent: 'error',
+        //     };
+        // }
+        // throw e;
     }
 }
 

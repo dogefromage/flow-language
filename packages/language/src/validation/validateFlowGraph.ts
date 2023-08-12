@@ -10,26 +10,16 @@ export const validateFlowGraph = memFreeze((
     flowEnvironment: FlowEnvironment,
 ): FlowGraphContext => {
 
-    const flowSignature: FlowSignature = {
-        id: flow.id,
-        attributes: { category: 'Groups' },
-        description: null,
-        name: flow.name, 
-        generics: flow.generics,
-        inputs: flow.inputs,
-        outputs: flow.outputs,
-    };
-
     const result: FlowGraphContext = {
         ref: flow,
         problems: [],
-        childProblemCount: 0,
+        criticalSubProblems: 0,
         nodeContexts: {},
-        flowSignature,
+        flowSignature: getFlowSignature(flow),
         flowEnvironment,
         edges: {},
         sortedUsedNodes: [],
-        dependencies: collectFlowDependencies(flow),
+        // dependencies: collectFlowDependencies(flow),
     };
 
     const missingNodes = new Set<string>();
@@ -160,7 +150,9 @@ export const validateFlowGraph = memFreeze((
         const isUsed = usedNodeIds.has(nodeId);
         const nodeResult = validateNode(node, flowEnvironment, nodeOutputTypes, isUsed);
         result.nodeContexts[nodeId] = nodeResult;
-        result.childProblemCount += nodeResult.childProblemCount + nodeResult.problems.length;
+        if (isUsed) {
+            result.criticalSubProblems += nodeResult.criticalSubProblems + nodeResult.problems.length;
+        }
         if (nodeResult.specifier?.output) {
             nodeOutputTypes.set(nodeId, nodeResult.specifier.output);
         }
@@ -168,6 +160,19 @@ export const validateFlowGraph = memFreeze((
 
     deepFreeze(result);
     return result;
+});
+
+export const getFlowSignature = memFreeze((flow: FlowGraph) => {
+    const flowSignature: FlowSignature = {
+        id: flow.id,
+        attributes: { category: 'Flows' },
+        description: null,
+        name: flow.name, 
+        generics: flow.generics,
+        inputs: flow.inputs,
+        outputs: flow.outputs,
+    };
+    return flowSignature;
 });
 
 export const collectFlowDependencies = memFreeze((flow: FlowGraph) => {

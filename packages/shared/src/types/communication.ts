@@ -20,7 +20,7 @@ export type ConsumerState =
     | ConsumerStateDebugging
     | ConsumerStateInterrupted
 
-export type ConsumerInputSignal = 'run' | 'debug' | 'restart-debug' | 'abort'; // add more
+export type ConsumerInputSignal = 'run' | 'force-run' | 'debug' | 'restart-debug' | 'abort'; // add more
 
 export interface ConsumerOutput {
     data: string;
