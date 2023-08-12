@@ -165,7 +165,7 @@ function createAddFlowAction(flowId: string, signature: FlowSignature, addNodeSt
         signature.outputs : signature.inputs;
     let compatibleRowId: string | undefined;
     for (const row of connectionColumn) {
-        if (areTypesCompatible(row.dataType, drag.dataType, drag.environment)) {
+        if (areTypesCompatible(row.specifier, drag.dataType, drag.environment)) {
             compatibleRowId = row.id;
             break;
         }

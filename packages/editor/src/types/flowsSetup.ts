@@ -13,14 +13,14 @@ export const mainSignature: lang.AnonymousFlowSignature = {
         id: 'value',
         label: 'Value',
         rowType: 'output',
-        dataType: 'T',
+        specifier: 'T',
     }],
 }
 
 export const emptyFlowSignature: lang.AnonymousFlowSignature = {
-    generics: [],
     inputs: [],
     outputs: [],
+    generics: [],
 }
 
 export const initialDefaultRootFlow: lang.FlowGraph = {
@@ -44,7 +44,7 @@ export const initialDefaultRootFlow: lang.FlowGraph = {
 //     nodes: {},
 //     inputs: [],
 //     outputs: [],
-//     idCounter: 0
+//     idCounter: 0,
 // }
 
 export const defaultFlows = {
