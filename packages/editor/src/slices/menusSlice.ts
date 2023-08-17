@@ -46,6 +46,12 @@ export const menusSlice = createSlice({
             if (!menu) return;
             menu.state.set(a.payload.key, a.payload.value);
         },
+        setFocusPath: (s, a: PayloadAction<{ menuId: string, focusPath: string }>) => {
+            const menu = getMenu(s, a);
+            if (!menu) return;
+            // console.log(menu.focusedPath, a.payload.focusPath);
+            menu.focusedPath = a.payload.focusPath;
+        },
     }
 });
 
@@ -55,6 +61,7 @@ export const {
     setClosed: menusSetClosed,
     setNode: menusSetNode,
     setState: menusSetState,
+    setFocusPath: menusSetFocusPath,
 } = menusSlice.actions;
 
 export const selectMenus = (state: RootState) => state.menus;

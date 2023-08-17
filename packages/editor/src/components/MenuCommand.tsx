@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { selectCommands } from '../slices/commandsSlice';
 import { selectContextMenu } from '../slices/contextMenuSlice';
 import { menusSetClosed, selectSingleMenu } from '../slices/menusSlice';
@@ -8,10 +8,12 @@ import { MenuElementProps } from './MenuFloating';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { formatKeyCombination } from '../utils/keyCombinations';
 import useDispatchCommand from '../utils/useDispatchCommand';
+import { useFocusNavigation, useFocusMoveHandlers } from '../utils/menus';
 
-const MenuCommand = ({ menuId, element }: MenuElementProps<CommandMenuElement>) => {
+const MenuCommand = ({ menuId, element, focusPath, neightbourCount }: MenuElementProps<CommandMenuElement>) => {
     const dispatch = useAppDispatch();
-    const menuState = useAppSelector(selectSingleMenu(menuId));
+    const divRef = useRef<HTMLDivElement>(null);
+    const menu = useAppSelector(selectSingleMenu(menuId));
     const { contextMenu } = useAppSelector(selectContextMenu);
     const { commands } = useAppSelector(selectCommands);
     const dispatchCommand = useDispatchCommand();
@@ -29,14 +31,14 @@ const MenuCommand = ({ menuId, element }: MenuElementProps<CommandMenuElement>) 
     }
 
     const invoke = () => {
-        if (!command || !menuState) return;
+        if (!command || !menu) return;
         dispatch(menusSetClosed({ menuId }));
 
-        if (menuState.type === 'context') {
+        if (menu.type === 'context') {
             if (!contextMenu) return;
             dispatchCommand(command.id, contextMenu.paramMap, 'contextmenu');
         }
-        else if (menuState.type === 'toolbar') {
+        else if (menu.type === 'toolbar') {
             dispatchCommand(command.id, {}, 'toolbar');
         }
         else {
@@ -44,10 +46,25 @@ const MenuCommand = ({ menuId, element }: MenuElementProps<CommandMenuElement>) 
         }
     }
 
+    const joinedPath = focusPath.join('.');
+    useEffect(() => {
+        if (menu.focusedPath == joinedPath) {
+            divRef.current?.focus();
+        }
+    }, [ menu.focusedPath ]);
+
+    const handlers = useFocusNavigation(menuId, joinedPath, {
+        out: () => focusPath.slice(0, -1).join('.'),
+        submit: invoke,
+        ...useFocusMoveHandlers(focusPath, neightbourCount),
+    });
+
     return (
         <MenuCommandDiv
+            ref={divRef}
             onClick={invoke}
             tabIndex={element.tabIndex}
+            {...handlers}
         >
             { <p>{text}</p> }
             { info && <p>{info}</p> }

@@ -4,6 +4,7 @@ export const MENU_ROW_HEIGHT = 26;
 
 export interface MenuElementDivProps {
     tabIndex?: number;
+    $outlinedRed?: boolean;
 }
 
 export const MenuElementDiv = styled.div.attrs<MenuElementDivProps>(({ tabIndex }) => ({
@@ -22,6 +23,8 @@ export const MenuElementDiv = styled.div.attrs<MenuElementDivProps>(({ tabIndex 
     
     border-radius: var(--border-radius);
     cursor: pointer;
+
+    ${({$outlinedRed}) => $outlinedRed && 'outline: 1px solid red;'}
 
     &:hover,
     &:focus {

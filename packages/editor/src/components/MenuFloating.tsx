@@ -1,19 +1,22 @@
 import useResizeObserver from '@react-hook/resize-observer';
 import React, { useMemo, useRef, useState } from 'react';
+import { useAppSelector } from '../redux/stateHooks';
+import { selectSingleMenu } from '../slices/menusSlice';
 import { selectPanelManager } from '../slices/panelManagerSlice';
 import MenuFloatingDiv, { VERTICAL_MENU_WIDTH } from '../styles/MenuFloatingDiv';
+import { ButtonMenuElement, ColorMenuElement, CommandMenuElement, ExpandMenuElement, FloatingMenuShape, MenuElement, Rect, SearchMenuElement, Size, TitleMenuElement, Vec2 } from '../types';
 import MenuButton from './MenuButton';
 import MenuColor from './MenuColor';
 import MenuCommand from './MenuCommand';
 import MenuExpand from './MenuExpand';
 import MenuSearch from './MenuSearch';
 import MenuTitle from './MenuTitle';
-import { useAppSelector } from '../redux/stateHooks';
-import { MenuElement, ButtonMenuElement, CommandMenuElement, ExpandMenuElement, TitleMenuElement, SearchMenuElement, ColorMenuElement, FloatingMenuShape, Vec2, Rect, Size } from '../types';
 
 export type MenuElementProps<M extends MenuElement = MenuElement> = {
     menuId: string;
     depth: number;
+    focusPath: number[];
+    neightbourCount: number;
     element: M;
 }
 
@@ -39,6 +42,7 @@ const MenuElementSwitch = (props: MenuElementProps) => {
 interface Props {
     menuId: string;
     depth: number;
+    focusPath: number[];
     shape: FloatingMenuShape;
     leftAnchor: Vec2;
     parentWidth: number;
@@ -67,7 +71,7 @@ function adjustVertically(preferredY: number, menuHeight: number, availableSpace
     return preferredY;
 }
 
-const MenuFloating = ({ menuId, depth, shape, leftAnchor, parentWidth }: Props) => {
+const MenuFloating = ({ menuId, depth, shape, leftAnchor, parentWidth, focusPath }: Props) => {
     const panelManagerState = useAppSelector(selectPanelManager);
     const { rootClientRect } = panelManagerState;
 
@@ -95,12 +99,14 @@ const MenuFloating = ({ menuId, depth, shape, leftAnchor, parentWidth }: Props) 
             $anchor={adjustedAnchor}
             $maxHeight={rootClientRect.h}
         >{
-            shape.list.map(element =>
+            shape.list.map((element, elementIndex) =>
                 <MenuElementSwitch
                     menuId={menuId}
                     key={element.key}
                     depth={depth}
                     element={element}
+                    focusPath={[...focusPath, elementIndex]}
+                    neightbourCount={shape.list.length}
                 />
             )
         }

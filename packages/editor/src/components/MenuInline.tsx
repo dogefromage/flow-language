@@ -9,10 +9,11 @@ import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 interface Props {
     menuId: string;
     depth: number;
+    focusPath: number[];
     shape: InlineMenuShape;
 }
 
-const MenuInline = ({ menuId, depth, shape }: Props) => {
+const MenuInline = ({ menuId, depth, shape, focusPath }: Props) => {
     const dispatch = useAppDispatch();
     const menu = useAppSelector(selectSingleMenu(menuId));
     if (!menu) return null;
@@ -21,7 +22,7 @@ const MenuInline = ({ menuId, depth, shape }: Props) => {
 
     return (
         <MenuInlineDiv> {
-            shape.list.map(expandElement =>
+            shape.list.map((expandElement, elementIndex) =>
                 <MenuInlineExpandDiv
                     key={expandElement.name}
                     onMouseEnter={e => {
@@ -45,6 +46,7 @@ const MenuInline = ({ menuId, depth, shape }: Props) => {
                             menuId={menuId}
                             depth={depth + 1}
                             shape={expandElement.sublist}
+                            focusPath={[ ...focusPath, elementIndex ]}
                             {...currentStackEl}
                         />
                     }
