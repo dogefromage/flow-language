@@ -7,7 +7,7 @@ import { deepFreeze } from "../utils";
 import { memFreeze } from "../utils/functional";
 import { getFlowSignature, validateFlowGraph } from "./validateFlowGraph";
 
-export function validateDocument(document: FlowDocument): DocumentContext {
+export const validateDocument = memFreeze((document: FlowDocument) => {
     const { 
         flows: rawFlowMap, 
         config: { /* entryFlows */ }
@@ -18,35 +18,6 @@ export function validateDocument(document: FlowDocument): DocumentContext {
     let environment = createEnvironment(baseEnvironmentContent);
     let criticalSubProblems = 0;
     
-    // const signatureDeps = new DependencyGraph<string>();
-    // for (const flow of Object.values(rawFlowMap)) {
-    //     const flowDependencies = collectFlowDependencies(flow);
-    //     signatureDeps.addDependencies(flow.id, flowDependencies);
-    //     // add every dependency, also built-in ones
-    // }
-
-    // const topSortResult = signatureDeps.sortTopologically();
-    // if (topSortResult.cycles.length) {
-    //     result.problems.push({
-    //         type: 'cyclic-flows',
-    //         cycles: topSortResult.cycles,
-    //     });
-    // }
-    // result.topologicalFlowOrder = topSortResult.bottomToTopDependencies;
-
-    // for (const [entryId, entryPoint] of Object.entries(entryFlows)) {
-    //     const topFlow = rawFlowMap[entryPoint.entryFlowId];
-    //     if (topFlow == null) {
-    //         result.problems.push({
-    //             type: 'missing-top-flow',
-    //             id: entryPoint.entryFlowId,
-    //         });
-    //     } else {
-    //         const depsRecursive = signatureDeps.findDependenciesRecursive(entryPoint.entryFlowId);
-    //         result.entryPointDependencies[entryId] = [...depsRecursive];
-    //     }
-    // }
-
     const flowsAnyOrder = Object.values(rawFlowMap);
 
     const signatureContent = makeFlowSignaturesContent(
@@ -71,7 +42,7 @@ export function validateDocument(document: FlowDocument): DocumentContext {
     };
     deepFreeze(result);
     return result;
-};
+});
 
 const makeFlowSignaturesContent = memFreeze(
     (...signatureList: FlowSignature[]): FlowEnvironmentContent => ({

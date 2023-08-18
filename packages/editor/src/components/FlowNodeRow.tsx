@@ -1,7 +1,6 @@
 import { RowContext } from '@fluss/language';
-import React, { ReactNode, useEffect } from 'react';
+import React, { ReactNode } from 'react';
 import styled, { css } from 'styled-components';
-import { FlowNodeRowDiv } from '../styles/flowStyles';
 
 const ErrorUnderlineSpan = styled.span<{ $hasErrors: boolean, $debugBackColor?: string }>`
 
@@ -47,7 +46,7 @@ interface Props {
     children: ReactNode;
 }
 
-const FlowNodeRow = ({ context, children }: Props) => {
+const FlowNodeRowContextWrapper = ({ context, children }: Props) => {
     const hasErrors = !!context?.problems.length;
 
     // const [color, setColor] = useState('#ffffff');
@@ -55,6 +54,12 @@ const FlowNodeRow = ({ context, children }: Props) => {
     //     // console.log(`ROW UPDATE ${row.id}`);
     //     setColor(`#${Math.floor(Math.random() * 16777215).toString(16)}`);
     // }, [context])
+
+    // useEffect(() => {
+    //     if (context?.problems.length) {
+    //         console.log(context.problems);
+    //     }
+    // }, [ context ])
 
     return (
         <ErrorUnderlineSpan
@@ -64,12 +69,10 @@ const FlowNodeRow = ({ context, children }: Props) => {
             }}
             // debugBackColor={color}
         >
-            <FlowNodeRowDiv>
-                {children}
-            </FlowNodeRowDiv>
+            {children}
             <span className='error-tooltip'>{context?.problems[0]?.type}</span>
         </ErrorUnderlineSpan>
     );
 }
 
-export default FlowNodeRow;
+export default FlowNodeRowContextWrapper;

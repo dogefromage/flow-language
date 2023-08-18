@@ -1,35 +1,57 @@
 import { useMouseDrag } from '@fluss/interactive';
-import { FlowEnvironment, FlowNodeContext } from '@fluss/language';
-import React, { useCallback, useRef } from 'react';
+import * as lang from '@fluss/language';
+import React, { useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { useAppDispatch } from '../redux/stateHooks';
-import { flowsMoveSelection } from '../slices/flowsSlice';
-import { flowEditorPanelsPushFlowId, flowEditorSetSelection } from '../slices/panelFlowEditorSlice';
+import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
+import { flowsMoveSelection, selectSingleFlow } from '../slices/flowsSlice';
+import { flowEditorPanelsPushFlowId, flowEditorSetRelativeClientJointPosition, flowEditorSetSelection } from '../slices/panelFlowEditorSlice';
 import { FlowNodeDiv } from '../styles/flowStyles';
-import { FlowEditorPanelState, SelectionStatus, Vec2 } from '../types';
+import { FlowEditorPanelState, JointLocationKey, SelectionStatus, Vec2 } from '../types';
 import { vectorScreenToWorld } from '../utils/planarCameraMath';
+import { FLOW_JOINT_TARGET_CLASS } from './FlowJoint';
 import FlowNodeContent from './FlowNodeContent';
 import { FlowNodeMissingContent } from './FlowNodeMissingContent';
+import { editorSetActiveFlow } from '../slices/editorSlice';
 
 export const FLOW_NODE_DIV_CLASS = 'flow-node-div';
 
 interface Props {
     panelId: string;
     flowId: string;
-    context: FlowNodeContext;
+    context: lang.FlowNodeContext;
     getPanelState: () => FlowEditorPanelState;
     selectionStatus: SelectionStatus;
-    env: FlowEnvironment;
+    env: lang.FlowEnvironment;
 }
 
 const FlowNodeElement = ({ panelId, flowId, context, getPanelState, selectionStatus, env }: Props) => {
     const dispatch = useAppDispatch();
     const wrapperRef = useRef<HTMLDivElement>(null);
 
-    const getClientNodePos = useCallback(() => {
-        const rect = wrapperRef.current!.getBoundingClientRect();
-        return { x: rect.x, y: rect.y } as Vec2;
-    }, [wrapperRef]);
+    const referencedFlow = useAppSelector(selectSingleFlow(context.templateSignature?.id!)) as lang.FlowGraph | undefined;
+
+    useEffect(() => {
+        if (wrapperRef.current == null) return;
+        const div = wrapperRef.current;
+        const nodeRect = wrapperRef.current.getBoundingClientRect();
+
+        div.querySelectorAll(`.${FLOW_JOINT_TARGET_CLASS}`).forEach(joint => {
+            const jointRect = joint.getBoundingClientRect();
+            const relativeClientPosition = {
+                x: jointRect.x + 0.5 * jointRect.width - nodeRect.x,
+                y: jointRect.y + 0.5 * jointRect.height - nodeRect.y,
+            };
+            const jointKeyAttr = joint.attributes.getNamedItem('data-joint-key');
+            if (jointKeyAttr != null) {
+                dispatch(flowEditorSetRelativeClientJointPosition({
+                    panelId,
+                    relativeClientPosition,
+                    jointKey: jointKeyAttr.value as JointLocationKey,
+                }));
+            }
+        });
+        
+    }, [ context ]);
 
     const dragRef = useRef<{
         startCursor: Vec2;
@@ -106,14 +128,15 @@ const FlowNodeElement = ({ panelId, flowId, context, getPanelState, selectionSta
             onContextMenu={() => ensureSelection()} // context will be triggered further down in tree
             ref={wrapperRef}
             // debugOutlineColor={color}
-            // onDoubleClick={e => {
-            //     const signatureId = context.templateSignature?.id;
-            //     dispatch(flowEditorPanelsPushFlowId({
-            //         panelId,
-            //         flowId: signatureId!,
-            //     }));
-            //     e.stopPropagation();
-            // }}
+            onDoubleClick={e => {
+                if (!referencedFlow) {
+                    return;
+                }
+                dispatch(editorSetActiveFlow({
+                    flowId: referencedFlow.id,
+                }));
+                e.stopPropagation();
+            }}
         >
             {
                 context.templateSignature ? (
@@ -122,7 +145,6 @@ const FlowNodeElement = ({ panelId, flowId, context, getPanelState, selectionSta
                         flowId={flowId}
                         context={context}
                         signature={context.templateSignature}
-                        getClientNodePos={getClientNodePos}
                         env={env}
                     />
                 ) : (

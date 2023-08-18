@@ -2,11 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { v4 as uuidv4 } from 'uuid';
-import { menusSetState, selectSingleMenu } from '../slices/menusSlice';
-import { ColorTuple, FloatingMenuShape, Vec2 } from '../types';
-import { colorTupleToHex } from '../utils/color';
-import MenuRootFloating from './MenuRootFloating';
 import { useAppDispatch } from '../redux/stateHooks';
+import { menusSetState, selectSingleMenu } from '../slices/menusSlice';
+import { FloatingMenuShape, Vec2 } from '../types';
+import MenuRootFloating from './MenuRootFloating';
 
 interface ColorDivProps { color: string };
 
@@ -46,8 +45,8 @@ const colorPickerMenuShape: FloatingMenuShape = {
 }
 
 interface Props {
-    value: ColorTuple;
-    onChange: (newColor: ColorTuple, actionToken: string) => void;
+    value: string;
+    onChange: (newColor: string, actionToken: string) => void;
 }
 
 const FormColorPicker = ({ value, onChange }: Props) => {
@@ -76,12 +75,12 @@ const FormColorPicker = ({ value, onChange }: Props) => {
     
     return (<>
         <ColorPickerDiv
-            color={colorTupleToHex(value)}
+            color={value}
             onClick={e => {
                 const target = e.currentTarget as HTMLDivElement;
                 const rect = target.getBoundingClientRect();
                 setMenu({
-                    anchor: { x: rect.left, y: rect.top },
+                    anchor: { x: rect.left, y: rect.bottom },
                     menuId: `color-picker:${uuidv4()}`
                 })
             }}

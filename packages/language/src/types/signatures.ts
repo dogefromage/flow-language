@@ -58,5 +58,5 @@ export interface FlowSignature extends AnonymousFlowSignature {
     id: FlowSignatureId;
     name: string;
     description: string | null;
-    attributes: Obj<string>;
+    attributes: Record<string, string>;
 }

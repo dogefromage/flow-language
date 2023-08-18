@@ -1,14 +1,12 @@
-import { color, hexToHsva, HsvaColor, hsvaToHex, Wheel } from '@uiw/react-color';
+import { hexToHsva, HsvaColor, hsvaToHex, Wheel } from '@uiw/react-color';
 import React from 'react';
 import styled from 'styled-components';
-import { menusSetState, selectSingleMenu } from '../slices/menusSlice';
-import { MenuElementProps } from './MenuFloating';
-import { ColorMenuElement, ColorTuple } from '../types';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { colorTupleToHex, hexToColorTuple } from '../utils/color';
+import { menusSetState, selectSingleMenu } from '../slices/menusSlice';
+import { ColorMenuElement } from '../types';
+import { MenuElementProps } from './MenuFloating';
 
 const INNER_HEIGHT = 160;
-const DEFAULT_COLOR: ColorTuple = [ 1, 1, 1 ];
 
 const ColorPickerDiv = styled.div`
     width: 100%;
@@ -75,16 +73,14 @@ const ValueSliderInput = styled.input.attrs<ValueSliderProps>(({ maxValue }) => 
 const MenuColor = ({ menuId, element }: MenuElementProps<ColorMenuElement>) => {
     const dispatch = useAppDispatch();
     const menuState = useAppSelector(selectSingleMenu(menuId));
-    const colorValue = menuState?.state.get(element.key) ?? DEFAULT_COLOR;
-
-    const hexColor = colorTupleToHex(colorValue);
+    const hexColor: string = menuState?.state.get(element.key) ?? '#ffffff';
     const hsvaColor = hexToHsva(hexColor);
 
     const setHexColor = (hexColor: string) => {
         dispatch(menusSetState({ 
             menuId,
             key: element.key,
-            value: hexToColorTuple(hexColor),
+            value: hexColor,
         }));
     }
 

@@ -37,10 +37,15 @@ function assertSubsetSwitch(path: TypeTreePath, X: TypeSpecifier, Y: TypeSpecifi
         });
     }
 
+    // special case
+    if (X.type === 'tuple' && Y.type === 'list') {
+        for (let i = 0; i < X.elements.length; i++) {
+            assertSubsetSwitch(path.add({ key: i.toString(), formatting: 'property' }), X.elements[i], Y.element, env);
+        }
+        return;
+    }
+
     if (X.type !== Y.type) {
-        /**
-         * implement: allow tuple to be subset of list if every element is
-         */
         throw new TypeSystemException({
             type: 'incompatible-type', 
             message: `Type '${X.type}' is not compatible with expected type '${Y.type}'.`,

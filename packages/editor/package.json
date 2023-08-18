@@ -23,8 +23,10 @@
         "react": "^18.2.0",
         "react-redux": "^8.1.0",
         "react-reflex": "^4.1.0",
+        "react-sortablejs": "^6.1.4",
         "redux-logger": "^3.0.6",
         "redux-yjs-bindings": "^0.3.1",
+        "sortablejs": "^1.15.0",
         "styled-components": "^5.3.5",
         "threejs-math": "^0.147.0",
         "uuid": "^9.0.0",
@@ -36,6 +38,7 @@
         "@types/react": "^18.0.37",
         "@types/react-dom": "^18.0.11",
         "@types/redux-logger": "^3.0.9",
+        "@types/sortablejs": "^1.15.1",
         "@types/styled-components": "^5.1.26",
         "@types/uuid": "^9.0.2",
         "typescript": "^5.0.2"

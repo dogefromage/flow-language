@@ -83,6 +83,7 @@ export const FlowJointDiv = styled.div<{
     $direction: 'input' | 'output';
     $dataTypeTag: string;
     $isHovering: boolean;
+    $additional?: boolean;
 }>`
     position: absolute;
     top: ${0.5 * FLOW_NODE_ROW_HEIGHT}px;
@@ -112,6 +113,10 @@ export const FlowJointDiv = styled.div<{
             background-color: ${theme.colors.jointStyles[$dataTypeTag].fillColor};
         `}
         
+        ${({ $additional, theme, $dataTypeTag }) => $additional && css`
+            border: dashed 2px ${theme.colors.jointStyles[$dataTypeTag].fillColor};
+            background-color: transparent;
+        `}
 
         ${({ $isHovering }) => $isHovering && `transform: scale(1.3);`}
 

@@ -1,13 +1,12 @@
 import { useDraggable, useDroppable } from '@fluss/interactive';
 import * as lang from '@fluss/language';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { flowsAddLink } from '../slices/flowsSlice';
-import { flowEditorSetRelativeClientJointPosition, flowEditorSetStateDraggingLink, flowEditorSetStateNeutral, selectFlowEditorPanelActionState } from '../slices/panelFlowEditorSlice';
+import { flowEditorSetStateDraggingLink, flowEditorSetStateNeutral, selectFlowEditorPanelActionState } from '../slices/panelFlowEditorSlice';
 import { FlowJointDiv } from '../styles/flowStyles';
-import { Vec2 } from '../types';
-import { getJointLocationKey } from '../utils/flows';
 import { getTypeSpecifierStyleTag } from '../utils/color';
+import { getJointLocationKey } from '../utils/flows';
 
 interface Props {
     panelId: string;
@@ -15,13 +14,13 @@ interface Props {
     env: lang.FlowEnvironment;
     type: lang.TypeSpecifier;
     location: lang.JointLocation;
-    getClientNodePos: () => Vec2;
+    additional?: boolean;
 }
 
 export const DRAG_JOIN_DND_TAG = `drag-join`;
-const JOINT_DIV_CLASS = `joint-target`;
+export const FLOW_JOINT_TARGET_CLASS = `joint-target`;
 
-const FlowJoint = ({ panelId, flowId, location, env, type, getClientNodePos }: Props) => {
+const FlowJoint = ({ panelId, flowId, location, env, type, additional }: Props) => {
     const dispatch = useAppDispatch();
     const actionState = useAppSelector(selectFlowEditorPanelActionState(panelId));
 
@@ -72,52 +71,25 @@ const FlowJoint = ({ panelId, flowId, location, env, type, getClientNodePos }: P
     });
 
     const innerRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const rect = innerRef.current!.getBoundingClientRect();
-        const nodePos = getClientNodePos();
-        const relativePos = {
-            x: rect.x + 0.5 * rect.width - nodePos.x,
-            y: rect.y + 0.5 * rect.height - nodePos.y,
-        };
-
-        const jointKey = getJointLocationKey(location);
-
-        dispatch(flowEditorSetRelativeClientJointPosition({
-            panelId,
-            jointKey,
-            relativeClientPosition: relativePos,
-        }));
-    }, []);
-
     const dataTypeTag = getTypeSpecifierStyleTag(type, env)
 
     return (
         <FlowJointDiv
             $direction={location.direction}
             $dataTypeTag={dataTypeTag}
-            // $dataType={type || lang.createUnknownType()}
             {...drag.handlers}
             {...drop.handlers}
             onMouseDown={e => e.stopPropagation()}
             $isHovering={drop.isHovering}
+            $additional={additional}
         >
             <div
-                className={JOINT_DIV_CLASS}
+                className={FLOW_JOINT_TARGET_CLASS}
                 ref={innerRef}
+                data-joint-key={getJointLocationKey(location)}
             />
         </FlowJointDiv>
     );
 }
 
 export default FlowJoint;
-
-// function getDataTypeLiteral(specifier: TypeSpecifier): DataTypes {
-//     if (specifier.type === 'primitive') {
-//         return specifier.primitive as DataTypes;
-//     }
-//     if (specifier.type === 'reference') {
-//         return specifier.name as DataTypes;
-//     }
-//     return 'unknown' as DataTypes;
-// }

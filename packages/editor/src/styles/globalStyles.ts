@@ -12,9 +12,12 @@ const GlobalStyle = createGlobalStyle`
         --color-text-secondary: #929292;
         
         --box-shadow: 0 0 10px #00000033;
-        
+
         --border-radius: 3px;
         --border-radius-top: 0 3px 3px 0;
+
+        --list-gap: 4px;
+        --list-height: 30px;
     }
 
     body {

@@ -2,6 +2,7 @@ import React from 'react';
 import { PanelHeaderDiv, PanelHeadingH } from '../styles/common';
 import { ViewProps } from '../types';
 import PanelBody from './PanelBody';
+import FlowInspectorContent from './FlowInspectorContent';
 
 const FlowInspectorView = (viewProps: ViewProps) => {
 
@@ -10,7 +11,7 @@ const FlowInspectorView = (viewProps: ViewProps) => {
             <PanelHeaderDiv>
                 <PanelHeadingH>Inspector</PanelHeadingH>
             </PanelHeaderDiv>
-            {/* <FlowInspectorContent /> */}
+            <FlowInspectorContent />
         </PanelBody>
     );
 }

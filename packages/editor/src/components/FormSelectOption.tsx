@@ -17,7 +17,7 @@ const SelectOptionDiv = styled.div<{ disabled?: boolean }>`
     
     padding: 0 0.5rem;
     border-radius: var(--border-radius);
-    background-color: ${({ theme }) => theme.colors.general.fields};
+    background-color: var(--color-2);
 
     cursor: ${({ disabled }) => disabled ? 'not-allowed' : 'pointer' };
 
@@ -84,7 +84,7 @@ const FormSelectOption = ({ className, icon, value, onChange, options, mapName, 
                 const rect = wrapperRef.current!.getBoundingClientRect();
                 setDropdown({
                     menuId: `select-option-menu:${uuidv4()}`,
-                    anchor: { x: rect.left, y: rect.top }
+                    anchor: { x: rect.left, y: rect.bottom }
                 });
             }}
             ref={wrapperRef}

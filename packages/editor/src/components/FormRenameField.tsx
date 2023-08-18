@@ -4,24 +4,28 @@ import MaterialSymbol from '../styles/MaterialSymbol';
 
 const RenameFieldDiv = styled.div`
 
-    height: 1.4rem;
+    /* height: 1.4rem; */
+    height: calc(0.8 * var(--list-height));
     padding: 0 0.5rem;
     display: flex;
-    gap: 0.5rem;
+    /* gap: 0.5rem; */
     align-items: center;
 
     cursor: text;
 
-    &:hover,
+    background-color: var(--color-2);
+    border-radius: var(--border-radius);
+
+    /* &:hover,
     &:has(form > input:focus) {
         font-style: italic;
-    }
+    } */
     form {
         input {
+            width: 100%;
             background-color: unset;
             border: none;
             outline: none;
-            width: 100%;
             font-style: inherit;
         }
     }

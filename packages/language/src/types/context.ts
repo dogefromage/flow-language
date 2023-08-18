@@ -55,7 +55,8 @@ export interface FlowNodeContext {
     ref: FlowNode;
     problems: NodeProblem[];
     criticalSubProblems: number;
-    rowContexts: Obj<RowContext>;
+    inputRows: Obj<RowContext>;
+    outputRows: Obj<RowContext>;
     templateSignature: FlowSignature | null;
     specifier: FunctionTypeSpecifier | null;
     isUsed: boolean;

@@ -1,13 +1,13 @@
 
 export * from './types';
-export { 
-    validateDocument 
+export {
+    validateDocument
 } from './validation/validateDocument';
 
-export { 
-    interpretDocument, 
-    InterpreterConfig, 
-    InterpretationException 
+export {
+    interpretDocument,
+    InterpreterConfig,
+    InterpretationException
 } from './interpreter';
 
 export {
@@ -17,7 +17,13 @@ export {
 } from './core/environment';
 
 export {
+    createMissingType,
     createUnknownType,
+    createPrimitiveType,
+    createListType,
+    createTupleType,
+    createFunctionType,
+    createMapType,
 } from './typeSystem';
 
 export {

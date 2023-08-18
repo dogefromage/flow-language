@@ -9,12 +9,14 @@ const ExpandableHeaderDiv = styled.div`
     align-items: center;
     gap: 0.25rem;
     padding: 0 1rem;
-    background-color: #ddd;
+    outline: 1px solid var(--color-2);
     font-weight: bold;
-    
     user-select: none;
-
     cursor: pointer;
+
+    .expand-icon {
+        transform: translateX(-4px);
+    }
 `;
 
 const ExpandedRegion = styled.div`
@@ -38,7 +40,7 @@ const FormExpandableRegion = ({ name, children, defaultValue }: Props) => {
         <ExpandableHeaderDiv
             onClick={() => setExpanded(!expanded)}
         >
-            <MaterialSymbol>{ icon }</MaterialSymbol>
+            <MaterialSymbol className='expand-icon'>{ icon }</MaterialSymbol>
             { name }
         </ExpandableHeaderDiv>
         {

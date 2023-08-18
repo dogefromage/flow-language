@@ -1,26 +1,27 @@
 import React, { PropsWithChildren, useMemo } from 'react';
 import styled from 'styled-components';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { flowsCreate, flowsRename, selectFlows } from '../slices/flowsSlice';
 import { editorSetActiveFlow, selectEditor } from '../slices/editorSlice';
+import { flowsCreate, selectFlows } from '../slices/flowsSlice';
 import { emptyFlowSignature } from '../types';
-import FormRenameField from './FormRenameField';
 
 const OutlinerListDiv = styled.div`
     display: flex;
     height: 100%;
     flex-direction: column;
     padding: 0.25rem 0.5rem;
-    gap: 0.5rem;
+    gap: var(--list-gap);
+    /* gap: 0.5rem; */
 `;
 
 const OutlinerFlowEntry = styled.div<{ $active: boolean }>`
     padding: 0 0.5rem;
-    height: 30px;
+    height: var(--list-height);
     display: flex;
     align-items: center;
 
-    ${({ $active }) => $active && `outline: 1px solid var(--color-1);` }
+    ${({ $active }) => $active && `background-color: var(--color-2);` }
+    /* ${({ $active }) => $active && `outline: 1px solid var(--color-1);` } */
     border-radius: var(--border-radius);
 
     cursor: pointer;
@@ -57,7 +58,8 @@ const PageOutlinerList = ({ panelId }: PropsWithChildren<PageOutlinerListProps>)
                         }}
                         $active={editorState.activeFlow == flow.id}
                     >
-                        <FormRenameField 
+                        <p>{ flow.name }</p>
+                        {/* <FormRenameField 
                             value={flow.name}
                             onChange={newVal => {
                                 dispatch(flowsRename({
@@ -66,7 +68,7 @@ const PageOutlinerList = ({ panelId }: PropsWithChildren<PageOutlinerListProps>)
                                     undo: { desc: `Renamed flow '${flow.name}' to '${newVal}'.`},
                                 }));
                             }}
-                        />
+                        /> */}
                     </OutlinerFlowEntry>
                 )
             }

@@ -84,7 +84,7 @@ export const flowEditorPanelsSlice = createSlice({
             const ps = getPanelState(s, a);
             if (!ps) return;
             if (ps.state.type !== 'dragging-link') {
-                return console.error(`Not dragging link but update was called`);
+                return;
             }
             ps.state.cursorWorldPosition = pointScreenToWorld(ps.camera, a.payload.offsetCursor);
         },

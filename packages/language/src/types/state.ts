@@ -37,6 +37,7 @@ export interface FlowGraph {
     id: string;
     name: string;
     nodes: Obj<FlowNode>;
+    attributes: Record<string, string>;
     generics: string[];
     inputs: InputRowSignature[];
     outputs: OutputRowSignature[];

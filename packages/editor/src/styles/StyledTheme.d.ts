@@ -14,7 +14,7 @@ declare module 'styled-components' {
     export interface DefaultTheme {
         colors: {
             general: {
-                fields: string;
+                // fields: string;
                 errorOverlay: string;
                 active: string;
             }

@@ -58,7 +58,7 @@ const SlidableInputDiv = styled.div`
 `;
 
 function formatShort(text: string) {
-    return `"${_.truncate(text, { length: 12 })}"`;
+    return `"${_.truncate(text, { length: 8 })}"`;
 }
 
 type Props = {

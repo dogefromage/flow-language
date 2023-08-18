@@ -1,14 +1,13 @@
 import * as lang from "@fluss/language";
 import { createSlice } from "@reduxjs/toolkit";
 import { Draft, enableMapSet } from "immer";
-import _, { difference } from "lodash";
 import { useCallback } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { selectDocument } from "../redux/stateHooks";
 import { RootState } from "../redux/store";
 import { FlowsSliceState, UndoAction, Vec2, defaultFlows } from "../types";
-import { getBasePowers } from "../utils/math";
-import { selectDocument } from "../redux/stateHooks";
-import { v4 as uuidv4 } from "uuid";
 import { RowSignatureBlueprint } from "../types/flowRows";
+import { getBasePowers } from "../utils/math";
 enableMapSet();
 
 function getFlow(s: Draft<FlowsSliceState>, a: { payload: { flowId: string } }) {
@@ -36,42 +35,6 @@ function removeConnectionsToNodes(g: lang.FlowGraph, nodes: Set<string>) {
     }
 }
 
-// function createBlankRow(id: string, rowAndDataType: RowDataTypeCombination): RowT {
-//     const displayName = allowedInputRows[rowAndDataType] || allowedOutputRows[rowAndDataType];
-//     const rowName = `New ` + (displayName || 'Row');
-
-//     const { rowType, dataType } = decomposeRowDataTypeCombination(rowAndDataType);
-
-//     switch (rowType) {
-//         case 'field':
-//         case 'input':
-//         case 'output':
-//             return {
-//                 id, type: rowType, dataType, name: rowName,
-//                 value: initialDataTypeValue[dataType],
-//             }
-//         case 'rotation':
-//             return {
-//                 id,
-//                 type: 'rotation', 
-//                 dataType: 'mat3',
-//                 name: rowName,
-//                 value: initialDataTypeValue['mat3'],
-//                 rotationModel: 'xyz',
-//             }
-//         case 'color':
-//             return {
-//                 id,
-//                 type: 'color', 
-//                 dataType: 'vec3',
-//                 name: rowName,
-//                 value: [ 1, 1, 1 ],
-//             }
-//         default: 
-//             throw new Error(`${rowAndDataType} not implemented`);
-//     }
-// }
-
 function generateAlphabeticalId(index: number) {
     const token = getBasePowers(index, 26)
         .reverse()
@@ -82,35 +45,25 @@ function generateAlphabeticalId(index: number) {
 
 const initialState: FlowsSliceState = { ...defaultFlows };
 
-function splicePort<T extends { id: string }>(ports: T[], newPort: T, start = ports.length, deleteCount = 0) {
+function findUniquePortId<T extends { id: string }>(ports: T[]) {
     for (let i = 0; true; i++) {
         let id = i.toString(36);
-        if (ports.find(p => p.id == id)) {
-            continue;
+        if (ports.find(p => p.id == id) == null) {
+            return id;
         }
-        newPort.id = id;
-        ports.splice(start, deleteCount, newPort);
-        return;
     }
 }
-
 type RowSignature = lang.InputRowSignature | lang.OutputRowSignature;
 
 function createRowSignature(id: string, label: string, blueprint: RowSignatureBlueprint) {
-    return {
+    const s = {
         id,
         label,
         rowType: blueprint.rowType,
         specifier: blueprint.specifier,
     }
+    return s as RowSignature;
 }
-
-// const port = {
-//     id: '',
-//     label: 'New Row',
-//     specifier: a.payload.blueprint.specifier,
-//     rowType: a.payload.blueprint.rowType,
-// };
 
 export const flowsSlice = createSlice({
     name: 'flows',
@@ -139,6 +92,7 @@ export const flowsSlice = createSlice({
                 ...a.payload.signature,
                 id,
                 name: a.payload.name,
+                attributes: {},
                 nodes: {
                     a: { id: 'a', signature: lang.getInternalId('input'), position: { x: 400, y: 200 }, rowStates: {} },
                     b: { id: 'b', signature: lang.getInternalId('output'), position: { x: 1000, y: 200 }, rowStates: {} },
@@ -147,13 +101,23 @@ export const flowsSlice = createSlice({
             }
             s[id] = flow as any;
         },
+        remove: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string }>) => {
+            delete s[a.payload.flowId];
+        },
         rename: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, name: string }>) => {
             const g = getFlow(s, a);
             if (!g) return;
             g.name = a.payload.name;
         },
-        remove: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string }>) => {
-            delete s[a.payload.flowId];
+        setAttribute: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, key: string, value?: string }>) => {
+            const g = getFlow(s, a);
+            if (!g) return;
+
+            if (a.payload.value != null) {
+                g.attributes[a.payload.key] = a.payload.value;
+            } else {
+                delete g.attributes[a.payload.key];
+            }
         },
         addNode: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, signatureId: lang.FlowSignatureId, position: Vec2, rowStates?: lang.FlowNode['rowStates'] }>) => {
             const g = getFlow(s, a);
@@ -261,44 +225,24 @@ export const flowsSlice = createSlice({
             const g = getFlow(s, a);
             if (!g) return;
 
-            const port = createRowSignature('', 'New Row', a.payload.blueprint);
-            if (a.payload.direction === 'in') {
-                splicePort(g.inputs, port);
-            } else {
-                splicePort(g.outputs, port);
-            }
+            const ports: RowSignature[] = a.payload.direction === 'in' ? g.inputs : g.outputs;
+            const portId = findUniquePortId(g.inputs);
+            const port = createRowSignature(portId, 'New Port', a.payload.blueprint);
+            ports.push(port);
         },
         replacePort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', portId: string, blueprint: RowSignatureBlueprint }>) => {
             const g = getFlow(s, a);
             if (!g) return;
 
-            const ports = a.payload.direction === 'in' ? g.inputs : g.outputs;
+            const ports: RowSignature[] = a.payload.direction === 'in' ? g.inputs : g.outputs;
             const index = ports.findIndex(i => i.id === a.payload.portId);
             const port = ports[index];
             if (port == null) {
                 return console.error(`Row not found.`);
             }
-
             const newPort = createRowSignature(port.id, port.label, a.payload.blueprint);
-            splicePort(ports, newPort, index, 1);
+            ports.splice(index, 1, newPort);
         },
-        // addDefaultRow: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', defaultRow: InputRowT | OutputRowT }>) => {
-        //     const g = getFlow(s, a);
-        //     if (!g) return;
-            
-        //     const port = {
-        //         id: '',
-        //         label: 'New Row',
-        //         specifier: a.payload.blueprint.specifier,
-        //         rowType: a.payload.blueprint.rowType,
-        //     };
-
-        //     if (a.payload.direction === 'in') {
-        //         g.inputs.push(port as lang.InputRowSignature);
-        //     } else {
-        //         g.outputs.push(port as lang.OutputRowSignature);
-        //     }
-        // },
         updatePort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, direction: 'in' | 'out', portId: string, newState: Partial<RowSignature> }>) => {
             const g = getFlow(s, a);
             if (!g) return;
@@ -345,6 +289,7 @@ export const {
     rename: flowsRename,
     remove: flowsRemove,
     // CONTENT
+    setAttribute: flowsSetAttribute,
     addNode: flowsAddNode,
     removeNodes: flowsRemoveNodes,
     positionNode: flowsPositionNode,

@@ -4,7 +4,7 @@ import { SelectionStatus } from "../types";
 const defaultTheme: DefaultTheme = {
     colors: {
         general: {
-            fields: '#d7d7d7',
+            // fields: '#d7d7d7',
             errorOverlay: '#ff000022',
             active: '#dd2255',
         },

@@ -5,7 +5,7 @@ import { findDependencies, sortTopologically } from "../utils/algorithms";
 import { memFreeze, memoObjectByFlatEntries } from "../utils/functional";
 import { validateNode } from "./validateNode";
 
-export const validateFlowGraph = memFreeze((
+export const validateFlowGraph = /* memFreeze */((
     flow: FlowGraph,
     flowEnvironment: FlowEnvironment,
 ): FlowGraphContext => {
@@ -165,7 +165,10 @@ export const validateFlowGraph = memFreeze((
 export const getFlowSignature = memFreeze((flow: FlowGraph) => {
     const flowSignature: FlowSignature = {
         id: flow.id,
-        attributes: { category: 'Flows' },
+        attributes: { 
+            category: 'Flows',
+            ...flow.attributes,
+        },
         description: null,
         name: flow.name, 
         generics: flow.generics,

@@ -5,7 +5,7 @@ import { TypeSystemException, TypeSystemExceptionData, TypeTreePath } from "../t
 import { generateDefaultValue } from "../typeSystem/generateDefaultValue";
 import { applyInstantiationConstraints, inferGenerics } from "../typeSystem/generics";
 import { assertElementOfType } from "../typeSystem/validateElement";
-import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, InitializerValue, InputRowSignature, InstantiationConstraints, MapTypeSpecifier, RowState, TypeSpecifier } from "../types";
+import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, InitializerValue, InputRowSignature, InstantiationConstraints, MapTypeSpecifier, RowState, TypeSpecifier, inputRowTypes } from "../types";
 import { FlowNodeContext, RowContext } from "../types/context";
 import { assertTruthy } from "../utils";
 import { memFreeze, memoList } from "../utils/functional";
@@ -110,7 +110,8 @@ const noSignatureContext = memFreeze(
         criticalSubProblems: 0,
         specifier: null,
         templateSignature: null,
-        rowContexts: {},
+        inputRows: {},
+        outputRows: {},
         isUsed,
     })
 );
@@ -130,19 +131,20 @@ const bundleNodeContext = memFreeze((
         criticalSubProblems: 0,
         templateSignature,
         specifier,
-        rowContexts: {},
+        inputRows: {},
+        outputRows: {},
         isUsed,
     };
     assertTruthy(templateSignature.inputs.length === inputContexts.length);
     for (let i = 0; i < templateSignature.inputs.length; i++) {
         const rowContext = inputContexts[i];
-        result.rowContexts[templateSignature.inputs[i].id] = rowContext;
+        result.inputRows[templateSignature.inputs[i].id] = rowContext;
         result.criticalSubProblems += rowContext.problems.length;
     }
     assertTruthy(templateSignature.outputs.length === outputContexts.length);
     for (let i = 0; i < templateSignature.outputs.length; i++) {
         const rowContext = outputContexts[i];
-        result.rowContexts[templateSignature.outputs[i].id] = rowContext;
+        result.outputRows[templateSignature.outputs[i].id] = rowContext;
         result.criticalSubProblems += rowContext.problems.length;
     }
     return result;
@@ -192,7 +194,7 @@ const validateRows = memFreeze((
 
     if (input.rowType === 'input-variable' && !isConnected) {
         let displayValue: InitializerValue | undefined = rowState?.value ?? input.defaultValue;
-
+        // validate value if there
         if (displayValue != null) {
             try {
                 assertElementOfType(specifier, displayValue, env);
@@ -208,8 +210,7 @@ const validateRows = memFreeze((
                 }
             }
         }
-        const generatedDefault = generateDefaultValue(specifier, env);
-        result.displayValue = displayValue ?? generatedDefault;
+        result.displayValue = displayValue ?? generateDefaultValue(specifier, env);
     }
     return result;
 });

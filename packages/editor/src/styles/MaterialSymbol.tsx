@@ -5,6 +5,8 @@ interface Props {
     $weight?: number;
     $color?: string;
     $button?: boolean;
+    $cursor?: string;
+    $disabled?: boolean;
 }
 
 const MaterialSymbol = styled.span.attrs<Props>(({ className }) => ({
@@ -27,6 +29,10 @@ const MaterialSymbol = styled.span.attrs<Props>(({ className }) => ({
             transform: scale(1.2);
         }
     `}
+
+    ${({ $cursor }) => $cursor && `cursor: ${$cursor};` }
+
+    ${({ $disabled }) => $disabled && 'cursor: not-allowed;' }
 `;
 
 export default MaterialSymbol;

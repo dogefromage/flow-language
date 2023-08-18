@@ -1,7 +1,7 @@
 import { baseInterpretations } from "../content/signatures";
 import { DocumentContext, FlowGraphContext, FlowSignature, InitializerValue, MAIN_FLOW_ID } from "../types";
 import { ValueMap } from "../types/local";
-import { assertDef, assertTruthy } from "../utils";
+import { assertDef } from "../utils";
 
 export interface InterpreterConfig {
     args: ValueMap;
@@ -36,14 +36,18 @@ function interpretFlow(doc: DocumentContext, flow: FlowGraphContext, flowArgs: V
 
         const inputProxy = new Proxy({} as ValueMap, {
             get(_, inputId: string) {
-                const rowContext = node.rowContexts[inputId];
+                const rowContext = node.inputRows[inputId];
                 const connections = rowContext.ref?.connections || [];
-                if (connections.length > 0) {
-                    assertTruthy(connections.length < 2, "Multiple connections not implemented.");
-                    const firstConnection = connections[0];
-                    const prevNodeOutput = interpretNode(firstConnection.nodeId);
-                    const transportedValue = prevNodeOutput[firstConnection.outputId];
-                    return assertDef(transportedValue, 'Value missing or misplaced.');
+                const inputRowSignature = node.templateSignature!.inputs.find(row => row.id === inputId)!;
+                const isListInput = inputRowSignature.rowType === 'input-list';
+                if (connections.length > 0 || isListInput) {
+                    const transportedValues = connections.map(conn =>
+                        interpretNode(conn.nodeId)[conn.outputId]
+                    );
+                    if (isListInput) {
+                        return transportedValues;
+                    }
+                    return assertDef(transportedValues[0], 'Value missing or misplaced.');
                 } else {
                     return assertDef(rowContext.displayValue, 'No input connected but not display value found.');
                 }

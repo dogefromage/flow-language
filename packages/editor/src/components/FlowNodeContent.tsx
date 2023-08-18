@@ -1,24 +1,21 @@
+import * as lang from '@fluss/language';
 import React from 'react';
 import { FlowNodeNameWrapper, FlowNodeRowNameP } from '../styles/flowStyles';
-import { Vec2 } from '../types';
 import { FlowInputRowSwitch, FlowOutputRow } from './FlowNodeRowComponents';
-import * as lang from '@fluss/language';
 
 interface Props {
     panelId: string;
     flowId: string;
     context: lang.FlowNodeContext;
     signature: lang.FlowSignature;
-    getClientNodePos: () => Vec2;
     env: lang.FlowEnvironment;
 }
 
-const FlowNodeContent = ({ panelId, flowId, context, signature, getClientNodePos, env }: Props) => {
+const FlowNodeContent = ({ panelId, flowId, context, signature, env }: Props) => {
     const commonProps = { 
         panelId, 
         flowId, 
         nodeId: context.ref.id, 
-        getClientNodePos 
     };
     const inputType = context.specifier?.parameter;
     const outputType = context.specifier?.output;
@@ -42,7 +39,7 @@ const FlowNodeContent = ({ panelId, flowId, context, signature, getClientNodePos
                     key={output.id}
                     row={output}
                     type={outputType?.elements[output.id] || lang.createUnknownType()}
-                    context={context.rowContexts[output.id]}
+                    context={context.outputRows[output.id]}
                     env={env}
                 />
             )
@@ -54,7 +51,7 @@ const FlowNodeContent = ({ panelId, flowId, context, signature, getClientNodePos
                     key={input.id}
                     row={input}
                     type={inputType?.elements[input.id] || lang.createUnknownType()}
-                    context={context.rowContexts[input.id]}
+                    context={context.inputRows[input.id]}
                     env={env}
                 />
             )

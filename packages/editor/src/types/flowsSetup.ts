@@ -18,8 +18,37 @@ export const mainSignature: lang.AnonymousFlowSignature = {
 }
 
 export const emptyFlowSignature: lang.AnonymousFlowSignature = {
-    inputs: [],
-    outputs: [],
+    inputs: [
+        {
+            id: 'a',
+            label: 'A',
+            rowType: 'input-variable',
+            specifier: 'number',
+            defaultValue: 0,
+        },
+        {
+            id: 'b',
+            label: 'B',
+            rowType: 'input-variable',
+            specifier: 'boolean',
+            defaultValue: false,
+        },
+        {
+            id: 'c',
+            label: 'c',
+            rowType: 'input-variable',
+            specifier: 'string',
+            defaultValue: '',
+        }
+    ],
+    outputs: [
+        {
+            id: 'value',
+            label: 'Value',
+            rowType: 'output',
+            specifier: 'number',
+        }
+    ],
     generics: [],
 }
 
@@ -28,6 +57,7 @@ export const initialDefaultRootFlow: lang.FlowGraph = {
     name: 'Main',
     ...mainSignature,
     idCounter: 1,
+    attributes: {},
     nodes: {
         a: {
             id: 'a',
