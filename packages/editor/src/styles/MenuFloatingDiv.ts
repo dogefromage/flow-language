@@ -7,10 +7,11 @@ export interface MenuVerticalDivProps {
     $anchor: Vec2;
     width?: string;
     $maxHeight: number;
+    $outlineRed?: boolean;
 }
 
 const MenuVerticalDiv = styled.div.attrs<MenuVerticalDivProps>(({
-    $anchor, width,
+    $anchor, width
 }) => {
     return {
         style: {
@@ -36,6 +37,8 @@ const MenuVerticalDiv = styled.div.attrs<MenuVerticalDivProps>(({
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     outline: solid 1px #00000077;
+
+    /* ${({$outlineRed}) => $outlineRed && 'outline: 1px solid red;'} */
 
     z-index: 1;
 

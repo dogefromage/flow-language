@@ -2,13 +2,13 @@ import React, { useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import styled from 'styled-components';
 import { useAppDispatch } from '../redux/stateHooks';
+import { menusSetClosed } from '../slices/menusSlice';
 import { FloatingMenuShape, MenuTypes, Vec2 } from '../types';
 import { useBindMenuState } from '../utils/menus';
+import useClickedOutside from '../utils/useClickedOutside';
 import useStopMouseEvents from '../utils/useStopMouseEvents';
 import MenuFloating from './MenuFloating';
 import { MENU_PORTAL_MOUNT_ID } from './MenuPortalMount';
-import { menusSetClosed } from '../slices/menusSlice';
-import useClickedOutside from '../utils/useClickedOutside';
 
 const FixedFullscreenDiv = styled.div`
     position: fixed;
@@ -20,14 +20,15 @@ const FixedFullscreenDiv = styled.div`
 interface Props {
     menuId: string;
     menuType: MenuTypes;
-    shape: FloatingMenuShape
+    shape: FloatingMenuShape;
+    initialFocusPath?: string;
     onClose: () => void;
     anchor: Vec2;
 }
 
-const MenuRootFloating = ({ menuId, menuType, shape, onClose, anchor }: Props) => {
+const MenuRootFloating = ({ menuId, menuType, shape, onClose, anchor, initialFocusPath }: Props) => {
 
-    const { menuState } = useBindMenuState(menuId, menuType);
+    const { menuState } = useBindMenuState(menuId, menuType, initialFocusPath);
     const wrapperDivRef = useRef<HTMLDivElement>(null);
     const dispatch = useAppDispatch();
 
@@ -46,16 +47,20 @@ const MenuRootFloating = ({ menuId, menuType, shape, onClose, anchor }: Props) =
 
     return ReactDOM.createPortal(
         <FixedFullscreenDiv
-            {...stopMouseHandlers} 
+            {...stopMouseHandlers}
             ref={wrapperDivRef}
         >
-            <MenuFloating
-                menuId={menuId}
-                depth={0}
-                shape={shape as FloatingMenuShape}
-                leftAnchor={anchor}
-                parentWidth={0}
-            />
+            {
+                menuState &&
+                <MenuFloating
+                    menuId={menuId}
+                    depth={0}
+                    focusPath={[]}
+                    shape={shape as FloatingMenuShape}
+                    leftAnchor={anchor}
+                    parentWidth={0}
+                />
+            }
         </FixedFullscreenDiv>,
         document.querySelector(`#${MENU_PORTAL_MOUNT_ID}`)!
     );

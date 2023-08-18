@@ -19,7 +19,7 @@ export interface CommandMenuElement extends BaseMenuElement<'command'> {
 }
 
 export interface ButtonMenuElement extends BaseMenuElement<'button'> {
-    onClick: (e: React.MouseEvent) => void;
+    onClick: () => void;
 }
 
 export interface SearchMenuElement extends BaseMenuElement<'search'> {
@@ -65,6 +65,7 @@ export interface MenuState {
     id: string;
     type: MenuTypes;
     nodeStack: MenuStackNode[];
+    focusedPath: string;
     isClosed: boolean;
     state: Map<string, any>;
 }

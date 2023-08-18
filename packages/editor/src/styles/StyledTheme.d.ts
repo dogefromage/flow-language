@@ -14,8 +14,6 @@ declare module 'styled-components' {
     export interface DefaultTheme {
         colors: {
             general: {
-                // fields: string;
-                errorOverlay: string;
                 active: string;
             }
             flowEditor: {

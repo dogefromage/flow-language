@@ -73,31 +73,22 @@ export interface RowContext {
     problems: RowProblem[];
 }
 
-
-// interface CyclicFlows {
-//     type: 'cyclic-flows';
-//     cycles: string[][];
-// }
-// interface MissingTopFlow {
-//     type: 'missing-top-flow';
-//     id: string;
-// }
-
 export type DocumentProblem =
     never
-    // | CyclicFlows
-    // | MissingTopFlow
 
 interface CyclicNodes {
     type: 'cyclic-nodes';
+    message: string;
     cycles: string[][];
 }
 interface MissingNode {
     type: 'missing-node';
+    message: string;
     nodeId: string;
 }
 interface OutputMissing {
     type: 'output-missing';
+    message: string;
 }
 export type FlowProblem =
     | CyclicNodes
@@ -106,6 +97,7 @@ export type FlowProblem =
 
 interface MissingSignature {
     type: 'missing-signature';
+    message: string;
     signature: string;
 }
 export type NodeProblem =
@@ -113,24 +105,24 @@ export type NodeProblem =
 
 interface InvalidSignature {
     type: 'invalid-signature';
+    message: string;
 }
 interface RequiredParameter {
     type: 'required-parameter';
+    message: string;
 }
 interface IncompatibleArgumentType {
     type: 'incompatible-argument-type';
+    message: string;
     connectionIndex: number;
     typeProblem: TypeSystemExceptionData;
 }
-// interface InvalidRowType {
-//     type: 'invalid-row-type';
-//     typeProblem: TypeSystemExceptionData;
-// }
 interface InvalidValue {
     type: 'invalid-value';
+    message: string;
     typeProblem: TypeSystemExceptionData;
 }
-export type RowProblem = 
+export type RowProblem =
     | InvalidSignature
     | RequiredParameter
     | IncompatibleArgumentType

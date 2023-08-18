@@ -1,8 +1,13 @@
-import { RowContext } from '@fluss/language';
-import React, { ReactNode } from 'react';
 import styled, { css } from 'styled-components';
+import { FlowNodeRowDiv } from '../styles/flowStyles';
+import useHover from '../utils/useHover';
+import { RowComponentProps } from './FlowNodeRowComponents';
+import FlowNodeRowContextToolTip from './FlowNodeRowContextToolTip';
+import { PropsWithChildren } from 'react';
+import React from 'react';
 
-const ErrorUnderlineSpan = styled.span<{ $hasErrors: boolean, $debugBackColor?: string }>`
+const ErrorUnderlineDiv = styled.div<{ $hasErrors: boolean, $debugBackColor?: string }>`
+    position: relative;
 
     ${({ $debugBackColor: debugBackColor }) => debugBackColor && css`
         &>div {
@@ -10,43 +15,13 @@ const ErrorUnderlineSpan = styled.span<{ $hasErrors: boolean, $debugBackColor?: 
         }
     `}
 
-    ${({ $hasErrors: hasErrors, theme }) => hasErrors && css`
-        position: relative;
-
-        p {
-            /* background-color: ${theme.colors.general.errorOverlay}; */
-            /* text-decoration: underline overline red; */
-            text-decoration: red wavy underline;
-            /* font-style: italic; */
-            /* text-underline-position: auto; */
-        }
-
-        .error-tooltip {
-            position: absolute;
-            visibility: hidden;
-            width: 120px;
-            background-color: black;
-            color: #fff;
-            text-align: center;
-            padding: 5px 0;
-            border-radius: 6px;
-            z-index: 1;
-            top: -5px;
-            left: 105%;
-        }
-
-        &:hover .error-tooltip {
-            visibility: visible;
-        }
+    ${({ $hasErrors }) => $hasErrors && css`
+        --error-deco: red wavy underline;
     `}
 `;
 
-interface Props {
-    context: RowContext | undefined;
-    children: ReactNode;
-}
-
-const FlowNodeRowContextWrapper = ({ context, children }: Props) => {
+const FlowNodeRowContextWrapper = (props: PropsWithChildren<RowComponentProps>) => {
+    const { context, children } = props;
     const hasErrors = !!context?.problems.length;
 
     // const [color, setColor] = useState('#ffffff');
@@ -55,23 +30,24 @@ const FlowNodeRowContextWrapper = ({ context, children }: Props) => {
     //     setColor(`#${Math.floor(Math.random() * 16777215).toString(16)}`);
     // }, [context])
 
-    // useEffect(() => {
-    //     if (context?.problems.length) {
-    //         console.log(context.problems);
-    //     }
-    // }, [ context ])
+    const { handlers, hovering } = useHover(700);
 
     return (
-        <ErrorUnderlineSpan
+        <ErrorUnderlineDiv
             $hasErrors={hasErrors}
-            onMouseEnter={(hasErrors) => {
+            // onMouseEnter={(hasErrors) => {
                 // hasErrors && console.log(context?.problems);
-            }}
-            // debugBackColor={color}
+            // }}
+            {...handlers}
         >
-            {children}
-            <span className='error-tooltip'>{context?.problems[0]?.type}</span>
-        </ErrorUnderlineSpan>
+            <FlowNodeRowDiv>
+                {children}
+            </FlowNodeRowDiv>
+            {
+                hovering &&
+                <FlowNodeRowContextToolTip {...props} />
+            }
+        </ErrorUnderlineDiv>
     );
 }
 

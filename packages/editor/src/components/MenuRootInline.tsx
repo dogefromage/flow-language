@@ -35,6 +35,7 @@ const MenuRootInline = ({ menuId, menuType, shape }: Props) => {
                 menuId={menuId}
                 shape={shape as InlineMenuShape}
                 depth={0}
+                focusPath={[]}
             />
         </div>
     )

@@ -55,6 +55,7 @@ const FlowNodeCatalog = ({ panelId }: Props) => {
             onClose={() => {
                 dispatch(flowEditorSetStateNeutral({ panelId }))
             }}
+            initialFocusPath="1"
             anchor={catalogState.location.clientPosition}
         />
     );

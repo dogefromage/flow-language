@@ -1,23 +1,29 @@
 import React, { useEffect, useRef } from 'react';
-import { menusSetState, selectSingleMenu } from '../slices/menusSlice';
+import { menusSetClosed, menusSetState, selectSingleMenu } from '../slices/menusSlice';
 import { MenuSearchDiv } from '../styles/MenuSearchDiv';
 import { SearchMenuElement } from '../types';
 import { MenuElementProps } from './MenuFloating';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
+import { useFocusNavigation, useFocusMoveHandlers } from '../utils/menus';
 
-const MenuSearch = ({ menuId, element }: MenuElementProps<SearchMenuElement>) => {
+const MenuSearch = ({ menuId, element, focusPath, neightbourCount }: MenuElementProps<SearchMenuElement>) => {
     const dispatch = useAppDispatch();
-    const menuState = useAppSelector(selectSingleMenu(menuId));
-
+    const menu = useAppSelector(selectSingleMenu(menuId));
     const inputRef = useRef<HTMLInputElement>(null);
+    
+    const joinedPath = focusPath.join('.');
     useEffect(() => {
-        if (!element.autofocus) return;
-        setTimeout(() => {
+        if (menu.focusedPath == joinedPath) {
             inputRef.current?.focus();
-        }, 50)
-    }, [inputRef]);
+            setTimeout(() => inputRef.current?.select(), 5);
+        }
+    }, [ menu.focusedPath ]);
 
-    const searchValue = menuState?.state.get(element.key) ?? '';
+    const handlers = useFocusNavigation(menuId, joinedPath, {
+        ...useFocusMoveHandlers(focusPath, neightbourCount),
+    });
+
+    const searchValue = menu?.state.get(element.key) ?? '';
 
     return (
         <MenuSearchDiv>
@@ -42,6 +48,7 @@ const MenuSearch = ({ menuId, element }: MenuElementProps<SearchMenuElement>) =>
                     autoComplete='off'
                     autoCorrect='off'
                     autoSave='off'
+                    {...handlers}
                 />
             </form>
         </MenuSearchDiv>
