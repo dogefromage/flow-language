@@ -15,7 +15,6 @@ declare module 'styled-components' {
         colors: {
             general: {
                 fields: string;
-                errorOverlay: string;
                 active: string;
             }
             flowEditor: {

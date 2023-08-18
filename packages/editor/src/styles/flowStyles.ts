@@ -77,6 +77,8 @@ export const FlowNodeRowNameP = styled.p<{
     ${({ $bold: bold }) => bold && `font-weight: bold;`}
 
     color: ${({ $color }) => $color || 'inherit'};
+
+    text-decoration: var(--error-deco);
 `;
 
 export const FlowJointDiv = styled.div<{

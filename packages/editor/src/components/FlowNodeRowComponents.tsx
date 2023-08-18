@@ -6,7 +6,8 @@ import FlowJoint from "./FlowJoint";
 import FlowNodeRow from "./FlowNodeRow";
 import FlowNodeRowInitializer from "./FlowNodeRowInitializer";
 
-export type RowComponentProps<R extends lang.InputRowSignature | lang.OutputRowSignature> = {
+type RowSignature = lang.InputRowSignature | lang.OutputRowSignature;
+export type RowComponentProps<R extends RowSignature = RowSignature> = {
     panelId: string;
     flowId: string;
     nodeId: string;
@@ -22,7 +23,7 @@ export const FlowOutputRow = (props: RowComponentProps<lang.OutputRowSignature>)
 
     return (
         <FlowNodeRow
-            context={context}
+            {...props}
         >
             <FlowJoint
                 panelId={panelId}
@@ -63,9 +64,7 @@ export const FlowInputRowSimple = (props: RowComponentProps<lang.SimpleInputRowS
     const { panelId, flowId, nodeId, row, getClientNodePos, context, type, env } = props;
 
     return (
-        <FlowNodeRow
-            context={context}
-        >
+        <FlowNodeRow {...props}>
             <FlowJoint
                 panelId={panelId}
                 flowId={flowId}
@@ -92,7 +91,7 @@ export const FlowInputRowVariable = (props: RowComponentProps<lang.VariableInput
     const { panelId, flowId, nodeId, row, getClientNodePos, context, type, env } = props;
 
     return (
-        <FlowNodeRow context={context}>
+            <FlowNodeRow {...props}>
             <FlowJoint
                 panelId={panelId}
                 flowId={flowId}
@@ -121,7 +120,7 @@ export const FlowInputRowList = (props: RowComponentProps<lang.ListInputRowSigna
     const { panelId, flowId, nodeId, row, getClientNodePos, context } = props;
 
     return (
-        <FlowNodeRow context={context}>
+        <FlowNodeRow {...props}>
             {/* <FlowJoint
                 panelId={panelId}
                 flowId={flowId}

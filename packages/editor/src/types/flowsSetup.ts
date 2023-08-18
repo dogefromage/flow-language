@@ -33,7 +33,7 @@ export const initialDefaultRootFlow: lang.FlowGraph = {
             id: 'a',
             signature: lang.getInternalId('output'),
             rowStates: {},
-            position: { x: 1020, y: 294 }
+            position: { x: 400, y: 294 }
         },
     },
 };
