@@ -18,6 +18,7 @@ export const FlowNodeDiv = styled.div.attrs<FlowNodeDivProps>(({ $position: posi
 })) <FlowNodeDivProps>`
 
     position: absolute;
+    z-index: 0;
     top: 0;
     left: 0;
     min-width: ${FLOW_NODE_MIN_WIDTH}px;

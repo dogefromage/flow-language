@@ -1,32 +1,99 @@
 import { upperFirst } from "lodash";
-import { InputRowSignature, OutputRowSignature } from "../types";
 import { SignatureDefinition } from "../types/local";
+import { OutputRowSignature, SimpleInputRowSignature, VariableInputRowSignature } from "../types";
+
+function autoName(id: string) {
+    return id
+        .split('_')
+        .map(upperFirst)
+        .join(' ');
+}
+const variable = {
+    string: (id: string, defaultValue: string): VariableInputRowSignature => ({
+        id,
+        rowType: 'input-variable',
+        label: autoName(id),
+        specifier: 'string',
+        defaultValue,
+    }),
+    number: (id: string, defaultValue: number): VariableInputRowSignature => ({
+        id,
+        rowType: 'input-variable',
+        label: autoName(id),
+        specifier: 'number',
+        defaultValue,
+    }),
+    boolean: (id: string, defaultValue: boolean): VariableInputRowSignature => ({
+        id,
+        rowType: 'input-variable',
+        label: autoName(id),
+        specifier: 'boolean',
+        defaultValue,
+    }),
+};
+const simple = {
+    string: (id: string): SimpleInputRowSignature => ({
+        id,
+        rowType: 'input-simple',
+        label: autoName(id),
+        specifier: 'string',
+    }),
+    number: (id: string): SimpleInputRowSignature => ({
+        id,
+        rowType: 'input-simple',
+        label: autoName(id),
+        specifier: 'number',
+    }),
+    boolean: (id: string): SimpleInputRowSignature => ({
+        id,
+        rowType: 'input-simple',
+        label: autoName(id),
+        specifier: 'boolean',
+    }),
+    generic: (id: string, specifier: string): SimpleInputRowSignature => ({
+        id,
+        rowType: 'input-simple',
+        label: autoName(id),
+        specifier,
+    }),
+};
+const output = {
+    string: (id: string): OutputRowSignature => ({
+        id,
+        rowType: 'output',
+        label: autoName(id),
+        specifier: 'string',
+    }),
+    number: (id: string): OutputRowSignature => ({
+        id,
+        rowType: 'output',
+        label: autoName(id),
+        specifier: 'number',
+    }),
+    boolean: (id: string): OutputRowSignature => ({
+        id,
+        rowType: 'output',
+        label: autoName(id),
+        specifier: 'boolean',
+    }),
+    generic: (id: string, specifier: string): OutputRowSignature => ({
+        id,
+        rowType: 'output',
+        label: autoName(id),
+        specifier,
+    }),
+};
 
 export const localDefinitions: SignatureDefinition[] = [];
-
-const varNumberRow = (tag: string, defaultValue = 0): InputRowSignature => ({
-    rowType: 'input-variable',
-    id: tag,
-    label: upperFirst(tag),
-    specifier: 'number',
-    defaultValue,
-});
-const outNumberRow = (tag: string): OutputRowSignature => ({
-    rowType: 'output',
-    id: tag,
-    label: upperFirst(tag),
-    specifier: 'number',
-});
-
 localDefinitions.push({
     signature: {
         id: 'add',
         name: 'Add',
-        attributes: { category: 'Basic' },
+        attributes: { category: 'Numbers' },
         description: null,
         generics: [],
-        inputs: [varNumberRow('a'), varNumberRow('b')],
-        outputs: [outNumberRow('sum')],
+        inputs: [variable.number('a', 0), variable.number('b', 0)],
+        outputs: [output.number('sum')],
     },
     interpretation: args => ({ sum: args.a + args.b }),
 });
@@ -35,11 +102,11 @@ localDefinitions.push({
     signature: {
         id: 'multiply',
         name: 'Multiply',
-        attributes: { category: 'Basic' },
+        attributes: { category: 'Numbers' },
         description: null,
         generics: [],
-        inputs: [varNumberRow('a', 1), varNumberRow('b', 1)],
-        outputs: [outNumberRow('product')],
+        inputs: [variable.number('a', 1), variable.number('b', 1)],
+        outputs: [output.number('product')],
     },
     interpretation: args => ({ product: args.a * args.b }),
 });
@@ -48,11 +115,11 @@ localDefinitions.push({
     signature: {
         id: 'sine',
         name: 'Sine',
-        attributes: { category: 'Basic', color: '#b32248' },
+        attributes: { category: 'Math', color: '#b32248' },
         description: null,
         generics: [],
-        inputs: [varNumberRow('angle', 0)],
-        outputs: [outNumberRow('sine')],
+        inputs: [variable.number('angle', 0)],
+        outputs: [output.number('sine')],
     },
     interpretation: args => ({ sine: Math.sin(args.angle) }),
 });
@@ -61,218 +128,103 @@ localDefinitions.push({
     signature: {
         id: 'random',
         name: 'Random [0,1)',
-        attributes: { category: 'Basic', color: '#b32248' },
+        attributes: { category: 'Math', color: '#b32248' },
         description: null,
         generics: [],
         inputs: [],
-        outputs: [outNumberRow('value')],
+        outputs: [output.number('value')],
     },
     interpretation: args => ({ value: Math.random() }),
 });
 
 localDefinitions.push({
     signature: {
-        id: 'generic_passthrough',
-        name: 'Generic Passthrough',
-        attributes: { category: 'Basic' },
-        description: null,
-        generics: [ 'T' ],
-        inputs: [{
-            id: 'input',
-            label: 'Input',
-            specifier: 'T',
-            rowType: 'input-simple',
-        }],
-        outputs: [{
-            id: 'output',
-            label: 'Output',
-            specifier: 'T',
-            rowType: 'output',
-        }],
-    },
-    interpretation: args => ({ output: args.input }),
-});
-
-localDefinitions.push({
-    signature: {
         id: 'choose',
         name: 'Choose',
-        attributes: { category: 'Basic' },
+        attributes: { category: 'Logic' },
         description: null,
-        generics: [ 'T' ],
-        inputs: [{
-            id: 't',
-            label: 'Condition',
-            specifier: 'boolean',
-            rowType: 'input-variable',
-            defaultValue: true,
-        }, {
-            id: 'x1',
-            label: 'Match True',
-            specifier: 'T',
-            rowType: 'input-simple',
-        }, {
-            id: 'x2',
-            label: 'Match False',
-            specifier: 'T',
-            rowType: 'input-simple',
-        }],
-        outputs: [{
-            id: 'y',
-            label: 'Choice',
-            specifier: 'T',
-            rowType: 'output',
-        }],
+        generics: ['T'],
+        inputs: [
+            variable.boolean('condition', true),
+            simple.generic('match_true', 'T'),
+            simple.generic('match_false', 'T'),
+        ],
+        outputs: [
+            output.generic('choice', 'T'),
+        ],
     },
-    interpretation: args => ({ y: args.t ? args.x1 : args.x2 }),
+    interpretation: args => ({ choice: args.condition ? args.match_true : args.match_false }),
 });
 
 localDefinitions.push({
     signature: {
         id: 'number',
         name: 'Number',
-        attributes: { category: 'Basic' },
+        attributes: { category: 'Numbers' },
         description: null,
         generics: [],
-        inputs: [{
-            id: 'x',
-            label: 'Number',
-            specifier: 'number',
-            rowType: 'input-variable',
-            defaultValue: 0,
-        }],
-        outputs: [{
-            id: 'y',
-            label: 'Output',
-            specifier: 'number',
-            rowType: 'output',
-        }],
+        inputs: [variable.number('number', 0)],
+        outputs: [output.number('output')],
     },
-    interpretation: args => ({ y: args.x }),
+    interpretation: args => ({ output: args.number }),
 });
 localDefinitions.push({
     signature: {
         id: 'boolean',
         name: 'Boolean',
-        attributes: { category: 'Basic' },
+        attributes: { category: 'Logic' },
         description: null,
         generics: [],
-        inputs: [{
-            id: 'x',
-            label: 'Boolean',
-            specifier: 'boolean',
-            rowType: 'input-variable',
-            defaultValue: false,
-        }],
-        outputs: [{
-            id: 'y',
-            label: 'Output',
-            specifier: 'boolean',
-            rowType: 'output',
-        }],
+        inputs: [variable.boolean('boolean', false)],
+        outputs: [output.boolean('output')],
     },
-    interpretation: args => ({ y: args.x }),
+    interpretation: args => ({ output: args.boolean }),
 });
 localDefinitions.push({
     signature: {
         id: 'string',
         name: 'String',
-        attributes: { category: 'Basic' },
+        attributes: { category: 'Strings' },
         description: null,
         generics: [],
-        inputs: [{
-            id: 'x',
-            label: 'String',
-            specifier: 'string',
-            rowType: 'input-variable',
-            defaultValue: '',
-        }],
-        outputs: [{
-            id: 'y',
-            label: 'Output',
-            specifier: 'string',
-            rowType: 'output',
-        }],
+        inputs: [variable.string('string', '')],
+        outputs: [output.string('output')],
     },
-    interpretation: args => ({ y: args.x }),
-})
+    interpretation: args => ({ output: args.string }),
+});
 localDefinitions.push({
     signature: {
         id: 'greater',
         name: 'Greater Than',
-        attributes: { category: 'Basic' },
+        attributes: { category: 'Numbers' },
+        description: null,
+        generics: [],
+        inputs: [ variable.number('a', 0), variable.number('b',0) ],
+        outputs: [ output.boolean('output') ],
+    },
+    interpretation: args => ({ output: args.a > args.b }),
+});
+
+
+localDefinitions.push({
+    signature: {
+        id: 'concat',
+        name: 'Concat Strings',
+        attributes: { category: 'Strings' },
         description: null,
         generics: [],
         inputs: [
-            varNumberRow('a', 0),
-            varNumberRow('b', 0),
+            variable.string('left', ''),
+            variable.string('right', ''),
         ],
-        outputs: [{
-            id: 'y',
-            label: 'Output',
-            specifier: 'boolean',
-            rowType: 'output',
-        }],
+        outputs: [
+            output.string('concatenated'),
+        ],
     },
-    interpretation: args => ({ y: args.a > args.b }),
-})
-
-localDefinitions.push({
-    signature: {
-        id: 'log_a',
-        name: 'Log A',
-        attributes: { category: 'Dev', color: '#b32248' },
-        description: null,
-        generics: [],
-        inputs: [],
-        outputs: [outNumberRow('zero')],
-    },
-    interpretation: args => {
-        console.log('A');
-        return { zero: 0 };
-    },
-});
-localDefinitions.push({
-    signature: {
-        id: 'log_b',
-        name: 'Log B',
-        attributes: { category: 'Dev', color: '#b32248' },
-        description: null,
-        generics: [],
-        inputs: [],
-        outputs: [outNumberRow('zero')],
-    },
-    interpretation: args => {
-        console.log('B');
-        return { zero: 0 };
-    },
+    interpretation: args => ({ concatenated: args.left + args.right }),
 });
 
-// const test: FlowSignature = {
-//     id: 'test',
-//     name: 'Test',
-//     attributes: { category: 'Basic' },
-//     description: null,
-//     inputs: [ 
-//         varNumberRow('Number'),
-//         {
-//             rowType: 'input-variable',
-//             id: 'b',
-//             label: 'Boolean',
-//             dataType: 'boolean',
-//             defaultValue: true,
-//         },
-//         {
-//             rowType: 'input-variable',
-//             id: 's',
-//             label: 'String',
-//             dataType: 'string',
-//             defaultValue: 'Hello',
-//         }
 
-//     ],
-//     outputs: [],
-// }
 
 export const baseInterpretations = Object.fromEntries(
     localDefinitions.map(def => [def.signature.id, def.interpretation])

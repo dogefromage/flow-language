@@ -1,30 +1,70 @@
 import { findEnvironmentSignature } from "../core/environment";
-import { createFunctionType, createMapType, createMissingType, createTupleType, createUnknownType } from "../typeSystem";
+import { createFunctionType, createMapType, createMissingType, createTupleType, createUnknownType, memoizeTypeStructure } from "../typeSystem";
 import { assertSubsetType } from "../typeSystem/comparison";
 import { TypeSystemException, TypeSystemExceptionData, TypeTreePath } from "../typeSystem/exceptionHandling";
 import { generateDefaultValue } from "../typeSystem/generateDefaultValue";
 import { applyInstantiationConstraints, inferGenerics } from "../typeSystem/generics";
 import { assertElementOfType } from "../typeSystem/validateElement";
-import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, InitializerValue, InputRowSignature, InstantiationConstraints, MapTypeSpecifier, RowState, TypeSpecifier, inputRowTypes } from "../types";
+import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, InitializerValue, InputRowSignature, InstantiationConstraints, MapTypeSpecifier, RowState, TypeSpecifier } from "../types";
 import { FlowNodeContext, RowContext } from "../types/context";
+import { Obj } from "../types/utilTypes";
 import { assertTruthy } from "../utils";
-import { memFreeze, memoList } from "../utils/functional";
+import { mem, memoList } from "../utils/functional";
 
-export function validateNode(
+export const validateNode = mem((
     node: FlowNode,
     env: FlowEnvironment,
-    earlierNodeOutputTypes: Map<string, MapTypeSpecifier>,
+    earlierNodeOutputTypes: Record<string, MapTypeSpecifier>,
     isUsed: boolean,
-): FlowNodeContext {
+): FlowNodeContext => {
     const templateSignature = findEnvironmentSignature(env, node.signature);
     if (templateSignature == null) {
         return noSignatureContext(node, isUsed);
     }
 
+    const { instantiatedNodeType, typeComparisonProblem } = 
+        validateNodeInput(node.rowStates, templateSignature, earlierNodeOutputTypes, env);
+
+    return bundleNodeContext(
+        node,
+        isUsed,
+        templateSignature,
+        instantiatedNodeType,
+        memoList(
+            ...templateSignature.inputs.map(input => 
+                validateRows(
+                    input, 
+                    node.rowStates[input.id], instantiatedNodeType.parameter.elements[input.id], 
+                    env, 
+                    typeComparisonProblem
+                )
+            )
+        ),
+        memoList(
+            ...templateSignature.outputs.map(output => 
+                ({ 
+                    ref: node.rowStates[output.id], 
+                    problems: [], 
+                })
+            )   
+        ),
+    );
+});
+
+const validateNodeInput = mem((
+    rowStates: Obj<RowState>,
+    templateSignature: FlowSignature,
+    earlierNodeOutputTypes: Obj<MapTypeSpecifier>,
+    env: FlowEnvironment,
+) => {
     const incomingTypeMap: Record<string, TypeSpecifier> = {};
     for (const input of templateSignature.inputs) {
-        const rowState = node.rowStates[input.id] as RowState | undefined;
-        const connectedTypes = selectConnectedTypes(rowState, earlierNodeOutputTypes);
+        const rowState = rowStates[input.id] as RowState | undefined;
+        // each node input receives a list of connections to support list inputs
+        const connectedTypes = rowState?.connections.map(conn => 
+            earlierNodeOutputTypes[conn.nodeId]?.elements[conn.outputId] || createUnknownType()
+        ) || []; 
+
         switch (input.rowType) {
             case 'input-list':
                 incomingTypeMap[input.id] = createTupleType(...connectedTypes);
@@ -37,18 +77,19 @@ export function validateNode(
                 break;
         }
     }
-
+    
     const argumentTypeSignature = createMapType(incomingTypeMap);
     const signatureFunctionType = getSignatureFunctionType(templateSignature);
 
     const freeGenerics: InstantiationConstraints = Object.fromEntries(
-        templateSignature.generics.map(key => [ key, createUnknownType() ])
+        templateSignature.generics.map(key => [key, createUnknownType()])
     );
     const constraints = inferGenerics(new TypeTreePath(),
         argumentTypeSignature, signatureFunctionType.parameter, freeGenerics, env);
 
-    const instantiatedNodeType = applyInstantiationConstraints(new TypeTreePath(),
+    const unmemoizedInstantiatetType = applyInstantiationConstraints(new TypeTreePath(),
         signatureFunctionType, constraints, env) as FunctionTypeSpecifier;
+    const instantiatedNodeType = memoizeTypeStructure(unmemoizedInstantiatetType);
 
     let typeComparisonProblem: TypeSystemExceptionData | undefined;
     try {
@@ -60,30 +101,8 @@ export function validateNode(
             throw e;
         }
     }
-
-    const inputContexts: RowContext[] = [];
-    for (const input of templateSignature.inputs) {
-        const rowState = node.rowStates[input.id] as RowState | undefined;
-        const specifier = instantiatedNodeType.parameter.elements[input.id];
-        const rowResult = validateRows(input, rowState, specifier, env, typeComparisonProblem);
-        inputContexts.push(rowResult);
-    }
-    const outputContexts: RowContext[] = [];
-    for (const output of templateSignature.outputs) {
-        outputContexts.push({
-            ref: node.rowStates[output.id], // probably empty
-            problems: [],
-        });
-    }
-    return bundleNodeContext(
-        node,
-        isUsed,
-        templateSignature,
-        instantiatedNodeType,
-        memoList(...inputContexts),
-        memoList(...outputContexts),
-    );
-}
+    return { instantiatedNodeType, typeComparisonProblem };
+});
 
 function getSignatureFunctionType(signature: FlowSignature) {
     return createFunctionType(
@@ -100,12 +119,13 @@ function getSignatureFunctionType(signature: FlowSignature) {
     );
 }
 
-const noSignatureContext = memFreeze(
+const noSignatureContext = mem(
     (node: FlowNode, isUsed: boolean): FlowNodeContext => ({
         ref: node,
         problems: [{
             type: 'missing-signature',
             signature: node.signature,
+            message: `Cannot find nodes signature '${node.signature}'.`,
         }],
         criticalSubProblems: 0,
         specifier: null,
@@ -116,7 +136,7 @@ const noSignatureContext = memFreeze(
     })
 );
 
-const bundleNodeContext = memFreeze((
+const bundleNodeContext = mem((
     node: FlowNode,
     isUsed: boolean,
     templateSignature: FlowSignature,
@@ -148,27 +168,19 @@ const bundleNodeContext = memFreeze((
         result.criticalSubProblems += rowContext.problems.length;
     }
     return result;
+}, undefined, {
+    tag: 'bundleNodeContext',
+    // debugHitMiss: true,
 });
 
-const selectConnectedTypes = memFreeze((
-    rowState: RowState | undefined,
-    earlierNodeOutputTypes: Map<string, MapTypeSpecifier>,
-) => {
-    // each node input receives a list of connections to support list inputs
-    const connectedTypes: TypeSpecifier[] = rowState?.connections
-        .map(conn => earlierNodeOutputTypes
-            .get(conn.nodeId)?.elements[conn.outputId] || createUnknownType()
-        ) || [];
-    return memoList(...connectedTypes);
-});
-
-const validateRows = memFreeze((
+const validateRows = mem((
     input: InputRowSignature,
     rowState: RowState | undefined,
     specifier: TypeSpecifier,
     env: FlowEnvironment,
     typeComparisonProblem: TypeSystemExceptionData | undefined,
 ): RowContext => {
+
     const result: RowContext = {
         ref: rowState,
         problems: [],
@@ -180,10 +192,12 @@ const validateRows = memFreeze((
         if (reducedData.type === 'required-type') {
             result.problems.push({
                 type: 'required-parameter',
+                message: 'This row requires a connection.'
             });
         } else {
             result.problems.push({
                 type: 'incompatible-argument-type',
+                message: 'Connected value cannot be used as input for this row.',
                 typeProblem: reducedData,
                 connectionIndex,
             })
@@ -203,6 +217,7 @@ const validateRows = memFreeze((
                     result.problems.push({
                         type: 'invalid-value',
                         typeProblem: e.data,
+                        message: 'Incompatible value stored in row.'
                     });
                     displayValue = undefined;
                 } else {
@@ -213,11 +228,15 @@ const validateRows = memFreeze((
         result.displayValue = displayValue ?? generateDefaultValue(specifier, env);
     }
     return result;
+}, undefined, {
+    tag: 'validateRows',
+    // debugHitMiss: true,
+    // debugHitMissRate: true,
 });
 
 function getRowSpecificProblem(typeComparisonProblem: TypeSystemExceptionData | undefined, rowId: string) {
     if (typeComparisonProblem != null) {
-        const [_, rowKey, nextType, tupleIndex ] = typeComparisonProblem.path.nodes.map(node => node.key);
+        const [_, rowKey, nextType, tupleIndex] = typeComparisonProblem.path.nodes.map(node => node.key);
         if (rowKey === rowId) {
             const reducedData: TypeSystemExceptionData = {
                 ...typeComparisonProblem,
@@ -234,3 +253,7 @@ function getRowSpecificProblem(typeComparisonProblem: TypeSystemExceptionData | 
         }
     }
 }
+
+// function generateIncomingTypeMap(rowStates: Obj<RowState>, templateSignature: FlowSignature, earlierNodeOutputTypes: Obj<MapTypeSpecifier>) {
+// }
+

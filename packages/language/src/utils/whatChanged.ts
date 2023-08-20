@@ -2,7 +2,7 @@
 
 export function whatChanged(last: any, next: any, skipDepth: number) {
 
-    if (skipDepth > 0) {
+    if (skipDepth <= 0) {
         if (last != next) {
             return [ 'changed', last, next ];
         }

@@ -20,22 +20,41 @@ export function hashIntSequence(X: number[]) {
     return x;
 }
 
-const objHashCache = new WeakMap<object, number>(); // makes objects garbage collectable
-const otherHashCache = new Map<any, number>(); // for now dont care about memory
-export function crudeHash(value: any) {
-    const isWeakKey = typeof value === 'object' && value != null;
-    const hashCache = isWeakKey ? objHashCache : otherHashCache;
-    const cached = hashCache.get(value);
-    if (cached != null) {
-        return cached;
-    }
-    const val = randomI32();
-    hashCache.set(value, val);
-    return val;
+export function randomU32() {
+    return (Math.random()*(2**32)) | 0;
 }
 
-// const randomBuffer = new Uint32Array(new Int32Array(1));
-function randomI32() {
-    // return crypto.getRandomValues(randomBuffer)[0];
-    return (Math.random()*(2**32)) | 0;
+const nullHash = randomU32();
+const undefinedHash = randomU32();
+const trueHash = randomU32();
+const falseHash = randomU32();
+
+const weakCache = new WeakMap<object, number>(); // makes objects garbage collectable
+export function hashAnyU32(value: any): number {
+    switch (typeof value) {
+        case 'number':
+            return value;
+        case 'boolean':
+            return value ? trueHash : falseHash;
+        case 'string':
+            const charCodes: number[] = [];
+            for (let i = 0; i < value.length; i++) {
+                charCodes.push(value.charCodeAt(i))
+            }
+            return hashIntSequence(charCodes);
+        case 'object':
+            if (value === null) {
+                return nullHash;
+            }
+            const cached = weakCache.get(value);
+            if (cached != null) {
+                return cached;
+            }
+            const hash = randomU32();
+            weakCache.set(value, hash);
+            return hash;
+        case 'undefined':
+            return undefinedHash;
+    }
+    throw new Error(`Unsupported type '${typeof value}'`);
 }

@@ -23,7 +23,6 @@ const SlidableInputDiv = styled.div`
     form {
         input {
             padding: 0 0.5em;
-            box-shadow: var(--box-shadow);
             background-color: var(--color-1);
             border: none;
             text-align: right;

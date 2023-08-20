@@ -1,4 +1,5 @@
 import lang from '@fluss/language';
+import { TypeSystemExceptionData, TypeTreePath } from '@fluss/language/lib/types/typeSystem/exceptionHandling';
 
 export default function formatSpecifier(X: lang.TypeSpecifier, env: lang.FlowEnvironment): string {
     if (typeof X === 'string') {
@@ -25,3 +26,4 @@ export default function formatSpecifier(X: lang.TypeSpecifier, env: lang.FlowEnv
     }
     throw new Error(`Unknown type`);
 }
+

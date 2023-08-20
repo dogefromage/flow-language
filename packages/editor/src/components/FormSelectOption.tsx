@@ -61,10 +61,9 @@ const FormSelectOption = ({ className, icon, value, onChange, options, mapName, 
                 name: mapName?.[ option ] || option,
                 key: option,
                 tabIndex: 1 + index,
-                onClick: e => {
+                onClick: () => {
                     onChange(option);
                     setDropdown(undefined);
-                    e.stopPropagation();
                 }
             };
             return button;

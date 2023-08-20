@@ -11,7 +11,7 @@ const GlobalStyle = createGlobalStyle`
         --color-text: #eee;
         --color-text-secondary: #929292;
         
-        --box-shadow: 0 0 10px #00000033;
+        --box-shadow: 3px 3px 8px #00000033;
 
         --border-radius: 3px;
         --border-radius-top: 0 3px 3px 0;

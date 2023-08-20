@@ -1,73 +1,67 @@
 import { assertTruthy, deepFreeze } from '.';
 import { Obj } from '../types/utilTypes';
-import { crudeHash, hashIntSequence } from './hashing';
+import { ListCache } from './ListCache';
+import { randomU32 } from './hashing';
 
-// function sameValueZero(x: any, y: any) {
-//     return x === y || (Number.isNaN(x) && Number.isNaN(y));
-// }
-
-// const shallowArrayEqualTo = (a: any) => (b: any) => {
-//     return Array.isArray(a) && Array.isArray(b)
-//         && a.length === b.length
-//         && a.every((val, index) => {
-//             return sameValueZero(val, b[index]);
-//         });
-// };
-// const list = (...args: any[]) => args;
-
-// class ShallowArrayCache extends Map {
-//     delete(key: any) {
-//         const keys = Array.from(this.keys());
-//         const foundKey = keys.find(shallowArrayEqualTo(key));
-//         return super.delete(foundKey);
-//     }
-//     get(key: any) {
-//         const keys = Array.from(this.keys());
-//         const foundKey = keys.find(shallowArrayEqualTo(key));
-//         return super.get(foundKey);
-//     }
-//     has(key: any) {
-//         const keys = Array.from(this.keys());
-//         return keys.findIndex(shallowArrayEqualTo(key)) !== -1;
-//     }
-// }
-
-// export const memFunction = (fn: (...args: any) => any) => {
-//     const { Cache: OriginalCache } = _.memoize;
-//     _.memoize.Cache = ShallowArrayCache;
-//     const memoized = _.memoize(fn, list);
-//     _.memoize.Cache = OriginalCache;
-//     return memoized;
-// };
-
-export function memFreeze<F extends (...args: any[]) => any>(fn: F) {
-    const memoized = (...args: any[]) => {
-        const key = hashIntSequence(args.map(a => crudeHash(a)));
-        const cache = memoized.cache;
-        if (cache.has(key)) {
-            return cache.get(key)
-        }
-        const result = fn(...args);
-        deepFreeze(result);
-        cache.set(key, result);
-        return result;
-    }
-    memoized.cache = new Map();
-    return memoized as any as F;
+interface MemOptions {
+    tag: string;
+    debugHitMiss?: boolean;
+    // debugCacheFull?: boolean;
+    debugHitMissRate?: boolean;
+    // debugPrint?: boolean;
+    // debugValues?: boolean;
 }
 
+export function mem<F extends (...args: any[]) => any>(
+    fn: F, 
+    cache = new ListCache(1009), 
+    options?: MemOptions
+) {
+    let hits = 0;
+    let misses = 0;
+    const handlerTag = randomU32(); // unique for every handler instance
 
-export function freezeResult<F extends (...args: any[]) => any>(fn: F) {
-    return ((...args: any[]) => {
-        const res = fn(...args);
-        deepFreeze(res);
-        return res;
+    return ((...plainArgs: Parameters<F>) => {
+        const taggedArgs = [ handlerTag, ...plainArgs ];
+
+        const cached = cache.get(taggedArgs);
+        if (typeof cached !== 'undefined') {
+            if (options?.debugHitMiss) {
+                console.log(`Cache hit: ${options.tag}`);
+            }
+            hits++;
+            // if (options?.debugValues) {
+            //     console.log('hit', taggedArgs, cached);
+            // }
+            return cached;
+        }
+        
+        if (options?.debugHitMiss) {
+            console.log(`Cache miss: ${options.tag}`);
+        }
+        const result = fn(...plainArgs);
+        deepFreeze(result);
+        cache.set(taggedArgs, result);
+        // if (options?.debugValues) {
+        //     console.log('miss', taggedArgs, result);
+        // }
+        misses++;
+        // if (options?.debugCacheFull) {
+        //     console.log(`Cache full: ${options.tag} ${cache.getCacheFull().toFixed(4)}`);
+        // }
+        // if (options?.debugPrint) {
+        //     console.log(cache);
+        // }
+        if (options?.debugHitMissRate) {
+            console.log(`Hits/Misses: ${options.tag} ${(hits/misses).toFixed(4)}`);
+        }
+        return result;
     }) as F;
 }
 
 export const always = <T>(v: T) => () => v;
 
-export const memoObjectByFlatEntries = memFreeze(
+export const memoObjectByFlatEntries = mem(
     <T extends Exclude<any, string>>(...flatEntries: (T | string)[]) => {
         // type V = T extends string ? never : T;
         const res: Obj<T> = {};
@@ -78,7 +72,7 @@ export const memoObjectByFlatEntries = memFreeze(
             res[key as string] = value as T;
         }
         return res;
-    }
+    },
 )
 
 export function memoObject<T extends any>(obj: Obj<T>): Obj<T> {
@@ -86,4 +80,4 @@ export function memoObject<T extends any>(obj: Obj<T>): Obj<T> {
     return memoObjectByFlatEntries(...flatEntries);
 } 
 
-export const memoList = memFreeze(<T>(...items: T[]) => items);
+export const memoList = mem(<T>(...items: T[]) => items);

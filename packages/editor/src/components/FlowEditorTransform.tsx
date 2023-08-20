@@ -56,6 +56,7 @@ const BackgroundDiv = styled.div.attrs<DivProps>(({ camera }) => {
 `;
 
 const TransformingDiv = styled.div`
+    z-index: 0;
     width: 100%;
     height: 100%;
     transform-origin: top left;

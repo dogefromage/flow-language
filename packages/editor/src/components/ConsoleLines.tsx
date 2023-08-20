@@ -20,6 +20,8 @@ const ConsolePre = styled.pre<{ $accent?: ConsumerOutput['accent'] }>`
     font-size: 18px;
     font-family: monospace;
     user-select: text;
+    white-space: break-spaces;
+    word-break: break-word;
 
     ${({ $accent, theme }) => $accent && `
         color: ${theme.colors.console.accents[$accent]};

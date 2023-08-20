@@ -1,16 +1,15 @@
 import { baseEnvironmentContent } from "../content/baseEnvironment";
 import { createEnvironment, pushContent } from "../core/environment";
 import { FlowDocument, FlowEnvironmentContent, FlowSignature, InputRowSignature, OutputRowSignature, getInternalId } from "../types";
-import { DocumentContext, FlowGraphContext, DocumentProblem } from "../types/context";
+import { DocumentContext, DocumentProblem, FlowGraphContext } from "../types/context";
 import { Obj } from "../types/utilTypes";
-import { deepFreeze } from "../utils";
-import { memFreeze } from "../utils/functional";
+import { mem } from "../utils/functional";
 import { getFlowSignature, validateFlowGraph } from "./validateFlowGraph";
 
-export const validateDocument = memFreeze((document: FlowDocument) => {
+export const validateDocument = mem((document: FlowDocument) => {
     const { 
         flows: rawFlowMap, 
-        config: { /* entryFlows */ }
+        config: {}
     } = document;
 
     const flowContexts: Obj<FlowGraphContext> = {};
@@ -18,14 +17,15 @@ export const validateDocument = memFreeze((document: FlowDocument) => {
     let environment = createEnvironment(baseEnvironmentContent);
     let criticalSubProblems = 0;
     
-    const flowsAnyOrder = Object.values(rawFlowMap);
+    const flowsSorted = Object.values(rawFlowMap)
+        .sort((a, b) => a.id.localeCompare(b.id));
 
     const signatureContent = makeFlowSignaturesContent(
-        ...flowsAnyOrder.map(getFlowSignature)
+        ...flowsSorted.map(getFlowSignature)
     );
     environment = pushContent(environment, signatureContent);
 
-    for (const flow of flowsAnyOrder) {
+    for (const flow of flowsSorted) {
         const flowSyntaxContent = generateFlowSyntaxLayer(flow.generics, flow.inputs, flow.outputs);
         const flowSyntaxEnv = pushContent(environment, flowSyntaxContent);
         const flowContext = validateFlowGraph(flow, flowSyntaxEnv);
@@ -40,18 +40,17 @@ export const validateDocument = memFreeze((document: FlowDocument) => {
         criticalSubProblems,
         environment,
     };
-    deepFreeze(result);
     return result;
 });
 
-const makeFlowSignaturesContent = memFreeze(
+const makeFlowSignaturesContent = mem(
     (...signatureList: FlowSignature[]): FlowEnvironmentContent => ({
         signatures: Object.fromEntries(signatureList.map(s => [ s.id, s ])),
         types: {}, // maybe generate return types or something
     })
 );
 
-const generateFlowSyntaxLayer = memFreeze(generateFlowSyntaxLayerInitial);
+const generateFlowSyntaxLayer = mem(generateFlowSyntaxLayerInitial);
 function generateFlowSyntaxLayerInitial(
     generics: string[],
     flowInputs: InputRowSignature[],

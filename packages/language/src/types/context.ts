@@ -79,7 +79,7 @@ export type DocumentProblem =
 interface CyclicNodes {
     type: 'cyclic-nodes';
     message: string;
-    cycles: string[][];
+    cycle: string[];
 }
 interface MissingNode {
     type: 'missing-node';

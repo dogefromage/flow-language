@@ -24,12 +24,9 @@ interface ConsoleControlsProps {
 }
 
 const ConsoleControls = ({ onSignal, state }: PropsWithChildren<ConsoleControlsProps>) => {
-
     const start = '#20e680';
     const control = '#eadf4e';
     const stop = '#ed5050';
-
-    // const 
 
     return (<>
         <ControlsWrapper>

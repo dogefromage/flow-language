@@ -30,7 +30,7 @@ const MenuButton = ({ menuId, element, focusPath, neightbourCount }: MenuElement
         if (menu.focusedPath == joinedPath) {
             divRef.current?.focus();
         }
-    }, [ menu.focusedPath ]);
+    }, [menu.focusedPath]);
 
     const submit = () => {
         dispatch(menusSetClosed({ menuId }));
@@ -45,7 +45,10 @@ const MenuButton = ({ menuId, element, focusPath, neightbourCount }: MenuElement
 
     return (
         <MenuElementDiv
-            onClick={submit}
+            onClick={e => {
+                submit();
+                e.stopPropagation();
+            }}
             tabIndex={element.tabIndex}
             ref={divRef}
             {...handlers}
