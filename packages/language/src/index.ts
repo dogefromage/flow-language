@@ -31,5 +31,5 @@ export {
 } from './typeSystem/resolution';
 
 export {
-    isSubsetType as areTypesCompatible,
+    isSubsetType,
 } from './typeSystem/comparison';

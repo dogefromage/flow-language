@@ -1,6 +1,7 @@
 import { upperFirst } from "lodash";
 import { SignatureDefinition } from "../types/local";
-import { OutputRowSignature, SimpleInputRowSignature, VariableInputRowSignature } from "../types";
+import { GenericTag, ListInputRowSignature, OutputRowSignature, SimpleInputRowSignature, TypeSpecifier, VariableInputRowSignature } from "../types";
+import { createFunctionType, createListType, createUnionType } from "../typeSystem";
 
 function autoName(id: string) {
     return id
@@ -50,13 +51,23 @@ const simple = {
         label: autoName(id),
         specifier: 'boolean',
     }),
-    generic: (id: string, specifier: string): SimpleInputRowSignature => ({
+    generic: (id: string, specifier: TypeSpecifier): SimpleInputRowSignature => ({
         id,
         rowType: 'input-simple',
         label: autoName(id),
         specifier,
     }),
 };
+const list = {
+    generic: (id: string, listSpecifier: TypeSpecifier): ListInputRowSignature => ({
+        id,
+        rowType: 'input-list',
+        label: autoName(id),
+        specifier: listSpecifier,
+    }),
+}
+
+
 const output = {
     string: (id: string): OutputRowSignature => ({
         id,
@@ -76,13 +87,14 @@ const output = {
         label: autoName(id),
         specifier: 'boolean',
     }),
-    generic: (id: string, specifier: string): OutputRowSignature => ({
+    generic: (id: string, specifier: TypeSpecifier): OutputRowSignature => ({
         id,
         rowType: 'output',
         label: autoName(id),
         specifier,
     }),
 };
+const generic = (name: string, constraint: TypeSpecifier | null = null): GenericTag => ({ name, constraint });
 
 export const localDefinitions: SignatureDefinition[] = [];
 localDefinitions.push({
@@ -143,7 +155,9 @@ localDefinitions.push({
         name: 'Choose',
         attributes: { category: 'Logic' },
         description: null,
-        generics: ['T'],
+        generics: [
+            generic('T'),
+        ],
         inputs: [
             variable.boolean('condition', true),
             simple.generic('match_true', 'T'),
@@ -199,16 +213,15 @@ localDefinitions.push({
         attributes: { category: 'Numbers' },
         description: null,
         generics: [],
-        inputs: [ variable.number('a', 0), variable.number('b',0) ],
-        outputs: [ output.boolean('output') ],
+        inputs: [variable.number('a', 0), variable.number('b', 0)],
+        outputs: [output.boolean('output')],
     },
     interpretation: args => ({ output: args.a > args.b }),
 });
 
-
 localDefinitions.push({
     signature: {
-        id: 'concat',
+        id: 'concat_strings',
         name: 'Concat Strings',
         attributes: { category: 'Strings' },
         description: null,
@@ -223,8 +236,43 @@ localDefinitions.push({
     },
     interpretation: args => ({ concatenated: args.left + args.right }),
 });
+localDefinitions.push({
+    signature: {
+        id: 'substring',
+        name: 'Substring',
+        attributes: { category: 'Strings' },
+        description: null,
+        generics: [],
+        inputs: [
+            variable.string('string', ''),
+            variable.number('start', 0),
+            variable.number('length', 1),
+        ],
+        outputs: [
+            output.string('substring'),
+        ],
+    },
+    interpretation: args => ({
+        substring: args.string.slice(args.start, Math.max(0, args.start + args.length)),
+    }),
+});
 
-
+localDefinitions.push({
+    signature: {
+        id: 'pack',
+        name: 'Pack',
+        attributes: { category: 'Lists' },
+        description: null,
+        generics: [ generic('T') ],
+        inputs: [
+            list.generic('elements', createListType('T'))
+        ],
+        outputs: [
+            output.generic('list', createListType('T'))
+        ],
+    },
+    interpretation: args => ({ list: args.elements }),
+});
 
 export const baseInterpretations = Object.fromEntries(
     localDefinitions.map(def => [def.signature.id, def.interpretation])

@@ -20,21 +20,52 @@ export function isSubsetType(X: TypeSpecifier, Y: TypeSpecifier, env: FlowEnviro
 export function assertSubsetType(X: TypeSpecifier, Y: TypeSpecifier, env: FlowEnvironment) {
     return assertSubsetSwitch(new TypeTreePath(), X, Y, env);
 }
-function assertSubsetSwitch(path: TypeTreePath, X: TypeSpecifier, Y: TypeSpecifier, env: FlowEnvironment) {
-    // base case for recursive definitions
-    if (typeof X === 'string' && X === Y) {
-        return;
-    }
-    X = resolveTypeAlias(path, X, env);
-    Y = resolveTypeAlias(path, Y, env);
+function assertSubsetSwitch(path: TypeTreePath, argX: TypeSpecifier, argY: TypeSpecifier, env: FlowEnvironment) {
 
-    const pathWithType = path.add({ key: X.type, formatting: 'type' });
-    if (X.type === 'missing') {
+    // move this outside of subset function since it is part of row logic
+    if (typeof argX !== 'string' && argX.type === 'missing') {
         throw new TypeSystemException({
             type: 'required-type', 
             message: `Type is missing.`,
-            path: pathWithType,
+            path,
         });
+    }
+
+    // base case for recursive definitions
+    if (typeof argX === 'string' && argX === argY) {
+        return;
+    }
+    const X = resolveTypeAlias(path, argX, env);
+    const Y = resolveTypeAlias(path, argY, env);
+
+    const pathWithTypeX = path.add({ key: X.type, formatting: 'type' });
+
+    if (X.type === 'any' || Y.type === 'any') {
+        return;
+    }
+
+    if (X.type === 'union') {
+        for (const Xi of X.elements) {
+            assertSubsetSwitch(pathWithTypeX, Xi, Y, env);
+        }
+        return;
+    }
+    if (Y.type === 'union') {
+        let fitsOne = false;
+        for (const Yi of Y.elements) {
+            try {
+                assertSubsetSwitch(path, X, Yi, env);
+                fitsOne = true;
+                break;
+            } catch {}
+        }
+        if (!fitsOne) {
+            throw new TypeSystemException({
+                type: 'incompatible-type', 
+                message: `Found no compatible subtype in union.`,
+                path,
+            });
+        }
     }
 
     // special case
@@ -59,7 +90,7 @@ function assertSubsetSwitch(path: TypeTreePath, X: TypeSpecifier, Y: TypeSpecifi
                 throw new TypeSystemException({
                     type: 'incompatible-type', 
                     message: `Primitive type '${X.name}' gotten, '${yName}' expected.`,
-                    path: pathWithType,
+                    path: pathWithTypeX,
                 });
             }
             return;
@@ -67,15 +98,13 @@ function assertSubsetSwitch(path: TypeTreePath, X: TypeSpecifier, Y: TypeSpecifi
             assertSubsetSwitch(path, X.element, (Y as ListTypeSpecifier).element, env);
             return;
         case 'tuple':
-            assertSubsetTuple(pathWithType, X, Y as TupleTypeSpecifier, env);
+            assertSubsetTuple(pathWithTypeX, X, Y as TupleTypeSpecifier, env);
             return;
         case 'map':
-            assertSubsetMap(pathWithType, X, Y as MapTypeSpecifier, env);
+            assertSubsetMap(pathWithTypeX, X, Y as MapTypeSpecifier, env);
             return;
         case 'function':
-            assertSubsetFunction(pathWithType, X, Y as FunctionTypeSpecifier, env);
-        case 'unknown':
-            return;
+            assertSubsetFunction(pathWithTypeX, X, Y as FunctionTypeSpecifier, env);
         default:
             throw new Error(`Unknown type "${(X as any).type}"`);
     }

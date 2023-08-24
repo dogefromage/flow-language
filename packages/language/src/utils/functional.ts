@@ -81,3 +81,12 @@ export function memoObject<T extends any>(obj: Obj<T>): Obj<T> {
 } 
 
 export const memoList = mem(<T>(...items: T[]) => items);
+
+export const zipInner = <X, Y>(x: X[], y: Y[]) => {
+    const pairs: [ X, Y ][] = [];
+    const sharedLength = Math.min(x.length, y.length);
+    for (let i = 0; i < sharedLength; i++) {
+        pairs.push([ x[i], y[i] ]);
+    }
+    return pairs;
+}

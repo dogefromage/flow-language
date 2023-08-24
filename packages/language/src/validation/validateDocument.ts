@@ -1,6 +1,6 @@
 import { baseEnvironmentContent } from "../content/baseEnvironment";
 import { createEnvironment, pushContent } from "../core/environment";
-import { FlowDocument, FlowEnvironmentContent, FlowSignature, InputRowSignature, OutputRowSignature, getInternalId } from "../types";
+import { FlowDocument, FlowEnvironmentContent, FlowSignature, GenericTag, InputRowSignature, OutputRowSignature, getInternalId } from "../types";
 import { DocumentContext, DocumentProblem, FlowGraphContext } from "../types/context";
 import { Obj } from "../types/utilTypes";
 import { mem } from "../utils/functional";
@@ -52,7 +52,7 @@ const makeFlowSignaturesContent = mem(
 
 const generateFlowSyntaxLayer = mem(generateFlowSyntaxLayerInitial);
 function generateFlowSyntaxLayerInitial(
-    generics: string[],
+    generics: GenericTag[],
     flowInputs: InputRowSignature[],
     flowOutputs: OutputRowSignature[],
 ): FlowEnvironmentContent {

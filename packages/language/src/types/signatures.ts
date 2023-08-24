@@ -1,5 +1,4 @@
 import { InitializerValue, TypeSpecifier } from "./typeSystem";
-import { Obj } from "./utilTypes";
 
 /**
  * Rows are either inputs or outputs of node.
@@ -32,6 +31,11 @@ export type OutputRowSignature =
 export const inputRowTypes: InputRowSignature['rowType'][] = ['input-simple', 'input-variable', 'input-list'];
 export const outputRowTypes: OutputRowSignature['rowType'][] = ['output'];
 
+export interface GenericTag {
+    name: string;
+    constraint: TypeSpecifier | null;
+}
+
 /**
  * Minimum data required to instantiate this function either internal, graph or other location.
  * Essentially template or outline of any node which can be used in graph.
@@ -41,9 +45,8 @@ export const outputRowTypes: OutputRowSignature['rowType'][] = ['output'];
  * 
  * The order of inputs and outputs in the array should be only used for display.
  */
-
 export interface AnonymousFlowSignature {
-    generics: string[];
+    generics: GenericTag[];
     inputs: InputRowSignature[];
     outputs: OutputRowSignature[];
 }

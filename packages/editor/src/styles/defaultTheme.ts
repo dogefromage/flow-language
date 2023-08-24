@@ -26,7 +26,7 @@ const defaultTheme: DefaultTheme = {
             boolean:   { fillColor: '#44adb3', borderColor: 'transparent' },
             number:    { fillColor: '#347dcf', borderColor: 'transparent' },
             string:    { fillColor: '#9249e6', borderColor: 'transparent' },
-            unknown:   { fillColor: 'transparent', borderColor: '#aaa' },
+            any:       { fillColor: 'transparent', borderColor: '#aaa' },
             missing:   { fillColor: 'transparent', borderColor: '#aaa' },
             function:  { fillColor: '#ff55ff', borderColor: 'transparent' },
             map:       { fillColor: '#ff55ff', borderColor: 'transparent' },

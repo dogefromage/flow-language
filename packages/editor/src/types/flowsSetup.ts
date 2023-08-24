@@ -7,7 +7,7 @@ export const defaultDocumentConfig: lang.FlowDocumentConfig = {
 }
 
 export const mainSignature: lang.AnonymousFlowSignature = {
-    generics: ['T'],
+    generics: [{ name: 'T', constraint: null }],
     inputs: [],
     outputs: [{
         id: 'value',

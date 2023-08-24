@@ -75,7 +75,7 @@ function _assertElementOfType(path: TypeTreePath, T: TypeSpecifier, element: Ini
         }
         return;
     }
-    if (T.type === 'unknown') {
+    if (T.type === 'any') {
         return;
     }
 

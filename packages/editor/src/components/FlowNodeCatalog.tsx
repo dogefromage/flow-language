@@ -1,4 +1,4 @@
-import { FlowSignature, FlowSignatureId, JointLocation, areTypesCompatible, collectTotalEnvironmentContent } from "@fluss/language";
+import { FlowSignature, FlowSignatureId, JointLocation, isSubsetType, collectTotalEnvironmentContent } from "@fluss/language";
 import React, { useCallback, useMemo } from "react";
 import { selectPanelState } from "../redux/panelStateEnhancer";
 import { useAppDispatch, useAppSelector } from "../redux/stateHooks";
@@ -164,7 +164,7 @@ function createAddFlowAction(flowId: string, signature: FlowSignature, addNodeSt
         signature.outputs : signature.inputs;
     let compatibleRowId: string | undefined;
     for (const row of connectionColumn) {
-        if (areTypesCompatible(row.specifier, drag.dataType, drag.environment)) {
+        if (isSubsetType(row.specifier, drag.dataType, drag.environment)) {
             compatibleRowId = row.id;
             break;
         }

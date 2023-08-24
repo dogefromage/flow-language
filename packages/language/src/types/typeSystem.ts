@@ -1,7 +1,7 @@
 import { Obj } from "./utilTypes";
 
-export interface UnknownTypeSpecifier {
-    type: 'unknown';
+export interface AnyTypeSpecifier {
+    type: 'any';
 }
 export interface MissingTypeSpecifier {
     type: 'missing';
@@ -27,17 +27,22 @@ export interface FunctionTypeSpecifier {
     parameter: MapTypeSpecifier;
     output: MapTypeSpecifier;
 }
+export interface UnionTypeSpecifier {
+    type: 'union';
+    elements: TypeSpecifier[];
+}
 
 export type InstantiationConstraints = Record<string, TypeSpecifier>;
 
 export type TypeSpecifier =
     | string
-    | UnknownTypeSpecifier
+    | AnyTypeSpecifier
     | MissingTypeSpecifier
     | PrimitiveTypeSpecifier
     | MapTypeSpecifier
     | ListTypeSpecifier
     | TupleTypeSpecifier
     | FunctionTypeSpecifier
+    | UnionTypeSpecifier
 
 export type InitializerValue = any;

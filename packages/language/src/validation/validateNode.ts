@@ -5,7 +5,7 @@ import { TypeSystemException, TypeSystemExceptionData, TypeTreePath } from "../t
 import { generateDefaultValue } from "../typeSystem/generateDefaultValue";
 import { applyInstantiationConstraints, inferGenerics } from "../typeSystem/generics";
 import { assertElementOfType } from "../typeSystem/validateElement";
-import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, InitializerValue, InputRowSignature, InstantiationConstraints, MapTypeSpecifier, RowState, TypeSpecifier } from "../types";
+import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, InitializerValue, InputRowSignature, MapTypeSpecifier, RowState, TypeSpecifier } from "../types";
 import { FlowNodeContext, RowContext } from "../types/context";
 import { Obj } from "../types/utilTypes";
 import { assertTruthy } from "../utils";
@@ -22,7 +22,7 @@ export const validateNode = mem((
         return noSignatureContext(node, isUsed);
     }
 
-    const { instantiatedNodeType, typeComparisonProblem } = 
+    const { instantiatedNodeType, typeComparisonProblem } =
         validateNodeInput(node.rowStates, templateSignature, earlierNodeOutputTypes, env);
 
     return bundleNodeContext(
@@ -31,22 +31,22 @@ export const validateNode = mem((
         templateSignature,
         instantiatedNodeType,
         memoList(
-            ...templateSignature.inputs.map(input => 
+            ...templateSignature.inputs.map(input =>
                 validateRows(
-                    input, 
-                    node.rowStates[input.id], instantiatedNodeType.parameter.elements[input.id], 
-                    env, 
+                    input,
+                    node.rowStates[input.id], instantiatedNodeType.parameter.elements[input.id],
+                    env,
                     typeComparisonProblem
                 )
             )
         ),
         memoList(
-            ...templateSignature.outputs.map(output => 
-                ({ 
-                    ref: node.rowStates[output.id], 
-                    problems: [], 
-                })
-            )   
+            ...templateSignature.outputs.map(output =>
+            ({
+                ref: node.rowStates[output.id],
+                problems: [],
+            })
+            )
         ),
     );
 });
@@ -61,9 +61,9 @@ const validateNodeInput = mem((
     for (const input of templateSignature.inputs) {
         const rowState = rowStates[input.id] as RowState | undefined;
         // each node input receives a list of connections to support list inputs
-        const connectedTypes = rowState?.connections.map(conn => 
+        const connectedTypes = rowState?.connections.map(conn =>
             earlierNodeOutputTypes[conn.nodeId]?.elements[conn.outputId] || createUnknownType()
-        ) || []; 
+        ) || [];
 
         switch (input.rowType) {
             case 'input-list':
@@ -77,15 +77,22 @@ const validateNodeInput = mem((
                 break;
         }
     }
-    
+
     const argumentTypeSignature = createMapType(incomingTypeMap);
     const signatureFunctionType = getSignatureFunctionType(templateSignature);
 
-    const freeGenerics: InstantiationConstraints = Object.fromEntries(
-        templateSignature.generics.map(key => [key, createUnknownType()])
+    const genericMap = Object.fromEntries(
+        templateSignature.generics.map(generic => [ 
+            generic.name, 
+            generic.constraint || createUnknownType(), 
+        ]),
     );
-    const constraints = inferGenerics(new TypeTreePath(),
-        argumentTypeSignature, signatureFunctionType.parameter, freeGenerics, env);
+    const constraints = inferGenerics(
+        argumentTypeSignature,
+        signatureFunctionType.parameter,
+        genericMap,
+        env
+    );
 
     const unmemoizedInstantiatetType = applyInstantiationConstraints(new TypeTreePath(),
         signatureFunctionType, constraints, env) as FunctionTypeSpecifier;

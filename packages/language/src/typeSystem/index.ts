@@ -1,4 +1,4 @@
-import { FunctionTypeSpecifier, ListTypeSpecifier, MapTypeSpecifier, MissingTypeSpecifier, PrimitiveTypeSpecifier, TupleTypeSpecifier, TypeSpecifier, UnknownTypeSpecifier } from "../types/typeSystem";
+import { FunctionTypeSpecifier, ListTypeSpecifier, MapTypeSpecifier, MissingTypeSpecifier, PrimitiveTypeSpecifier, TupleTypeSpecifier, TypeSpecifier, AnyTypeSpecifier, UnionTypeSpecifier } from "../types/typeSystem";
 import { assertTruthy } from "../utils";
 import { ListCache } from "../utils/ListCache";
 import { always, mem } from "../utils/functional";
@@ -11,7 +11,7 @@ const createConstantType = mem(
 );
 
 export const createMissingType = always<MissingTypeSpecifier>(createConstantType('missing'));
-export const createUnknownType = always<UnknownTypeSpecifier>(createConstantType('unknown'));
+export const createUnknownType = always<AnyTypeSpecifier>(createConstantType('any'));
 
 export const createPrimitiveType = mem(
     (name: string): PrimitiveTypeSpecifier => ({ type: 'primitive', name }), 
@@ -23,6 +23,10 @@ export const createListType = mem(
 );
 export const createTupleType = mem(
     (...elements: TypeSpecifier[]): TupleTypeSpecifier => ({ type: 'tuple', elements }), 
+    typeSystemCache,
+);
+export const createUnionType = mem(
+    (...elements: TypeSpecifier[]): UnionTypeSpecifier => ({ type: 'union', elements }), 
     typeSystemCache,
 );
 export const createFunctionType = mem(
@@ -76,7 +80,7 @@ export const memoizeTypeStructure = mem(<T extends TypeSpecifier>(X: T): T => {
         case 'primitive':
             return createPrimitiveType(X.name) as T;
         case 'missing':
-        case 'unknown':
+        case 'any':
             return createConstantType(X.type) as T;
         default:
             throw new Error(`Unknown type "${(X as any).type}"`);

@@ -1,4 +1,4 @@
-import { FlowSignatureId, InputRowSignature, OutputRowSignature } from "./signatures";
+import { FlowSignatureId, GenericTag, InputRowSignature, OutputRowSignature } from "./signatures";
 import { InitializerValue } from "./typeSystem";
 import { Obj, Vec2 } from "./utilTypes";
 
@@ -38,7 +38,7 @@ export interface FlowGraph {
     name: string;
     nodes: Obj<FlowNode>;
     attributes: Record<string, string>;
-    generics: string[];
+    generics: GenericTag[];
     inputs: InputRowSignature[];
     outputs: OutputRowSignature[];
     idCounter: number;

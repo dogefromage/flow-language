@@ -10,8 +10,8 @@ export default function formatSpecifier(X: lang.TypeSpecifier, env: lang.FlowEnv
             return X.name;
         case 'missing':
             return `Missing`;
-        case 'unknown':
-            return 'Unknown';
+        case 'any':
+            return 'Any';
         case 'function':
             return `Fn<${formatSpecifier(X.parameter, env)}, ${formatSpecifier(X.output, env)}>`;
         case 'list':
