@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { flowsAddLink } from '../slices/flowsSlice';
 import { flowEditorSetStateDraggingLink, flowEditorSetStateNeutral, selectFlowEditorPanelActionState } from '../slices/panelFlowEditorSlice';
 import { FlowJointDiv } from '../styles/flowStyles';
-import { getTypeSpecifierStyleTag } from '../utils/color';
+import { getJointStyling, getTypeSpecifierStyleTag } from '../utils/color';
 import { getJointLocationKey } from '../utils/flows';
 
 interface Props {
@@ -71,17 +71,16 @@ const FlowJoint = ({ panelId, flowId, location, env, type, additional }: Props) 
     });
 
     const innerRef = useRef<HTMLDivElement>(null);
-    const dataTypeTag = getTypeSpecifierStyleTag(type, env)
+    const jointStyle = getJointStyling(type, env, additional)
 
     return (
         <FlowJointDiv
             $direction={location.direction}
-            $dataTypeTag={dataTypeTag}
+            $jointStyle={jointStyle}
             {...drag.handlers}
             {...drop.handlers}
             onMouseDown={e => e.stopPropagation()}
             $isHovering={drop.isHovering}
-            $additional={additional}
         >
             <div
                 className={FLOW_JOINT_TARGET_CLASS}

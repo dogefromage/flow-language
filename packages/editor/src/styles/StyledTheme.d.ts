@@ -25,10 +25,10 @@ declare module 'styled-components' {
             console: {
                 accents: Record<ConsumerOutput['accent'], string>;
             }
-            jointStyles: Record<string, {
-                borderColor: string;
-                fillColor: string;
-            }>;
+            // jointStyles: Record<string, {
+            //     borderColor: string;
+            //     fillColor: string;
+            // }>;
             selectionStatus: {
                 [ S in SelectionStatus ]?: string;
             }

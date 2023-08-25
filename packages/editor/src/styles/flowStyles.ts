@@ -2,6 +2,7 @@ import styled, { css } from 'styled-components';
 // import { DataTypes, SelectionStatus } from '../types';
 // import { BORDER_RADIUS, BORDER_RADIUS_TOP, BOX_SHADOW } from './utils';
 import { SelectionStatus, Vec2 } from '../types';
+import { FlowJointStyling } from '../types/flowRows';
 
 export const FLOW_NODE_ROW_HEIGHT = 24;
 export const FLOW_NODE_MIN_WIDTH = 7 * FLOW_NODE_ROW_HEIGHT;
@@ -84,9 +85,8 @@ export const FlowNodeRowNameP = styled.p<{
 
 export const FlowJointDiv = styled.div<{
     $direction: 'input' | 'output';
-    $dataTypeTag: string;
+    $jointStyle: FlowJointStyling;
     $isHovering: boolean;
-    $additional?: boolean;
 }>`
     position: absolute;
     top: ${0.5 * FLOW_NODE_ROW_HEIGHT}px;
@@ -108,22 +108,15 @@ export const FlowJointDiv = styled.div<{
     div {
         width: 14px;
         height: 14px;
-        
         transition: transform 50ms, border 150ms, background-color 150ms;
-        border: solid 2px #00000033;
-        ${({ theme, $dataTypeTag }) => css`
-            border: solid 2px ${theme.colors.jointStyles[$dataTypeTag].borderColor};
-            background-color: ${theme.colors.jointStyles[$dataTypeTag].fillColor};
+
+        ${({ $jointStyle }) => css`
+            border: ${$jointStyle.borderStyle} 2px ${$jointStyle.border};
+            background-color: ${$jointStyle.background};
         `}
+        ${({ $jointStyle }) => $jointStyle.shape === 'round' && 'border-radius: 100%;' }
         
-        ${({ $additional, theme, $dataTypeTag }) => $additional && css`
-            border: dashed 2px ${theme.colors.jointStyles[$dataTypeTag].fillColor};
-            background-color: transparent;
-        `}
-
         ${({ $isHovering }) => $isHovering && `transform: scale(1.3);`}
-
-        border-radius: 100%;
     }
 
     

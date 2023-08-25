@@ -22,17 +22,17 @@ const defaultTheme: DefaultTheme = {
                 warn: '#eadf4e'
             }
         },
-        jointStyles: {
-            boolean:   { fillColor: '#44adb3', borderColor: 'transparent' },
-            number:    { fillColor: '#347dcf', borderColor: 'transparent' },
-            string:    { fillColor: '#9249e6', borderColor: 'transparent' },
-            any:       { fillColor: 'transparent', borderColor: '#aaa' },
-            missing:   { fillColor: 'transparent', borderColor: '#aaa' },
-            function:  { fillColor: '#ff55ff', borderColor: 'transparent' },
-            map:       { fillColor: '#ff55ff', borderColor: 'transparent' },
-            list:      { fillColor: '#ff55ff', borderColor: 'transparent' },
-            tuple:     { fillColor: '#ff55ff', borderColor: 'transparent' },
-        },
+        // jointStyles: {
+        //     boolean:   { fillColor: '#44adb3', borderColor: 'transparent' },
+        //     number:    { fillColor: '#347dcf', borderColor: 'transparent' },
+        //     string:    { fillColor: '#9249e6', borderColor: 'transparent' },
+        //     any:       { fillColor: 'transparent', borderColor: '#aaa' },
+        //     missing:   { fillColor: 'transparent', borderColor: '#aaa' },
+        //     function:  { fillColor: '#ff55ff', borderColor: 'transparent' },
+        //     map:       { fillColor: '#ff55ff', borderColor: 'transparent' },
+        //     list:      { fillColor: '#ff55ff', borderColor: 'transparent' },
+        //     tuple:     { fillColor: '#ff55ff', borderColor: 'transparent' },
+        // },
         selectionStatus: {
             [SelectionStatus.Selected]:        '#c4a149',
             [SelectionStatus.SelectedForeign]: '#4ae7df55',
