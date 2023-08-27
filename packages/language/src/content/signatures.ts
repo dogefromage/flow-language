@@ -94,7 +94,7 @@ const output = {
         specifier,
     }),
 };
-const generic = (name: string, constraint: TypeSpecifier | null = null): GenericTag => ({ name, constraint });
+const generic = (name: string, constraint: TypeSpecifier | null = null): GenericTag => ({ id: name, constraint });
 
 export const localDefinitions: SignatureDefinition[] = [];
 localDefinitions.push({
@@ -109,7 +109,18 @@ localDefinitions.push({
     },
     interpretation: args => ({ sum: args.a + args.b }),
 });
-
+localDefinitions.push({
+    signature: {
+        id: 'truncate',
+        name: 'Truncate',
+        attributes: { category: 'Numbers' },
+        description: null,
+        generics: [],
+        inputs: [variable.number('a', 0)],
+        outputs: [output.number('a_truncated')],
+    },
+    interpretation: args => ({ a_truncated: Math.floor(args.a) }),
+});
 localDefinitions.push({
     signature: {
         id: 'multiply',
@@ -121,6 +132,18 @@ localDefinitions.push({
         outputs: [output.number('product')],
     },
     interpretation: args => ({ product: args.a * args.b }),
+});
+localDefinitions.push({
+    signature: {
+        id: 'divide',
+        name: 'Divide',
+        attributes: { category: 'Numbers' },
+        description: null,
+        generics: [],
+        inputs: [variable.number('a', 1), variable.number('b', 1)],
+        outputs: [output.number('quotient')],
+    },
+    interpretation: args => ({ quotient: args.a / args.b }),
 });
 
 localDefinitions.push({
@@ -257,10 +280,11 @@ localDefinitions.push({
     }),
 });
 
+
 localDefinitions.push({
     signature: {
         id: 'pack',
-        name: 'Pack',
+        name: 'Pack List',
         attributes: { category: 'Lists' },
         description: null,
         generics: [ generic('T') ],
@@ -273,6 +297,63 @@ localDefinitions.push({
     },
     interpretation: args => ({ list: args.elements }),
 });
+localDefinitions.push({
+    signature: {
+        id: 'concat_lists',
+        name: 'Concat Lists',
+        attributes: { category: 'Lists' },
+        description: null,
+        generics: [ generic('T') ],
+        inputs: [
+            simple.generic('left', createListType('T')),
+            simple.generic('right', createListType('T')),
+        ],
+        outputs: [
+            output.generic('concatenated', createListType('T')),
+        ],
+    },
+    interpretation: args => ({ concatenated: args.left.concat(args.right) }),
+});
+localDefinitions.push({
+    signature: {
+        id: 'sublist',
+        name: 'Sublist',
+        attributes: { category: 'Lists' },
+        description: null,
+        generics: [ generic('T') ],
+        inputs: [
+            simple.generic('list', createListType('T')),
+            variable.number('start', 0),
+            variable.number('length', 1),
+        ],
+        outputs: [
+            output.generic('sublist', createListType('T')),
+        ],
+    },
+    interpretation: args => ({
+        sublist: args.list.slice(args.start, Math.max(0, args.start + args.length)),
+    }),
+});
+localDefinitions.push({
+    signature: {
+        id: 'access_list',
+        name: 'Access List',
+        attributes: { category: 'Lists' },
+        description: null,
+        generics: [ generic('T') ],
+        inputs: [
+            simple.generic('list', createListType('T')),
+            variable.number('index', 0),
+        ],
+        outputs: [
+            output.generic('element', 'T'),
+        ],
+    },
+    interpretation: args => ({
+        element: args.list.at(args.index), // .at() floors index
+    }),
+});
+
 
 export const baseInterpretations = Object.fromEntries(
     localDefinitions.map(def => [def.signature.id, def.interpretation])

@@ -14,11 +14,12 @@ export {
     collectTotalEnvironmentContent,
     findEnvironmentSignature,
     findEnvironmentType,
+    getAllReferencedSpecifiers,
 } from './core/environment';
 
 export {
     createMissingType,
-    createUnknownType,
+    createAnyType,
     createPrimitiveType,
     createListType,
     createTupleType,

@@ -1,4 +1,5 @@
 import { FlowEditorPanelState } from "./flowEditorView";
+import { FlowInspectorPanelState } from "./flowInspectorView";
 import { PageOutlinerPanelState } from "./pageOutlinerView";
 import { Rect } from "./utils";
 
@@ -19,11 +20,13 @@ export interface ViewProps {
 export enum ViewTypes {
     FlowEditor = 'flow_editor',
     PageOutliner = 'page_outliner',
+    FlowInspector = 'flow_inspector',
 }
 
 export type PanelStateMap = {
     [ViewTypes.FlowEditor]: FlowEditorPanelState;
     [ViewTypes.PageOutliner]: PageOutlinerPanelState;
+    [ViewTypes.FlowInspector]: FlowInspectorPanelState;
 }
 
 export interface PanelManagerSliceState {

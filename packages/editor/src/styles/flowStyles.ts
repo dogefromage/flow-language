@@ -110,12 +110,14 @@ export const FlowJointDiv = styled.div<{
         height: 14px;
         transition: transform 50ms, border 150ms, background-color 150ms;
 
-        ${({ $jointStyle }) => css`
-            border: ${$jointStyle.borderStyle} 2px ${$jointStyle.border};
-            background-color: ${$jointStyle.background};
-        `}
+
+        ${({ $jointStyle }) => $jointStyle.background &&
+            `background-color: ${$jointStyle.background};`
+        }
+        ${({ $jointStyle }) => $jointStyle.border &&
+            `border: ${$jointStyle.borderStyle} 2px ${$jointStyle.border};`
+        }
         ${({ $jointStyle }) => $jointStyle.shape === 'round' && 'border-radius: 100%;' }
-        
         ${({ $isHovering }) => $isHovering && `transform: scale(1.3);`}
     }
 

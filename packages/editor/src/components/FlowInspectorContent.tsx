@@ -1,8 +1,12 @@
 import React from "react";
 import styled from "styled-components";
+import { selectPanelState } from "../redux/panelStateEnhancer";
 import { useAppDispatch, useAppSelector } from "../redux/stateHooks";
+import { selectFlowContext } from "../slices/contextSlice";
 import { selectEditor } from "../slices/editorSlice";
 import { flowsRename, flowsSetAttribute, selectSingleFlow } from "../slices/flowsSlice";
+import { ViewTypes } from "../types";
+import FlowInspectorPortDetails from "./FlowInspectorPortDetails";
 import FlowInspectorPortList from './FlowInspectorPortList';
 import FormColorPicker from './FormColorPicker';
 import FormExpandableRegion from "./FormExpandableRegion";
@@ -22,20 +26,19 @@ const SettingsTable = styled.div`
 `;
 
 interface Props {
-    // panelId: string
+    panelId: string
 }
 
-const FlowInspectorContent = ({ /* panelId */ }: Props) => {
+const FlowInspectorContent = ({ panelId }: Props) => {
     const dispatch = useAppDispatch();
     const flowId = useAppSelector(selectEditor).activeFlow;
     const flow = useAppSelector(selectSingleFlow(flowId!));
-
-    const isLocked = false;
+    const panelState = useAppSelector(selectPanelState(ViewTypes.FlowInspector, panelId));
 
     return (
-        <InspectorWrapper>
-            <FormExpandableRegion name='Active Flow' defaultValue={true}> {
-                (flow && flowId) ? (<>
+        <InspectorWrapper>{
+            (flow && flowId) ? (<>
+                <FormExpandableRegion name='Flow Attributes' defaultValue={true}>
                     <SettingsTable>
                         <p>Name</p>
                         <FormRenameField
@@ -60,15 +63,30 @@ const FlowInspectorContent = ({ /* panelId */ }: Props) => {
 
                         />
                     </SettingsTable>
-                    <p>Inputs {isLocked && '(Locked)'}</p>
-                    <FlowInspectorPortList flowId={flowId} locked={isLocked} ports={flow.inputs} direction='in' />
-                    <p>Outputs {isLocked && '(Locked)'}</p>
-                    <FlowInspectorPortList flowId={flowId} locked={isLocked} ports={flow.outputs} direction='out' />
-                </>) : (
-                    <p>No active flow found</p>
-                )
-            }
-            </FormExpandableRegion>
+                </FormExpandableRegion>
+
+                <FormExpandableRegion name='Inputs' defaultValue={true}>
+                    <FlowInspectorPortList panelId={panelId} flowId={flowId} ports={flow.inputs} portType='inputs' />
+                    {
+                        panelState?.selectedListItems['inputs'] != null &&
+                        <FlowInspectorPortDetails panelId={panelId} flowId={flowId} portType={'inputs'}
+                            portId={panelState?.selectedListItems['inputs']} />
+                    }
+                </FormExpandableRegion>
+
+
+                <FormExpandableRegion name='Outputs' defaultValue={true}>
+                    <FlowInspectorPortList panelId={panelId} flowId={flowId} ports={flow.outputs} portType='outputs' />
+                    {
+                        panelState?.selectedListItems['outputs'] != null &&
+                        <FlowInspectorPortDetails panelId={panelId} flowId={flowId} portType={'outputs'}
+                            portId={panelState?.selectedListItems['outputs']} />
+                    }
+                </FormExpandableRegion>
+            </>) : (
+                <p>No active flow found</p>
+            )
+        }
         </InspectorWrapper>
     );
 }

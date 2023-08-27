@@ -5,10 +5,11 @@ import MaterialSymbol from '../styles/MaterialSymbol';
 import { ButtonMenuElement, FloatingMenuShape, Vec2 } from '../types';
 import MenuRootFloating from './MenuRootFloating';
 
-const SelectOptionDiv = styled.div<{ disabled?: boolean }>`
+const SelectOptionDiv = styled.div<{ disabled?: boolean, $widthInline?: boolean }>`
     position: relative;
     height: 1.6rem;
     max-height: 100%;
+    ${({ $widthInline }) => $widthInline && 'width: fit-content;' }
 
     display: flex;
     align-items: center;
@@ -34,14 +35,15 @@ const SelectOptionDiv = styled.div<{ disabled?: boolean }>`
 export interface SelectOptionProps {
     value: string;
     options: string[];
-    onChange: (newValue: string) => void;
+    onChange?: (newValue: string) => void;
     mapName?: Record<string, string>;
     className?: string;
     icon?: string;
     disabled?: boolean;
+    widthInline?: boolean;
 }
 
-const FormSelectOption = ({ className, icon, value, onChange, options, mapName, disabled }: SelectOptionProps) => {
+const FormSelectOption = ({ className, icon, value, onChange, options, mapName, disabled, widthInline }: SelectOptionProps) => {
     const [ dropdown, setDropdown ] = useState<{
         menuId: string;
         anchor: Vec2;
@@ -62,7 +64,7 @@ const FormSelectOption = ({ className, icon, value, onChange, options, mapName, 
                 key: option,
                 tabIndex: 1 + index,
                 onClick: () => {
-                    onChange(option);
+                    onChange?.(option);
                     setDropdown(undefined);
                 }
             };
@@ -88,6 +90,7 @@ const FormSelectOption = ({ className, icon, value, onChange, options, mapName, 
             }}
             ref={wrapperRef}
             disabled={disabled}
+            $widthInline={widthInline}
         >
             <p>{mapName?.[ value ] ?? value}</p>
             {
@@ -98,6 +101,7 @@ const FormSelectOption = ({ className, icon, value, onChange, options, mapName, 
                     shape={menuShape}
                     anchor={dropdown.anchor}
                     onClose={() => setDropdown(undefined)}
+                    // initialFocusPath='0'
                 />
             }
             <MaterialSymbol $size={20}>{ icon ?? 'expand_more' }</MaterialSymbol>

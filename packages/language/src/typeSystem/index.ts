@@ -1,3 +1,4 @@
+import { FlowSignature } from "../types/signatures";
 import { FunctionTypeSpecifier, ListTypeSpecifier, MapTypeSpecifier, MissingTypeSpecifier, PrimitiveTypeSpecifier, TupleTypeSpecifier, TypeSpecifier, AnyTypeSpecifier, UnionTypeSpecifier } from "../types/typeSystem";
 import { assertTruthy } from "../utils";
 import { ListCache } from "../utils/ListCache";
@@ -6,31 +7,31 @@ import { always, mem } from "../utils/functional";
 export const typeSystemCache = new ListCache(3037);
 
 const createConstantType = mem(
-    <T extends string>(name: T) => ({ type: name }), 
+    <T extends string>(name: T) => ({ type: name }),
     typeSystemCache,
 );
 
 export const createMissingType = always<MissingTypeSpecifier>(createConstantType('missing'));
-export const createUnknownType = always<AnyTypeSpecifier>(createConstantType('any'));
+export const createAnyType = always<AnyTypeSpecifier>(createConstantType('any'));
 
 export const createPrimitiveType = mem(
-    (name: string): PrimitiveTypeSpecifier => ({ type: 'primitive', name }), 
+    (name: string): PrimitiveTypeSpecifier => ({ type: 'primitive', name }),
     typeSystemCache,
 );
 export const createListType = mem(
-    (element: TypeSpecifier): ListTypeSpecifier => ({ type: 'list', element }), 
+    (element: TypeSpecifier): ListTypeSpecifier => ({ type: 'list', element }),
     typeSystemCache,
 );
 export const createTupleType = mem(
-    (...elements: TypeSpecifier[]): TupleTypeSpecifier => ({ type: 'tuple', elements }), 
+    (...elements: TypeSpecifier[]): TupleTypeSpecifier => ({ type: 'tuple', elements }),
     typeSystemCache,
 );
 export const createUnionType = mem(
-    (...elements: TypeSpecifier[]): UnionTypeSpecifier => ({ type: 'union', elements }), 
+    (...elements: TypeSpecifier[]): UnionTypeSpecifier => ({ type: 'union', elements }),
     typeSystemCache,
 );
 export const createFunctionType = mem(
-    (parameter: MapTypeSpecifier, output: MapTypeSpecifier): FunctionTypeSpecifier => ({ type: 'function', parameter, output }), 
+    (parameter: MapTypeSpecifier, output: MapTypeSpecifier): FunctionTypeSpecifier => ({ type: 'function', parameter, output }),
     typeSystemCache,
 );
 
@@ -47,7 +48,7 @@ export const createMapFromFlat = mem(
             map.elements[key as string] = value as TypeSpecifier;
         }
         return map;
-    }, 
+    },
     typeSystemCache,
 );
 export const createMapType = (elements: Record<string, TypeSpecifier>) => {
@@ -86,3 +87,20 @@ export const memoizeTypeStructure = mem(<T extends TypeSpecifier>(X: T): T => {
             throw new Error(`Unknown type "${(X as any).type}"`);
     }
 }, typeSystemCache);
+
+export function getSignatureFunctionType(signature: FlowSignature) {
+    return memoizeTypeStructure(
+        createFunctionType(
+            createMapType(
+                Object.fromEntries(
+                    signature.inputs.map(s => [s.id, s.specifier])
+                )
+            ),
+            createMapType(
+                Object.fromEntries(
+                    signature.outputs.map(s => [s.id, s.specifier])
+                )
+            )
+        )
+    );
+}

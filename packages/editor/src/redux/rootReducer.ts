@@ -13,6 +13,7 @@ import pageOutlinerPanelsReducer from "../slices/panelPageOutlinerSlice";
 import { ViewTypes } from "../types";
 import { getAndDeserializeLocalProject, serializeAndStoreProjectLocally } from "../utils/localProjectStorage";
 import storageEnhancer from "./storageEnhancer";
+import flowInspectorPanelsReducer from "../slices/panelFlowInspectorSlice";
 
 const documentReducer = combineReducers({
     flows: flowsReducer,
@@ -34,8 +35,9 @@ const rootReducer = combineReducers({
     context: contextReducer,
     editor: editorReducer,
     panels: combineReducers({
-        [ViewTypes.FlowEditor]: flowEditorPanelsReducer,
-        [ViewTypes.PageOutliner]: pageOutlinerPanelsReducer,
+        [ViewTypes.FlowEditor]:    flowEditorPanelsReducer,
+        [ViewTypes.PageOutliner]:  pageOutlinerPanelsReducer,
+        [ViewTypes.FlowInspector]: flowInspectorPanelsReducer,
     }),
     panelManager: panelManagerReducer,
     menus: menusReducer,

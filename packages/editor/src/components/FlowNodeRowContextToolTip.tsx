@@ -2,7 +2,7 @@ import * as lang from '@fluss/language';
 import React, { Fragment, PropsWithChildren } from 'react';
 import styled from 'styled-components';
 import { Bold } from '../styles/common';
-import formatSpecifier from '../utils/formatting';
+import { formatSpecifier } from '../utils/typeFormatting';
 import { RowComponentProps } from './FlowNodeRowComponents';
 
 const ToolTipWrapperDiv = styled.div`

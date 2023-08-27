@@ -5,8 +5,7 @@ import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { flowsAddLink } from '../slices/flowsSlice';
 import { flowEditorSetStateDraggingLink, flowEditorSetStateNeutral, selectFlowEditorPanelActionState } from '../slices/panelFlowEditorSlice';
 import { FlowJointDiv } from '../styles/flowStyles';
-import { getJointStyling, getTypeSpecifierStyleTag } from '../utils/color';
-import { getJointLocationKey } from '../utils/flows';
+import { getJointLocationKey, getJointStyling } from '../utils/flows';
 
 interface Props {
     panelId: string;
@@ -32,7 +31,7 @@ const FlowJoint = ({ panelId, flowId, location, env, type, additional }: Props) 
                 panelId,
                 draggingContext: {
                     fromJoint: location,
-                    dataType: type || lang.createUnknownType(),
+                    dataType: type || lang.createAnyType(),
                     environment: env,
                 }
             }));

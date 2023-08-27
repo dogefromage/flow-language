@@ -12,10 +12,10 @@ interface Props {
 }
 
 const FlowNodeContent = ({ panelId, flowId, context, signature, env }: Props) => {
-    const commonProps = { 
-        panelId, 
-        flowId, 
-        nodeId: context.ref.id, 
+    const commonProps = {
+        panelId,
+        flowId,
+        nodeId: context.ref.id,
     };
     const inputType = context.specifier?.parameter;
     const outputType = context.specifier?.output;
@@ -27,7 +27,7 @@ const FlowNodeContent = ({ panelId, flowId, context, signature, env }: Props) =>
             <FlowNodeRowNameP
                 $align='left'
                 $bold={true}
-                // $color={'black'}
+            // $color={'black'}
             >
                 {signature.name}
             </FlowNodeRowNameP>
@@ -38,7 +38,7 @@ const FlowNodeContent = ({ panelId, flowId, context, signature, env }: Props) =>
                     {...commonProps}
                     key={output.id}
                     row={output}
-                    type={outputType?.elements[output.id] || lang.createUnknownType()}
+                    type={outputType?.elements[output.id] || lang.createAnyType()}
                     context={context.outputRows[output.id]}
                     env={env}
                 />
@@ -50,7 +50,7 @@ const FlowNodeContent = ({ panelId, flowId, context, signature, env }: Props) =>
                     {...commonProps}
                     key={input.id}
                     row={input}
-                    type={inputType?.elements[input.id] || lang.createUnknownType()}
+                    type={inputType?.elements[input.id] || lang.createAnyType()}
                     context={context.inputRows[input.id]}
                     env={env}
                 />

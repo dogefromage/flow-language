@@ -32,7 +32,7 @@ export const inputRowTypes: InputRowSignature['rowType'][] = ['input-simple', 'i
 export const outputRowTypes: OutputRowSignature['rowType'][] = ['output'];
 
 export interface GenericTag {
-    name: string;
+    id: string;
     constraint: TypeSpecifier | null;
 }
 

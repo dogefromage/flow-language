@@ -1,5 +1,5 @@
 import { findEnvironmentSignature } from "../core/environment";
-import { createFunctionType, createMapType, createMissingType, createTupleType, createUnknownType, memoizeTypeStructure } from "../typeSystem";
+import { createFunctionType, createMapType, createMissingType, createTupleType, createAnyType, getSignatureFunctionType, memoizeTypeStructure } from "../typeSystem";
 import { assertSubsetType } from "../typeSystem/comparison";
 import { TypeSystemException, TypeSystemExceptionData, TypeTreePath } from "../typeSystem/exceptionHandling";
 import { generateDefaultValue } from "../typeSystem/generateDefaultValue";
@@ -62,7 +62,7 @@ const validateNodeInput = mem((
         const rowState = rowStates[input.id] as RowState | undefined;
         // each node input receives a list of connections to support list inputs
         const connectedTypes = rowState?.connections.map(conn =>
-            earlierNodeOutputTypes[conn.nodeId]?.elements[conn.outputId] || createUnknownType()
+            earlierNodeOutputTypes[conn.nodeId]?.elements[conn.outputId] || createAnyType()
         ) || [];
 
         switch (input.rowType) {
@@ -83,8 +83,8 @@ const validateNodeInput = mem((
 
     const genericMap = Object.fromEntries(
         templateSignature.generics.map(generic => [ 
-            generic.name, 
-            generic.constraint || createUnknownType(), 
+            generic.id, 
+            generic.constraint || createAnyType(), 
         ]),
     );
     const constraints = inferGenerics(
@@ -110,21 +110,6 @@ const validateNodeInput = mem((
     }
     return { instantiatedNodeType, typeComparisonProblem };
 });
-
-function getSignatureFunctionType(signature: FlowSignature) {
-    return createFunctionType(
-        createMapType(
-            Object.fromEntries(
-                signature.inputs.map(s => [s.id, s.specifier])
-            )
-        ),
-        createMapType(
-            Object.fromEntries(
-                signature.outputs.map(s => [s.id, s.specifier])
-            )
-        )
-    );
-}
 
 const noSignatureContext = mem(
     (node: FlowNode, isUsed: boolean): FlowNodeContext => ({

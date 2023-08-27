@@ -5,11 +5,6 @@ import { EdgeColor } from '@marble/language';
 import { TypeSpecifier } from '@fluss/language';
 import { ConsumerOutput } from '@fluss/shared';
 
-export interface JointStyle {
-    color: string;
-    fill: boolean;
-}
-
 declare module 'styled-components' {
     export interface DefaultTheme {
         colors: {
@@ -25,10 +20,6 @@ declare module 'styled-components' {
             console: {
                 accents: Record<ConsumerOutput['accent'], string>;
             }
-            // jointStyles: Record<string, {
-            //     borderColor: string;
-            //     fillColor: string;
-            // }>;
             selectionStatus: {
                 [ S in SelectionStatus ]?: string;
             }

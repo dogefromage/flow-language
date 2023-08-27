@@ -5,6 +5,8 @@ import { MapTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/ty
 import { Obj } from "../types/utilTypes";
 import { ListCache } from "../utils/ListCache";
 import { mem } from "../utils/functional";
+import { getSignatureFunctionType, memoizeTypeStructure } from "../typeSystem";
+import { tryResolveTypeAlias } from "../typeSystem/resolution";
 
 const environmentCache = new ListCache(5209);
 
@@ -27,6 +29,42 @@ export const pushGenericInference = mem(
         }
     }), environmentCache,
 );
+
+export const getAllReferencedSpecifiers = mem(
+    (env: FlowEnvironment): TypeSpecifier[] => {
+        const content = collectTotalEnvironmentContent(env);
+
+        // const visited = new Set<TypeSpecifier>();
+        const specs: TypeSpecifier[] = [];
+
+        // collect all types
+        for (const typeName of Object.keys(content.types || {})) {
+            // if (visited.has(typeName)) {
+            //     continue;
+            // }
+            specs.push(typeName);
+            // // add all mentions to visited
+            // visited.add(typeName);
+            // const deAliased = tryResolveTypeAlias(content.types![typeName], env);
+            // if (deAliased != null) {
+            //     const memoized = memoizeTypeStructure(deAliased); 
+            //     visited.add(memoized);
+            // }
+        }
+        
+        // collect signature types 
+        for (const signature of Object.values(content.signatures || {})) {
+            const functionSpec = getSignatureFunctionType(signature);
+            const functionSpecs = [
+                ...Object.values(functionSpec.parameter.elements),
+                ...Object.values(functionSpec.output.elements),
+            ];
+            specs.push(...functionSpecs);
+        }
+        return specs;
+    },
+    environmentCache,
+)
 
 export const collectTotalEnvironmentContent = mem(
     (env: FlowEnvironment): FlowEnvironmentContent => {

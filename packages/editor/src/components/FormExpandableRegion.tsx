@@ -20,7 +20,7 @@ const ExpandableHeaderDiv = styled.div`
 `;
 
 const ExpandedRegion = styled.div`
-    padding: 0.25rem 1rem;
+    padding: 0.5rem 1rem;
     
     display: flex;
     flex-direction: column;
