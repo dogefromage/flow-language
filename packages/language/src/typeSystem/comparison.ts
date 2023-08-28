@@ -25,7 +25,7 @@ function assertSubsetSwitch(path: TypeTreePath, argX: TypeSpecifier, argY: TypeS
     // move this outside of subset function since it is part of row logic
     if (typeof argX !== 'string' && argX.type === 'missing') {
         throw new TypeSystemException({
-            type: 'required-type', 
+            type: 'required-type',
             message: `Type is missing.`,
             path,
         });
@@ -61,7 +61,7 @@ function assertSubsetSwitch(path: TypeTreePath, argX: TypeSpecifier, argY: TypeS
         }
         if (!fitsOne) {
             throw new TypeSystemException({
-                type: 'incompatible-type', 
+                type: 'incompatible-type',
                 message: `Found no compatible subtype in union.`,
                 path,
             });
@@ -78,17 +78,17 @@ function assertSubsetSwitch(path: TypeTreePath, argX: TypeSpecifier, argY: TypeS
 
     if (X.type !== Y.type) {
         throw new TypeSystemException({
-            type: 'incompatible-type', 
+            type: 'incompatible-type',
             message: `Type '${X.type}' is not compatible with expected type '${Y.type}'.`,
             path,
         });
     }
     switch (X.type) {
         case 'primitive':
-            const yName =  (Y as PrimitiveTypeSpecifier).name;
+            const yName = (Y as PrimitiveTypeSpecifier).name;
             if (X.name !== yName) {
                 throw new TypeSystemException({
-                    type: 'incompatible-type', 
+                    type: 'incompatible-type',
                     message: `Primitive type '${X.name}' gotten, '${yName}' expected.`,
                     path: pathWithTypeX,
                 });
@@ -105,6 +105,7 @@ function assertSubsetSwitch(path: TypeTreePath, argX: TypeSpecifier, argY: TypeS
             return;
         case 'function':
             assertSubsetFunction(pathWithTypeX, X, Y as FunctionTypeSpecifier, env);
+            return;
         default:
             throw new Error(`Unknown type "${(X as any).type}"`);
     }
@@ -113,7 +114,7 @@ function assertSubsetSwitch(path: TypeTreePath, argX: TypeSpecifier, argY: TypeS
 function assertSubsetTuple(path: TypeTreePath, X: TupleTypeSpecifier, Y: TupleTypeSpecifier, env: FlowEnvironment) {
     if (X.elements.length !== Y.elements.length) {
         throw new TypeSystemException({
-            type: 'incompatible-type', 
+            type: 'incompatible-type',
             message: `A tuple with ${Y.elements.length} expected, only ${X.elements.length} were provided.`,
             path,
         });
@@ -129,7 +130,7 @@ function assertSubsetMap(path: TypeTreePath, X: MapTypeSpecifier, Y: MapTypeSpec
         const gottenType = X.elements[key];
         if (gottenType == null) {
             throw new TypeSystemException({
-                type: 'incompatible-type', 
+                type: 'incompatible-type',
                 message: `Object type is missing expected property '${key}'`,
                 path: propPath,
             })

@@ -45,7 +45,8 @@ const rowTypeNames: Record<RowTypes, string> = {
     'output': 'Output',
     'input-simple': 'Simple Input',
     'input-list': 'List Input',
-    'input-variable': 'Variable Input'
+    'input-variable': 'Variable Input',
+    'input-function': 'Function Input',
 };
 
 const colors = {

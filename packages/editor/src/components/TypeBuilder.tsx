@@ -1,37 +1,8 @@
 import * as lang from '@fluss/language';
-import React, { useMemo } from 'react';
-import { PropsWithChildren } from 'react';
+import React, { PropsWithChildren, useMemo } from 'react';
 import styled from 'styled-components';
-import { getSpecifierLabel } from '../utils/typeFormatting';
-import FormSelectOption from './FormSelectOption';
-import SymbolButton from '../styles/SymbolButton';
 import MaterialSymbol from '../styles/MaterialSymbol';
-
-
-const getContextBaseTypes = (flowEnvironment?: lang.FlowEnvironment) => {
-    const typeMap: Record<string, lang.TypeSpecifier> = {
-        'empty.tuple': lang.createTupleType(),
-        'empty.list': lang.createListType(lang.createAnyType()),
-        'empty.map': lang.createMapType({}),
-    };
-    const nameMap: Record<string, string> = {
-        'empty.tuple': 'Tuple<...>',
-        'empty.list': 'List<...>',
-        'empty.map': 'Map<...>',
-    };
-
-    if (flowEnvironment) {
-        const envContent = lang.collectTotalEnvironmentContent(flowEnvironment);
-        for (const [alias, _] of Object.entries(envContent.types || {})) {
-            const key = `def.${alias}`;
-            typeMap[key] = alias;
-            nameMap[key] = alias;
-        }
-    }
-    return { typeMap, nameMap };
-}
-
-
+import FormSelectOption from './FormSelectOption';
 
 const WrapperDiv = styled.div`
     width: 100%;
@@ -103,11 +74,13 @@ const TypeTag = ({ X, env, onChange }: PropsWithChildren<TypeTagProps>) => {
             'tuple': lang.createTupleType(),
             'list': lang.createListType(lang.createAnyType()),
             'map': lang.createMapType({}),
+            'function': lang.createFunctionType(lang.createMapType({}), lang.createMapType({})),
         };
         const nameMap: Record<string, string> = {
             'tuple': 'Tuple<...>',
             'list': 'List<...>',
             'map': 'Map<...>',
+            'function': 'Function<...>',
         };
         if (env) {
             const envContent = lang.collectTotalEnvironmentContent(env);

@@ -103,8 +103,8 @@ interface MissingSignature {
 export type NodeProblem =
     | MissingSignature
 
-interface InvalidSignature {
-    type: 'invalid-signature';
+interface InvalidSpecifier {
+    type: 'invalid-specifier';
     message: string;
 }
 interface RequiredParameter {
@@ -123,7 +123,7 @@ interface InvalidValue {
     typeProblem: TypeSystemExceptionData;
 }
 export type RowProblem =
-    | InvalidSignature
+    | InvalidSpecifier
     | RequiredParameter
     | IncompatibleArgumentType
     | InvalidValue

@@ -1,9 +1,12 @@
 import * as lang from "@fluss/language";
-import React from "react";
+import React, { useMemo } from "react";
 import { FlowNodeRowDiv, FlowNodeRowNameP } from "../styles/flowStyles";
 import FlowJoint from "./FlowJoint";
 import FlowNodeRowContextWrapper from "./FlowNodeRow";
 import FlowNodeRowInitializer from "./FlowNodeRowInitializer";
+import FormSelectOption from "./FormSelectOption";
+import { useAppDispatch } from "../redux/stateHooks";
+import { flowsSetRowValue } from "../slices/flowsSlice";
 
 type RowSignature = lang.InputRowSignature | lang.OutputRowSignature;
 export type RowComponentProps<R extends RowSignature = RowSignature> = {
@@ -53,6 +56,8 @@ export const FlowInputRowSwitch = (props: RowComponentProps<lang.InputRowSignatu
             return <FlowInputRowVariable {...props as RowComponentProps<lang.VariableInputRowSignature>} />
         case 'input-list':
             return <FlowInputRowList {...props as RowComponentProps<lang.ListInputRowSignature>} />
+        case 'input-function':
+            return <FlowInputRowFunction {...props as RowComponentProps<lang.ListInputRowSignature>} />
         default:
             console.error(`unknown row type ${(props.row as any).rowType}`);
             return null;
@@ -175,6 +180,50 @@ export const FlowInputRowList = (props: RowComponentProps<lang.ListInputRowSigna
                 }
             </FlowNodeRowDiv>
         </FlowNodeRowContextWrapper>
+    );
+}
+
+export const FlowInputRowFunction = (props: RowComponentProps<lang.ListInputRowSignature>) => {
+    const { panelId, flowId, nodeId, row, context, type, env } = props;
+    const dispatch = useAppDispatch();
+
+    const signatures = useMemo(() => {
+        const envContent = lang.collectTotalEnvironmentContent(env);
+        return Object.fromEntries(
+            Object.entries(envContent.signatures || {})
+                .map(([ _, signature ]) => [ signature.id, signature.name ])
+        )
+    }, [ env ]);
+
+    return (
+        <FlowNodeRowContextWrapper {...props}>
+            <FlowNodeRowDiv>
+                <FlowJoint
+                    panelId={panelId}
+                    flowId={flowId}
+                    type={type}
+                    location={{
+                        direction: 'input',
+                        nodeId,
+                        jointIndex: 0,
+                        rowId: row.id,
+                    }}
+                    env={env}
+                />
+                <FormSelectOption 
+                    value={context?.ref?.value || ''}
+                    options={Object.keys(signatures)}
+                    mapName={signatures}
+                    onChange={newSignatureId => {
+                        dispatch(flowsSetRowValue({
+                            flowId, nodeId, rowId: row.id,
+                            rowValue: newSignatureId,
+                            undo: { desc: 'Updated function input value.' },
+                        }));
+                    }}
+                />
+            </FlowNodeRowDiv>
+        </FlowNodeRowContextWrapper >
     );
 }
 

@@ -14,6 +14,7 @@ interface BaseRow<R extends string> {
 
 export interface SimpleInputRowSignature extends BaseRow<'input-simple'> {};
 export interface ListInputRowSignature extends BaseRow<'input-list'> {};
+export interface FunctionInputRowSignature extends BaseRow<'input-function'> {};
 export interface VariableInputRowSignature extends BaseRow<'input-variable'> {
     defaultValue: InitializerValue | null;
 };
@@ -24,12 +25,10 @@ export type InputRowSignature =
     | SimpleInputRowSignature
     | ListInputRowSignature
     | VariableInputRowSignature
+    | FunctionInputRowSignature
 
 export type OutputRowSignature =
     | SimpleOutputRowSignature
-
-export const inputRowTypes: InputRowSignature['rowType'][] = ['input-simple', 'input-variable', 'input-list'];
-export const outputRowTypes: OutputRowSignature['rowType'][] = ['output'];
 
 export interface GenericTag {
     id: string;

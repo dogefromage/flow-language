@@ -1,12 +1,13 @@
 import { findEnvironmentSignature } from "../core/environment";
-import { createFunctionType, createMapType, createMissingType, createTupleType, createAnyType, getSignatureFunctionType, memoizeTypeStructure } from "../typeSystem";
+import { createAnyType, createMapType, createMissingType, createTupleType, getSignatureFunctionType, memoizeTypeStructure } from "../typeSystem";
 import { assertSubsetType } from "../typeSystem/comparison";
 import { TypeSystemException, TypeSystemExceptionData, TypeTreePath } from "../typeSystem/exceptionHandling";
 import { generateDefaultValue } from "../typeSystem/generateDefaultValue";
 import { applyInstantiationConstraints, inferGenerics } from "../typeSystem/generics";
+import { tryResolveTypeAlias } from "../typeSystem/resolution";
 import { assertElementOfType } from "../typeSystem/validateElement";
 import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, InitializerValue, InputRowSignature, MapTypeSpecifier, RowState, TypeSpecifier } from "../types";
-import { FlowNodeContext, RowContext } from "../types/context";
+import { FlowNodeContext, RowContext, RowProblem } from "../types/context";
 import { Obj } from "../types/utilTypes";
 import { assertTruthy } from "../utils";
 import { mem, memoList } from "../utils/functional";
@@ -22,8 +23,8 @@ export const validateNode = mem((
         return noSignatureContext(node, isUsed);
     }
 
-    const { instantiatedNodeType, typeComparisonProblem } =
-        validateNodeInput(node.rowStates, templateSignature, earlierNodeOutputTypes, env);
+    const { instantiatedNodeType, rowProblems } =
+        validateNodeSyntax(node.rowStates, templateSignature, earlierNodeOutputTypes, env);
 
     return bundleNodeContext(
         node,
@@ -36,7 +37,7 @@ export const validateNode = mem((
                     input,
                     node.rowStates[input.id], instantiatedNodeType.parameter.elements[input.id],
                     env,
-                    typeComparisonProblem
+                    rowProblems[input.id],
                 )
             )
         ),
@@ -45,19 +46,20 @@ export const validateNode = mem((
             ({
                 ref: node.rowStates[output.id],
                 problems: [],
-            })
-            )
+            }))
         ),
     );
 });
 
-const validateNodeInput = mem((
+const validateNodeSyntax = mem((
     rowStates: Obj<RowState>,
     templateSignature: FlowSignature,
     earlierNodeOutputTypes: Obj<MapTypeSpecifier>,
     env: FlowEnvironment,
 ) => {
     const incomingTypeMap: Record<string, TypeSpecifier> = {};
+    const rowProblems: Record<string, RowProblem[]> = {};
+
     for (const input of templateSignature.inputs) {
         const rowState = rowStates[input.id] as RowState | undefined;
         // each node input receives a list of connections to support list inputs
@@ -65,15 +67,45 @@ const validateNodeInput = mem((
             earlierNodeOutputTypes[conn.nodeId]?.elements[conn.outputId] || createAnyType()
         ) || [];
 
+        if (input.rowType === 'input-list') {
+            // validate signature type
+            const resolvedSpec = tryResolveTypeAlias(input.specifier, env);
+            if (resolvedSpec && resolvedSpec.type !== 'list') {
+                objPushConditional(rowProblems, input.id, {
+                    type: 'invalid-specifier',
+                    message: 'A list input row must be of a list type.',
+                });
+            }
+            incomingTypeMap[input.id] = createTupleType(...connectedTypes);
+        }
+        if (input.rowType === 'input-function') {
+            // validate signature type
+            const resolvedSpec = tryResolveTypeAlias(input.specifier, env);
+            if (resolvedSpec && resolvedSpec.type !== 'function') {
+                objPushConditional(rowProblems, input.id, {
+                    type: 'invalid-specifier',
+                    message: 'A function input row must be of a function type.',
+                });
+            }
+            // find incoming type
+            let functionSpec: TypeSpecifier | undefined;
+            if (typeof rowState?.value === 'string') {
+                const funcSignature = findEnvironmentSignature(env, rowState.value);
+                functionSpec = funcSignature && getSignatureFunctionType(funcSignature);
+            }
+            incomingTypeMap[input.id] = connectedTypes[0] || functionSpec || createMissingType();
+        }
+        if (input.rowType === 'input-simple') {
+            incomingTypeMap[input.id] = connectedTypes[0] || createMissingType();
+        }
+        if (input.rowType === 'input-variable') {
+            incomingTypeMap[input.id] = connectedTypes[0] || input.specifier;
+        }
+
         switch (input.rowType) {
-            case 'input-list':
-                incomingTypeMap[input.id] = createTupleType(...connectedTypes);
-                break;
             case 'input-simple':
-                incomingTypeMap[input.id] = connectedTypes[0] || createMissingType();
                 break;
             case 'input-variable':
-                incomingTypeMap[input.id] = connectedTypes[0] || input.specifier;
                 break;
         }
     }
@@ -82,9 +114,9 @@ const validateNodeInput = mem((
     const signatureFunctionType = getSignatureFunctionType(templateSignature);
 
     const genericMap = Object.fromEntries(
-        templateSignature.generics.map(generic => [ 
-            generic.id, 
-            generic.constraint || createAnyType(), 
+        templateSignature.generics.map(generic => [
+            generic.id,
+            generic.constraint || createAnyType(),
         ]),
     );
     const constraints = inferGenerics(
@@ -98,17 +130,20 @@ const validateNodeInput = mem((
         signatureFunctionType, constraints, env) as FunctionTypeSpecifier;
     const instantiatedNodeType = memoizeTypeStructure(unmemoizedInstantiatetType);
 
-    let typeComparisonProblem: TypeSystemExceptionData | undefined;
     try {
         assertSubsetType(argumentTypeSignature, instantiatedNodeType.parameter, env);
     } catch (e) {
         if (e instanceof TypeSystemException) {
-            typeComparisonProblem = e.data;
+            for (const input of templateSignature.inputs) {
+                const rowTypeProblem = getRowsTypeProblem(e.data, input.id);
+                objPushConditional(rowProblems, input.id, rowTypeProblem);
+            }
         } else {
             throw e;
         }
     }
-    return { instantiatedNodeType, typeComparisonProblem };
+
+    return { instantiatedNodeType, rowProblems };
 });
 
 const noSignatureContext = mem(
@@ -170,31 +205,13 @@ const validateRows = mem((
     rowState: RowState | undefined,
     specifier: TypeSpecifier,
     env: FlowEnvironment,
-    typeComparisonProblem: TypeSystemExceptionData | undefined,
+    rowProblems: RowProblem[] | null,
 ): RowContext => {
 
     const result: RowContext = {
         ref: rowState,
-        problems: [],
+        problems: rowProblems || [],
     };
-
-    const rowTypeProblem = getRowSpecificProblem(typeComparisonProblem, input.id);
-    if (rowTypeProblem != null) {
-        const { connectionIndex, reducedData } = rowTypeProblem;
-        if (reducedData.type === 'required-type') {
-            result.problems.push({
-                type: 'required-parameter',
-                message: 'This row requires a connection.'
-            });
-        } else {
-            result.problems.push({
-                type: 'incompatible-argument-type',
-                message: 'Connected value cannot be used as input for this row.',
-                typeProblem: reducedData,
-                connectionIndex,
-            })
-        }
-    }
 
     const isConnected = rowState?.connections.length && rowState.connections.length > 0;
 
@@ -226,26 +243,42 @@ const validateRows = mem((
     // debugHitMissRate: true,
 });
 
-function getRowSpecificProblem(typeComparisonProblem: TypeSystemExceptionData | undefined, rowId: string) {
-    if (typeComparisonProblem != null) {
-        const [_, rowKey, nextType, tupleIndex] = typeComparisonProblem.path.nodes.map(node => node.key);
-        if (rowKey === rowId) {
-            const reducedData: TypeSystemExceptionData = {
-                ...typeComparisonProblem,
-                path: new TypeTreePath(typeComparisonProblem.path.nodes.slice(2)),
-            }
-            let connectionIndex = 0;
-            if (nextType === 'tuple' && tupleIndex != null && isFinite(parseInt(tupleIndex))) {
-                connectionIndex = parseInt(tupleIndex);
-            }
-            return {
-                connectionIndex,
-                reducedData,
-            }
-        }
+function getRowsTypeProblem(typeComparisonProblem: TypeSystemExceptionData | undefined, rowId: string): RowProblem | undefined {
+    if (typeComparisonProblem == null) return;
+
+    const [_, rowKey, nextType, tupleIndex] = typeComparisonProblem.path.nodes.map(node => node.key);
+    if (rowKey !== rowId) return;
+
+    const reducedData: TypeSystemExceptionData = {
+        ...typeComparisonProblem,
+        path: new TypeTreePath(typeComparisonProblem.path.nodes.slice(2)),
+    }
+    let connectionIndex = 0;
+    if (nextType === 'tuple' && tupleIndex != null && isFinite(parseInt(tupleIndex))) {
+        connectionIndex = parseInt(tupleIndex);
+    }
+
+    if (reducedData.type === 'required-type') {
+        return {
+            type: 'required-parameter',
+            message: 'This row requires a connection.'
+        };
+    } else {
+        return {
+            type: 'incompatible-argument-type',
+            message: 'Connected value cannot be used as input for this row.',
+            typeProblem: reducedData,
+            connectionIndex,
+        };
     }
 }
 
-// function generateIncomingTypeMap(rowStates: Obj<RowState>, templateSignature: FlowSignature, earlierNodeOutputTypes: Obj<MapTypeSpecifier>) {
-// }
-
+function objPushConditional<T>(obj: Record<string, T[]>, key: string, element?: T) {
+    if (!element) {
+        return;
+    }
+    if (obj[key] == null) {
+        obj[key] = [];
+    }
+    obj[key].push(element);
+}

@@ -11,7 +11,6 @@ import PanelBody from "./PanelBody";
 const FlowEditorView = (viewProps: ViewProps) => {
     const dispatch = useAppDispatch();
     const { panelId } = viewProps;
-    const panelState = useAppSelector(selectPanelState(ViewTypes.FlowEditor, panelId));
 
     const editorState = useAppSelector(selectEditor);
 
@@ -20,15 +19,6 @@ const FlowEditorView = (viewProps: ViewProps) => {
         createFlowEditorPanelState,
         ViewTypes.FlowEditor,
     );
-
-    // useEffect(() => {
-    //     if (panelState?.flowStack && panelState.flowStack.length === 0) {
-    //         dispatch(flowEditorPanelsSetFlowId({
-    //             panelId: panelId,
-    //             flowId: ROOT_FLOW_ID,
-    //         }));
-    //     }
-    // }, [panelState?.flowStack]);
 
     useEffect(() => {
         dispatch(flowEditorPanelsSetFlowId({
@@ -39,16 +29,7 @@ const FlowEditorView = (viewProps: ViewProps) => {
 
     return (
         <PanelBody viewProps={viewProps}>
-            {/* <FlowNavigatorBar panelId={panelId} /> */}
             <FlowEditorViewport panelId={panelId} />
-            {/* <ReflexContainer orientation='vertical'>
-                <ReflexElement>
-                </ReflexElement>
-                <ReflexSplitter />
-                <ReflexElement size={400}>
-                    <GeometryEditorInspector panelId={panelId} />
-                </ReflexElement>
-            </ReflexContainer> */}
         </PanelBody>
     )
 }

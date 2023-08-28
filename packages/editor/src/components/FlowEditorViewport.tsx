@@ -7,6 +7,7 @@ import { selectPanelState } from '../redux/panelStateEnhancer';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import useDispatchCommand from '../utils/useDispatchCommand';
 import useContextMenu from '../utils/useContextMenu';
+import FlowEditorLegend from './FlowEditorLegend';
 
 const EditorWrapper = styled.div`
     position: relative;
@@ -22,7 +23,7 @@ interface Props {
 const FlowEditorViewport = ({ panelId }: Props) => {
     const dispatch = useAppDispatch();
     const panelState = useAppSelector(selectPanelState(ViewTypes.FlowEditor, panelId));
-    const currFlowId = panelState?.flowStack[0];
+    const flowId = panelState?.flowStack[0];
     const dispatchCommand = useDispatchCommand();
 
     const contextMenu = useContextMenu(
@@ -31,13 +32,13 @@ const FlowEditorViewport = ({ panelId }: Props) => {
         [
             'flowEditor.addNodeAtPosition',
             'flowEditor.deleteSelected',
-            // 'geometryEditor.resetSelected',
             'flowEditor.createGroup'
         ]
     );
 
     return (
         <EditorWrapper
+            onContextMenu={contextMenu}
             onDoubleClick={e => {
                 dispatchCommand(
                     'flowEditor.addNodeAtPosition',
@@ -45,14 +46,15 @@ const FlowEditorViewport = ({ panelId }: Props) => {
                     'view',
                 );
             }}
-            onContextMenu={contextMenu}
         >
             {
-                currFlowId &&
-                <FlowEditorTransform
-                    panelId={panelId}
-                    flowId={currFlowId}
-                />
+                flowId && <>
+                    <FlowEditorTransform
+                        panelId={panelId}
+                        flowId={flowId}
+                    />
+                    <FlowEditorLegend flowId={flowId} />
+                </>
             }
             <FlowNodeCatalog
                 panelId={panelId}

@@ -1,22 +1,22 @@
-import React, { PropsWithChildren, useMemo } from 'react';
+import React, { PropsWithChildren } from 'react';
+import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
+import { selectFlowContext } from '../slices/contextSlice';
+import { flowsReplacePort, selectSingleFlow } from '../slices/flowsSlice';
 import { AllRowSignatures, FlowPortLists } from '../types/flowInspectorView';
 import FormSelectOption from './FormSelectOption';
-import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { flowsReplacePort, selectSingleFlow } from '../slices/flowsSlice';
-import * as lang from '@fluss/language';
-import { selectFlowContext } from '../slices/contextSlice';
 import TypeBuilder from './TypeBuilder';
 
 type RowTypes = AllRowSignatures['rowType'];
 
 const rowTypesOfDirection: Record<FlowPortLists, RowTypes[]> = {
-    inputs:  ['input-list', 'input-simple', 'input-variable'],
+    inputs:  ['input-list', 'input-simple', 'input-variable', 'input-function' ],
     outputs: ['output'],
 };
 const rowTypesNames: Record<RowTypes, string> = {
     'input-simple': 'Simple Input',
     'input-variable': 'Variable Input',
     'input-list': 'List Input',
+    'input-function': 'Function Input',
     'output': 'Output',
 }
 
