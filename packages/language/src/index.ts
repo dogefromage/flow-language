@@ -14,7 +14,6 @@ export {
     collectTotalEnvironmentContent,
     findEnvironmentSignature,
     findEnvironmentType,
-    getAllReferencedSpecifiers,
 } from './core/environment';
 
 export {

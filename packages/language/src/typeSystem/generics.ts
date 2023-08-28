@@ -110,7 +110,7 @@ const inferGenericsSwitch = (
 function inferGenericsFunction(path: TypeTreePath, X: FunctionTypeSpecifier, G: FunctionTypeSpecifier, 
     generics: GenericsMap, env: FlowEnvironment): InstantiationConstraints {
     return [
-        inferGenericsSwitch(path.add({ key: 'parameter', formatting: 'property' }), X.parameter, G.parameter, generics, env),
+        inferGenericsSwitch(path.add({ key: 'parameters', formatting: 'property' }), X.parameters, G.parameters, generics, env),
         inferGenericsSwitch(path.add({ key: 'output', formatting: 'property' }), X.output, G.output, generics, env),
     ].reduce(combineInstantiation, {});
 }
@@ -189,8 +189,10 @@ export function applyInstantiationConstraints(
             );
         case 'function':
             return createFunctionType(
-                applyInstantiationConstraints(path.add({ key: 'parameter', formatting: 'property' }), X.parameter, constraints, env) as MapTypeSpecifier,
-                applyInstantiationConstraints(path.add({ key: 'output', formatting: 'property' }), X.output, constraints, env) as MapTypeSpecifier,
+                applyInstantiationConstraints(path.add({ key: 'parameters', formatting: 'property' }), 
+                    X.parameters, constraints, env) as TupleTypeSpecifier,
+                applyInstantiationConstraints(path.add({ key: 'output', formatting: 'property' }), 
+                    X.output, constraints, env),
             );
         case 'missing':
         case 'primitive':

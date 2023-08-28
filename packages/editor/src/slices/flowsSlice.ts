@@ -212,7 +212,7 @@ export const flowsSlice = createSlice({
             const setIndex = Math.max(0, Math.min(inputLocation.jointIndex, connections.length));
             connections[setIndex] = {
                 nodeId: outputLocation.nodeId,
-                outputId: outputLocation.rowId,
+                accessor: outputLocation.accessor,
             }
         },
         removeEdge: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, input: lang.InputJointLocation }>) => {

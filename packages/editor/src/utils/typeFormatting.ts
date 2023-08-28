@@ -35,12 +35,12 @@ export function formatSpecifier(X: lang.TypeSpecifier, env: lang.FlowEnvironment
         case 'any':
             return getSpecifierLabel(X);
         case 'function':
-            return `${getSpecifierLabel(X)}<${formatSpecifier(X.parameter, env)}, ${formatSpecifier(X.output, env)}>`;
+            return `${formatSpecifier(X.parameters, env)} → ${formatSpecifier(X.output, env)}`;
         case 'list':
             return `${getSpecifierLabel(X)}<${formatSpecifier(X.element, env)}>`;
         case 'map':
             const entries = Object.entries(X.elements)
-                .map(([key, Y]) => `${key}:${formatSpecifier(Y, env)}`)
+                .map(([key, Y]) => `${key} → ${formatSpecifier(Y, env)}`)
                 .join(', ');
             return `${getSpecifierLabel(X)}<${entries}>`;
         case 'tuple':

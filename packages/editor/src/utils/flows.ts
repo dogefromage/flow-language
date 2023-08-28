@@ -1,13 +1,14 @@
 import * as lang from "@fluss/language";
 import { JointLocationKey } from "../types";
 import { FlowJointStyling } from "../types/flowRows";
+import { AllRowSignatures } from "../types/flowInspectorView";
 
 export function getJointLocationKey(location: lang.JointLocation): JointLocationKey {
-    let key: JointLocationKey = `${location.nodeId}.${location.rowId}`;
     if (location.direction === 'input') {
-        key = `${key}.${location.jointIndex}`;
+        return `${location.nodeId}.${location.rowId}.${location.jointIndex}`;
+    } else {
+        return `${location.nodeId}.${location.accessor || ''}`;
     }
-    return key;
 }
 
 const style = (
@@ -83,3 +84,14 @@ export function getJointStyling(argX: lang.TypeSpecifier, env: lang.FlowEnvironm
 
     return baseStyle;
 }
+
+type RowTypes = AllRowSignatures['rowType'];
+export const flowRowTypeNames: Record<RowTypes, string> = {
+    'output-simple': 'Simple Output',
+    'output-destructured': 'Destructured Output',
+    'output-hidden': 'Hidden Output',
+    'input-simple': 'Simple Input',
+    'input-list': 'List Input',
+    'input-variable': 'Variable Input',
+    'input-function': 'Function Input',
+};

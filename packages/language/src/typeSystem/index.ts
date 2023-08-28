@@ -31,7 +31,7 @@ export const createUnionType = mem(
     typeSystemCache,
 );
 export const createFunctionType = mem(
-    (parameter: MapTypeSpecifier, output: MapTypeSpecifier): FunctionTypeSpecifier => ({ type: 'function', parameter, output }),
+    (parameters: TupleTypeSpecifier, output: TypeSpecifier): FunctionTypeSpecifier => ({ type: 'function', parameters, output }),
     typeSystemCache,
 );
 
@@ -75,7 +75,7 @@ export const memoizeTypeStructure = mem(<T extends TypeSpecifier>(X: T): T => {
             ) as T;
         case 'function':
             return createFunctionType(
-                memoizeTypeStructure(X.parameter),
+                memoizeTypeStructure(X.parameters),
                 memoizeTypeStructure(X.output),
             ) as T;
         case 'primitive':
@@ -91,16 +91,10 @@ export const memoizeTypeStructure = mem(<T extends TypeSpecifier>(X: T): T => {
 export function getSignatureFunctionType(signature: FlowSignature) {
     return memoizeTypeStructure(
         createFunctionType(
-            createMapType(
-                Object.fromEntries(
-                    signature.inputs.map(s => [s.id, s.specifier])
-                )
+            createTupleType(
+                ...signature.inputs.map(s => s.specifier)
             ),
-            createMapType(
-                Object.fromEntries(
-                    signature.outputs.map(s => [s.id, s.specifier])
-                )
-            )
+            signature.output?.specifier || createMissingType(),
         )
     );
 }

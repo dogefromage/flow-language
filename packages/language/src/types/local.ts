@@ -3,7 +3,7 @@ import { InitializerValue } from "./typeSystem";
 
 export type ValueMap<T extends InitializerValue = InitializerValue> = Record<string, T>;
 
-export type FlowInterpretation = (nodeArgs: ValueMap, flowArgs: ValueMap) => ValueMap;
+export type FlowInterpretation = (nodeArgs: ValueMap, flowArgs: ValueMap) => any;
 
 export interface SignatureDefinition {
     signature: FlowSignature;

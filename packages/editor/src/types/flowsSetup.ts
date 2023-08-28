@@ -9,47 +9,31 @@ export const defaultDocumentConfig: lang.FlowDocumentConfig = {
 export const mainSignature: lang.AnonymousFlowSignature = {
     generics: [{ id: 'T', constraint: null }],
     inputs: [],
-    outputs: [{
+    output: {
         id: 'value',
         label: 'Value',
-        rowType: 'output',
+        rowType: 'output-simple',
         specifier: 'T',
-    }],
+    },
 }
 
 export const emptyFlowSignature: lang.AnonymousFlowSignature = {
+    generics: [],
     inputs: [
         {
             id: 'a',
-            label: 'A',
+            label: 'Some Input',
             rowType: 'input-variable',
             specifier: 'number',
             defaultValue: 0,
         },
-        {
-            id: 'b',
-            label: 'B',
-            rowType: 'input-variable',
-            specifier: 'boolean',
-            defaultValue: false,
-        },
-        {
-            id: 'c',
-            label: 'c',
-            rowType: 'input-variable',
-            specifier: 'string',
-            defaultValue: '',
-        }
     ],
-    outputs: [
-        {
-            id: 'value',
-            label: 'Value',
-            rowType: 'output',
-            specifier: 'number',
-        }
-    ],
-    generics: [],
+    output: {
+        id: 'value',
+        label: 'Some output',
+        rowType: 'output-simple',
+        specifier: 'number',
+    },
 }
 
 export const initialDefaultRootFlow: lang.FlowGraph = {
@@ -68,16 +52,6 @@ export const initialDefaultRootFlow: lang.FlowGraph = {
     },
 };
 
-// const anotherFlow: lang.FlowGraph = {
-//     id: 'otherGraph',
-//     name: 'Other Graph',
-//     nodes: {},
-//     inputs: [],
-//     outputs: [],
-//     idCounter: 0,
-// }
-
 export const defaultFlows = {
     [initialDefaultRootFlow.id]: initialDefaultRootFlow,
-    // [anotherFlow.id]: anotherFlow,
 };

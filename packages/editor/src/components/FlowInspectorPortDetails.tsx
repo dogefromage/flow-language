@@ -5,20 +5,14 @@ import { flowsReplacePort, selectSingleFlow } from '../slices/flowsSlice';
 import { AllRowSignatures, FlowPortLists } from '../types/flowInspectorView';
 import FormSelectOption from './FormSelectOption';
 import TypeBuilder from './TypeBuilder';
+import { flowRowTypeNames } from '../utils/flows';
 
 type RowTypes = AllRowSignatures['rowType'];
 
 const rowTypesOfDirection: Record<FlowPortLists, RowTypes[]> = {
     inputs:  ['input-list', 'input-simple', 'input-variable', 'input-function' ],
-    outputs: ['output'],
+    outputs: ['output-simple', 'output-destructured' ],
 };
-const rowTypesNames: Record<RowTypes, string> = {
-    'input-simple': 'Simple Input',
-    'input-variable': 'Variable Input',
-    'input-list': 'List Input',
-    'input-function': 'Function Input',
-    'output': 'Output',
-}
 
 interface FlowInspectorPortDetailsProps {
     panelId: string;
@@ -57,7 +51,7 @@ const FlowInspectorPortDetails = ({ panelId, flowId, portType, portId }: PropsWi
                 }));
             }}
             options={rowTypes}
-            mapName={rowTypesNames}
+            mapName={flowRowTypeNames}
         />
         <p>Data Type</p>
         <TypeBuilder

@@ -21,7 +21,7 @@ const singularName = {
 };
 const defaultBlueprint: Record<FlowPortLists, RowSignatureBlueprint> = {
     inputs:  { rowType: 'input-simple', specifier: lang.createAnyType() },
-    outputs: { rowType: 'output',       specifier: lang.createAnyType() },
+    outputs: { rowType: 'output-simple',       specifier: lang.createAnyType() },
 }
 
 const FlowInspectorPortList = ({ panelId, flowId, ports, portType }: PropsWithChildren<FlowInspectorPortListProps>) => {

@@ -2,20 +2,19 @@ import { findEnvironmentSignature } from "../core/environment";
 import { createAnyType, createMapType, createMissingType, createTupleType, getSignatureFunctionType, memoizeTypeStructure } from "../typeSystem";
 import { assertSubsetType } from "../typeSystem/comparison";
 import { TypeSystemException, TypeSystemExceptionData, TypeTreePath } from "../typeSystem/exceptionHandling";
-import { generateDefaultValue } from "../typeSystem/generateDefaultValue";
 import { applyInstantiationConstraints, inferGenerics } from "../typeSystem/generics";
 import { tryResolveTypeAlias } from "../typeSystem/resolution";
-import { assertElementOfType } from "../typeSystem/validateElement";
-import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, InitializerValue, InputRowSignature, MapTypeSpecifier, RowState, TypeSpecifier } from "../types";
+import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, InputRowSignature, FlowConnection, RowState, TypeSpecifier } from "../types";
 import { FlowNodeContext, RowContext, RowProblem } from "../types/context";
 import { Obj } from "../types/utilTypes";
 import { assertTruthy } from "../utils";
 import { mem, memoList } from "../utils/functional";
+import { validateRows } from "./validateRows";
 
 export const validateNode = mem((
     node: FlowNode,
     env: FlowEnvironment,
-    earlierNodeOutputTypes: Record<string, MapTypeSpecifier>,
+    previousOutputTypes: Record<string, TypeSpecifier>,
     isUsed: boolean,
 ): FlowNodeContext => {
     const templateSignature = findEnvironmentSignature(env, node.signature);
@@ -23,8 +22,8 @@ export const validateNode = mem((
         return noSignatureContext(node, isUsed);
     }
 
-    const { instantiatedNodeType, rowProblems } =
-        validateNodeSyntax(node.rowStates, templateSignature, earlierNodeOutputTypes, env);
+    const { instantiatedNodeType, rowProblemsMap } =
+        validateNodeSyntax(node.rowStates, templateSignature, previousOutputTypes, env);
 
     return bundleNodeContext(
         node,
@@ -32,21 +31,15 @@ export const validateNode = mem((
         templateSignature,
         instantiatedNodeType,
         memoList(
-            ...templateSignature.inputs.map(input =>
+            ...templateSignature.inputs.map((input, index) =>
                 validateRows(
                     input,
-                    node.rowStates[input.id], instantiatedNodeType.parameter.elements[input.id],
+                    node.rowStates[input.id],
+                    instantiatedNodeType.parameters.elements[index],
                     env,
-                    rowProblems[input.id],
+                    rowProblemsMap[input.id],
                 )
             )
-        ),
-        memoList(
-            ...templateSignature.outputs.map(output =>
-            ({
-                ref: node.rowStates[output.id],
-                problems: [],
-            }))
         ),
     );
 });
@@ -54,60 +47,27 @@ export const validateNode = mem((
 const validateNodeSyntax = mem((
     rowStates: Obj<RowState>,
     templateSignature: FlowSignature,
-    earlierNodeOutputTypes: Obj<MapTypeSpecifier>,
+    previousOutputTypes: Obj<TypeSpecifier>,
     env: FlowEnvironment,
 ) => {
     const incomingTypeMap: Record<string, TypeSpecifier> = {};
-    const rowProblems: Record<string, RowProblem[]> = {};
+    const rowProblemsMap: Record<string, RowProblem[]> = {};
 
     for (const input of templateSignature.inputs) {
         const rowState = rowStates[input.id] as RowState | undefined;
-        // each node input receives a list of connections to support list inputs
-        const connectedTypes = rowState?.connections.map(conn =>
-            earlierNodeOutputTypes[conn.nodeId]?.elements[conn.outputId] || createAnyType()
-        ) || [];
 
-        if (input.rowType === 'input-list') {
-            // validate signature type
-            const resolvedSpec = tryResolveTypeAlias(input.specifier, env);
-            if (resolvedSpec && resolvedSpec.type !== 'list') {
-                objPushConditional(rowProblems, input.id, {
-                    type: 'invalid-specifier',
-                    message: 'A list input row must be of a list type.',
-                });
-            }
-            incomingTypeMap[input.id] = createTupleType(...connectedTypes);
-        }
-        if (input.rowType === 'input-function') {
-            // validate signature type
-            const resolvedSpec = tryResolveTypeAlias(input.specifier, env);
-            if (resolvedSpec && resolvedSpec.type !== 'function') {
-                objPushConditional(rowProblems, input.id, {
-                    type: 'invalid-specifier',
-                    message: 'A function input row must be of a function type.',
-                });
-            }
-            // find incoming type
-            let functionSpec: TypeSpecifier | undefined;
-            if (typeof rowState?.value === 'string') {
-                const funcSignature = findEnvironmentSignature(env, rowState.value);
-                functionSpec = funcSignature && getSignatureFunctionType(funcSignature);
-            }
-            incomingTypeMap[input.id] = connectedTypes[0] || functionSpec || createMissingType();
-        }
-        if (input.rowType === 'input-simple') {
-            incomingTypeMap[input.id] = connectedTypes[0] || createMissingType();
-        }
-        if (input.rowType === 'input-variable') {
-            incomingTypeMap[input.id] = connectedTypes[0] || input.specifier;
+        const connectedTypes: TypeSpecifier[] = [];
+        for (const connection of rowState?.connections || []) {
+            const { connectedType, accessorProblem } = validateNodeAccessor(connection, previousOutputTypes, env);
+            connectedTypes.push(connectedType || createMissingType());
+            objPushConditional(rowProblemsMap, input.id, accessorProblem);
         }
 
-        switch (input.rowType) {
-            case 'input-simple':
-                break;
-            case 'input-variable':
-                break;
-        }
+        const { rowProblems: typeProblems, incomingType } =
+            validateIncomingTypes(input, rowState, connectedTypes, env);
+            
+        incomingTypeMap[input.id] = incomingType;
+        objPushConditional(rowProblemsMap, input.id, ...typeProblems);
     }
 
     const argumentTypeSignature = createMapType(incomingTypeMap);
@@ -121,7 +81,7 @@ const validateNodeSyntax = mem((
     );
     const constraints = inferGenerics(
         argumentTypeSignature,
-        signatureFunctionType.parameter,
+        signatureFunctionType.parameters,
         genericMap,
         env
     );
@@ -131,20 +91,138 @@ const validateNodeSyntax = mem((
     const instantiatedNodeType = memoizeTypeStructure(unmemoizedInstantiatetType);
 
     try {
-        assertSubsetType(argumentTypeSignature, instantiatedNodeType.parameter, env);
+        assertSubsetType(argumentTypeSignature, instantiatedNodeType.parameters, env);
     } catch (e) {
         if (e instanceof TypeSystemException) {
             for (const input of templateSignature.inputs) {
                 const rowTypeProblem = getRowsTypeProblem(e.data, input.id);
-                objPushConditional(rowProblems, input.id, rowTypeProblem);
+                objPushConditional(rowProblemsMap, input.id, rowTypeProblem);
             }
         } else {
             throw e;
         }
     }
 
-    return { instantiatedNodeType, rowProblems };
+    return { instantiatedNodeType, rowProblemsMap };
 });
+
+const validateNodeAccessor = (
+    connection: FlowConnection,
+    previousOutputTypes: Obj<TypeSpecifier>,
+    env: FlowEnvironment,
+): { connectedType?: TypeSpecifier, accessorProblem?: RowProblem } => {
+    const outputType = previousOutputTypes[connection.nodeId];
+    if (!outputType) {
+        return {};
+    }
+
+    if (connection.accessor == null) {
+        return { connectedType: outputType }
+    }
+
+    const resolvedType = tryResolveTypeAlias(outputType, env);
+    if (resolvedType == null) {
+        return {}
+    }
+
+    if (resolvedType.type === 'tuple') {
+        const accessorIndex = parseInt(connection.accessor);
+        if (isNaN(accessorIndex)) {
+            return {
+                accessorProblem: {
+                    type: 'invalid-accessor',
+                    message: `Cannot access tuple type with accessor '${connection.accessor}'.`,
+                }
+            };
+        }
+        const tupleLength = resolvedType.elements.length;
+        if (accessorIndex < 0 || accessorIndex >= tupleLength) {
+            return {
+                accessorProblem: {
+                    type: 'invalid-accessor',
+                    message: `Accessor with index ${accessorIndex} out of range for tuple with length ${tupleLength}.`,
+                }
+            };
+        }
+        return { connectedType: resolvedType.elements[accessorIndex] };
+    }
+
+    if (resolvedType.type === 'map') {
+        const hasKey = resolvedType.elements.hasOwnProperty(connection.accessor);
+        if (!hasKey) {
+            return {
+                accessorProblem: {
+                    type: 'invalid-accessor',
+                    message: `Object type does not contain key '${connection.accessor}'.`,
+                }
+            };
+        }
+        return { connectedType: resolvedType.elements[connection.accessor] };
+    }
+
+    return {
+        accessorProblem: {
+            type: 'invalid-accessor',
+            message: `Type of category '${resolvedType.type}' cannot be destructured.`,
+        }
+    };
+}
+
+const validateIncomingTypes = (
+    input: InputRowSignature,
+    rowState: RowState | undefined,
+    connectedTypes: TypeSpecifier[],
+    env: FlowEnvironment,
+): { incomingType: TypeSpecifier, rowProblems: RowProblem[] } => {
+    const rowProblems: RowProblem[] = [];
+
+    if (input.rowType === 'input-list') {
+        const incomingType = createTupleType(...connectedTypes);
+        const resolvedSpec = tryResolveTypeAlias(input.specifier, env);
+        if (resolvedSpec && resolvedSpec.type !== 'list') {
+            rowProblems.push({
+                type: 'invalid-specifier',
+                message: 'A list input row must be of a list type.',
+            });
+        }
+        return { incomingType, rowProblems };
+    }
+
+    if (input.rowType === 'input-function') {
+        // find incoming type
+        let functionSpec: TypeSpecifier | undefined;
+        if (typeof rowState?.value === 'string') {
+            const funcSignature = findEnvironmentSignature(env, rowState.value);
+            functionSpec = funcSignature && getSignatureFunctionType(funcSignature);
+        }
+
+        // validate signature type
+        const resolvedSpec = tryResolveTypeAlias(input.specifier, env);
+        if (resolvedSpec && resolvedSpec.type !== 'function') {
+            rowProblems.push({
+                type: 'invalid-specifier',
+                message: 'A function input row must be of a function type.',
+            });
+        }
+        const incomingType = connectedTypes[0] || functionSpec || createMissingType();
+        return { incomingType, rowProblems };
+    }
+    if (input.rowType === 'input-simple') {
+        return {
+            incomingType: connectedTypes[0] || createMissingType(),
+            rowProblems: [],
+        }
+    }
+    if (input.rowType === 'input-variable') {
+        return {
+            incomingType: connectedTypes[0] || input.specifier,
+            rowProblems: [],
+        };
+    }
+
+    // @ts-ignore
+    throw new Error(`Unknown input type ${input.rowType}`);
+}
 
 const noSignatureContext = mem(
     (node: FlowNode, isUsed: boolean): FlowNodeContext => ({
@@ -158,7 +236,7 @@ const noSignatureContext = mem(
         specifier: null,
         templateSignature: null,
         inputRows: {},
-        outputRows: {},
+        outputRow: { problems: [] },
         isUsed,
     })
 );
@@ -169,9 +247,7 @@ const bundleNodeContext = mem((
     templateSignature: FlowSignature,
     specifier: FunctionTypeSpecifier,
     inputContexts: RowContext[],
-    outputContexts: RowContext[],
 ): FlowNodeContext => {
-
     const result: FlowNodeContext = {
         ref: node,
         problems: [],
@@ -179,68 +255,21 @@ const bundleNodeContext = mem((
         templateSignature,
         specifier,
         inputRows: {},
-        outputRows: {},
+        outputRow: { problems: [] },
         isUsed,
     };
+
     assertTruthy(templateSignature.inputs.length === inputContexts.length);
     for (let i = 0; i < templateSignature.inputs.length; i++) {
         const rowContext = inputContexts[i];
         result.inputRows[templateSignature.inputs[i].id] = rowContext;
         result.criticalSubProblems += rowContext.problems.length;
     }
-    assertTruthy(templateSignature.outputs.length === outputContexts.length);
-    for (let i = 0; i < templateSignature.outputs.length; i++) {
-        const rowContext = outputContexts[i];
-        result.outputRows[templateSignature.outputs[i].id] = rowContext;
-        result.criticalSubProblems += rowContext.problems.length;
-    }
+
     return result;
 }, undefined, {
     tag: 'bundleNodeContext',
     // debugHitMiss: true,
-});
-
-const validateRows = mem((
-    input: InputRowSignature,
-    rowState: RowState | undefined,
-    specifier: TypeSpecifier,
-    env: FlowEnvironment,
-    rowProblems: RowProblem[] | null,
-): RowContext => {
-
-    const result: RowContext = {
-        ref: rowState,
-        problems: rowProblems || [],
-    };
-
-    const isConnected = rowState?.connections.length && rowState.connections.length > 0;
-
-    if (input.rowType === 'input-variable' && !isConnected) {
-        let displayValue: InitializerValue | undefined = rowState?.value ?? input.defaultValue;
-        // validate value if there
-        if (displayValue != null) {
-            try {
-                assertElementOfType(specifier, displayValue, env);
-            } catch (e) {
-                if (e instanceof TypeSystemException) {
-                    result.problems.push({
-                        type: 'invalid-value',
-                        typeProblem: e.data,
-                        message: 'Incompatible value stored in row.'
-                    });
-                    displayValue = undefined;
-                } else {
-                    throw e;
-                }
-            }
-        }
-        result.displayValue = displayValue ?? generateDefaultValue(specifier, env);
-    }
-    return result;
-}, undefined, {
-    tag: 'validateRows',
-    // debugHitMiss: true,
-    // debugHitMissRate: true,
 });
 
 function getRowsTypeProblem(typeComparisonProblem: TypeSystemExceptionData | undefined, rowId: string): RowProblem | undefined {
@@ -273,12 +302,13 @@ function getRowsTypeProblem(typeComparisonProblem: TypeSystemExceptionData | und
     }
 }
 
-function objPushConditional<T>(obj: Record<string, T[]>, key: string, element?: T) {
-    if (!element) {
-        return;
-    }
+function objPushConditional<T>(obj: Record<string, T[]>, key: string, ...elements: (T | undefined)[]) {
     if (obj[key] == null) {
         obj[key] = [];
     }
-    obj[key].push(element);
+    elements.forEach(el => {
+        if (el != null) {
+            obj[key].push(el);
+        }
+    })
 }

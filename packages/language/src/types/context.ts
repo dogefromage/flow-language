@@ -56,7 +56,7 @@ export interface FlowNodeContext {
     problems: NodeProblem[];
     criticalSubProblems: number;
     inputRows: Obj<RowContext>;
-    outputRows: Obj<RowContext>;
+    outputRow: RowContext;
     templateSignature: FlowSignature | null;
     specifier: FunctionTypeSpecifier | null;
     isUsed: boolean;
@@ -122,8 +122,13 @@ interface InvalidValue {
     message: string;
     typeProblem: TypeSystemExceptionData;
 }
+interface InvalidAccessor {
+    type: 'invalid-accessor';
+    message: string;
+}
 export type RowProblem =
     | InvalidSpecifier
     | RequiredParameter
     | IncompatibleArgumentType
     | InvalidValue
+    | InvalidAccessor

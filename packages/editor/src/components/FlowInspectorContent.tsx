@@ -76,7 +76,7 @@ const FlowInspectorContent = ({ panelId }: Props) => {
 
 
                 <FormExpandableRegion name='Outputs' defaultValue={true}>
-                    <FlowInspectorPortList panelId={panelId} flowId={flowId} ports={flow.outputs} portType='outputs' />
+                    <FlowInspectorPortList panelId={panelId} flowId={flowId} ports={[ flow.output ]} portType='outputs' />
                     {
                         panelState?.selectedListItems['outputs'] != null &&
                         <FlowInspectorPortDetails panelId={panelId} flowId={flowId} portType={'outputs'}

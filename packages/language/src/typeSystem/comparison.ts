@@ -142,7 +142,7 @@ function assertSubsetMap(path: TypeTreePath, X: MapTypeSpecifier, Y: MapTypeSpec
 }
 
 function assertSubsetFunction(path: TypeTreePath, X: FunctionTypeSpecifier, Y: FunctionTypeSpecifier, env: FlowEnvironment) {
-    assertSubsetMap(path.add({ key: 'parameter', formatting: 'property' }), X.parameter, Y.parameter, env);
-    assertSubsetMap(path.add({ key: 'output', formatting: 'property' }), X.output, Y.output, env);
+    assertSubsetTuple(path.add({ key: 'parameters', formatting: 'property' }), X.parameters, Y.parameters, env);
+    assertSubsetSwitch(path.add({ key: 'output', formatting: 'property' }), X.output, Y.output, env);
 }
 

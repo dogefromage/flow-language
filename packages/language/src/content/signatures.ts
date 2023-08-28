@@ -71,25 +71,25 @@ const list = {
 const output = {
     string: (id: string): OutputRowSignature => ({
         id,
-        rowType: 'output',
+        rowType: 'output-simple',
         label: autoName(id),
         specifier: 'string',
     }),
     number: (id: string): OutputRowSignature => ({
         id,
-        rowType: 'output',
+        rowType: 'output-simple',
         label: autoName(id),
         specifier: 'number',
     }),
     boolean: (id: string): OutputRowSignature => ({
         id,
-        rowType: 'output',
+        rowType: 'output-simple',
         label: autoName(id),
         specifier: 'boolean',
     }),
     generic: (id: string, specifier: TypeSpecifier): OutputRowSignature => ({
         id,
-        rowType: 'output',
+        rowType: 'output-simple',
         label: autoName(id),
         specifier,
     }),
@@ -105,9 +105,9 @@ localDefinitions.push({
         description: null,
         generics: [],
         inputs: [variable.number('a', 0), variable.number('b', 0)],
-        outputs: [output.number('sum')],
+        output: output.number('sum'),
     },
-    interpretation: args => ({ sum: args.a + args.b }),
+    interpretation: ({ a, b }) => a + b,
 });
 localDefinitions.push({
     signature: {
@@ -117,9 +117,9 @@ localDefinitions.push({
         description: null,
         generics: [],
         inputs: [variable.number('a', 0)],
-        outputs: [output.number('a_truncated')],
+        output: output.number('a_truncated'),
     },
-    interpretation: args => ({ a_truncated: Math.floor(args.a) }),
+    interpretation: ({ a }) => Math.floor(a),
 });
 localDefinitions.push({
     signature: {
@@ -129,9 +129,9 @@ localDefinitions.push({
         description: null,
         generics: [],
         inputs: [variable.number('a', 1), variable.number('b', 1)],
-        outputs: [output.number('product')],
+        output: output.number('product'),
     },
-    interpretation: args => ({ product: args.a * args.b }),
+    interpretation: ({ a, b }) => a * b,
 });
 localDefinitions.push({
     signature: {
@@ -141,9 +141,9 @@ localDefinitions.push({
         description: null,
         generics: [],
         inputs: [variable.number('a', 1), variable.number('b', 1)],
-        outputs: [output.number('quotient')],
+        output: output.number('quotient'),
     },
-    interpretation: args => ({ quotient: args.a / args.b }),
+    interpretation: ({ a, b }) => a / b,
 });
 
 localDefinitions.push({
@@ -154,9 +154,9 @@ localDefinitions.push({
         description: null,
         generics: [],
         inputs: [variable.number('angle', 0)],
-        outputs: [output.number('sine')],
+        output: output.number('sine'),
     },
-    interpretation: args => ({ sine: Math.sin(args.angle) }),
+    interpretation: ({ angle }) => Math.sin(angle),
 });
 
 localDefinitions.push({
@@ -167,9 +167,9 @@ localDefinitions.push({
         description: null,
         generics: [],
         inputs: [],
-        outputs: [output.number('value')],
+        output: output.number('value'),
     },
-    interpretation: args => ({ value: Math.random() }),
+    interpretation: () => Math.random(),
 });
 
 localDefinitions.push({
@@ -186,11 +186,9 @@ localDefinitions.push({
             simple.generic('match_true', 'T'),
             simple.generic('match_false', 'T'),
         ],
-        outputs: [
-            output.generic('choice', 'T'),
-        ],
+        output: output.generic('choice', 'T'),
     },
-    interpretation: args => ({ choice: args.condition ? args.match_true : args.match_false }),
+    interpretation: args => args.condition ? args.match_true : args.match_false,
 });
 
 localDefinitions.push({
@@ -201,9 +199,9 @@ localDefinitions.push({
         description: null,
         generics: [],
         inputs: [variable.number('number', 0)],
-        outputs: [output.number('output')],
+        output: output.number('output'),
     },
-    interpretation: args => ({ output: args.number }),
+    interpretation: ({ number }) => number,
 });
 localDefinitions.push({
     signature: {
@@ -213,9 +211,9 @@ localDefinitions.push({
         description: null,
         generics: [],
         inputs: [variable.boolean('boolean', false)],
-        outputs: [output.boolean('output')],
+        output: output.boolean('output'),
     },
-    interpretation: args => ({ output: args.boolean }),
+    interpretation: ({ boolean }) => boolean,
 });
 localDefinitions.push({
     signature: {
@@ -225,9 +223,9 @@ localDefinitions.push({
         description: null,
         generics: [],
         inputs: [variable.string('string', '')],
-        outputs: [output.string('output')],
+        output: output.string('output'),
     },
-    interpretation: args => ({ output: args.string }),
+    interpretation: ({ string }) => string,
 });
 localDefinitions.push({
     signature: {
@@ -237,9 +235,9 @@ localDefinitions.push({
         description: null,
         generics: [],
         inputs: [variable.number('a', 0), variable.number('b', 0)],
-        outputs: [output.boolean('output')],
+        output: output.boolean('output'),
     },
-    interpretation: args => ({ output: args.a > args.b }),
+    interpretation: ({ a, b }) => a > b,
 });
 
 localDefinitions.push({
@@ -253,11 +251,9 @@ localDefinitions.push({
             variable.string('left', ''),
             variable.string('right', ''),
         ],
-        outputs: [
-            output.string('concatenated'),
-        ],
+        output: output.string('concatenated'),
     },
-    interpretation: args => ({ concatenated: args.left + args.right }),
+    interpretation: ({ left, right }) => left + right,
 });
 localDefinitions.push({
     signature: {
@@ -271,13 +267,9 @@ localDefinitions.push({
             variable.number('start', 0),
             variable.number('length', 1),
         ],
-        outputs: [
-            output.string('substring'),
-        ],
+        output: output.string('substring'),
     },
-    interpretation: args => ({
-        substring: args.string.slice(args.start, Math.max(0, args.start + args.length)),
-    }),
+    interpretation: ({ string, start, length }) => string.slice(start, Math.max(0, start + length)),
 });
 
 
@@ -287,15 +279,13 @@ localDefinitions.push({
         name: 'Pack List',
         attributes: { category: 'Lists' },
         description: null,
-        generics: [ generic('T') ],
+        generics: [generic('T')],
         inputs: [
             list.generic('elements', createListType('T'))
         ],
-        outputs: [
-            output.generic('list', createListType('T'))
-        ],
+        output: output.generic('list', createListType('T'))
     },
-    interpretation: args => ({ list: args.elements }),
+    interpretation: ({ elements }) => elements,
 });
 localDefinitions.push({
     signature: {
@@ -303,16 +293,14 @@ localDefinitions.push({
         name: 'Concat Lists',
         attributes: { category: 'Lists' },
         description: null,
-        generics: [ generic('T') ],
+        generics: [generic('T')],
         inputs: [
             simple.generic('left', createListType('T')),
             simple.generic('right', createListType('T')),
         ],
-        outputs: [
-            output.generic('concatenated', createListType('T')),
-        ],
+        output: output.generic('concatenated', createListType('T')),
     },
-    interpretation: args => ({ concatenated: args.left.concat(args.right) }),
+    interpretation: ({ left, right }) => left.concat(right),
 });
 localDefinitions.push({
     signature: {
@@ -320,19 +308,15 @@ localDefinitions.push({
         name: 'Sublist',
         attributes: { category: 'Lists' },
         description: null,
-        generics: [ generic('T') ],
+        generics: [generic('T')],
         inputs: [
             simple.generic('list', createListType('T')),
             variable.number('start', 0),
             variable.number('length', 1),
         ],
-        outputs: [
-            output.generic('sublist', createListType('T')),
-        ],
+        output: output.generic('sublist', createListType('T')),
     },
-    interpretation: args => ({
-        sublist: args.list.slice(args.start, Math.max(0, args.start + args.length)),
-    }),
+    interpretation: ({ list, start, length }) => list.slice(start, Math.max(0, start + length)),
 });
 localDefinitions.push({
     signature: {
@@ -340,18 +324,14 @@ localDefinitions.push({
         name: 'Access List',
         attributes: { category: 'Lists' },
         description: null,
-        generics: [ generic('T') ],
+        generics: [generic('T')],
         inputs: [
             simple.generic('list', createListType('T')),
             variable.number('index', 0),
         ],
-        outputs: [
-            output.generic('element', 'T'),
-        ],
+        output: output.generic('element', 'T'),
     },
-    interpretation: args => ({
-        element: args.list.at(args.index), // .at() floors index
-    }),
+    interpretation: ({ list, index }) => list.at(index),
 });
 
 

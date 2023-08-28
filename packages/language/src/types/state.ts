@@ -11,17 +11,17 @@ export interface InputJointLocation {
 export interface OutputJointLocation {
     direction: 'output';
     nodeId: string;
-    rowId: string;
+    accessor?: string;
 }
 export type JointLocation = InputJointLocation | OutputJointLocation
 
-export interface OutputLocation {
+export interface FlowConnection {
     nodeId: string;
-    outputId: string;
+    accessor?: string; // used for destructured outputs
 }
 
 export interface RowState {
-    connections: OutputLocation[];
+    connections: FlowConnection[];
     value: InitializerValue | null;
 }
 
@@ -40,18 +40,12 @@ export interface FlowGraph {
     attributes: Record<string, string>;
     generics: GenericTag[];
     inputs: InputRowSignature[];
-    outputs: OutputRowSignature[];
+    output: OutputRowSignature;
+    // outputs: OutputRowSignature[];
     idCounter: number;
 }
 
-export interface FlowEntryPoint {
-    id: string;
-    entryFlowId: string;
-}
-
-export interface FlowDocumentConfig {
-    // entryFlows: Record<string, FlowEntryPoint>;
-}
+export interface FlowDocumentConfig {}
 
 export interface FlowDocument {
     flows: Obj<FlowGraph>;

@@ -1,4 +1,4 @@
-import { FlowEnvironment, FlowGraph, FlowNode, FlowSignature, FlowSignatureId, MapTypeSpecifier, getInternalId } from "../types";
+import { FlowEnvironment, FlowGraph, FlowNode, FlowSignature, FlowSignatureId, TypeSpecifier, getInternalId } from "../types";
 import { EdgeColor, FlowEdge, FlowGraphContext } from "../types/context";
 import { deepFreeze } from "../utils";
 import { findDependencies, sortTopologically } from "../utils/algorithms";
@@ -34,7 +34,7 @@ export const validateFlowGraph = mem((
         for (const [inputRowId, inputRow] of Object.entries(inputNode.rowStates)) {
             const { connections } = inputRow!;
             for (let inputIndex = 0; inputIndex < connections.length; inputIndex++) {
-                const { nodeId: outputNodeId, outputId } = connections[inputIndex];
+                const { nodeId: outputNodeId, accessor } = connections[inputIndex];
                 // check if present
                 const depIndex = nodeEntries
                     .findIndex(entry => entry[0] === outputNodeId);
@@ -45,12 +45,12 @@ export const validateFlowGraph = mem((
                 // adjacency
                 inputNodeDepIndices.add(depIndex);
                 // edge list
-                const edgeId = `${outputNodeId}.${outputId}_${inputNodeId}.${inputRowId}.${inputIndex}`;
+                const edgeId = `${outputNodeId}.${accessor || ''}_${inputNodeId}.${inputRowId}.${inputIndex}`;
                 uncoloredEdges.push(
                     makeUncoloredEdge(
                         edgeId,
                         outputNodeId,
-                        outputId,
+                        accessor,
                         inputNodeId,
                         inputRowId,
                         inputIndex,
@@ -147,7 +147,7 @@ export const validateFlowGraph = mem((
     result.edges = memoizedEdgeObj;
 
     // filling type table bottom-up using topsort
-    let nodeOutputTypesFlat: (string | MapTypeSpecifier)[] = [];
+    let nodeOutputTypesFlat: TypeSpecifier[] = [];
 
     for (const nodeId of namedTopSort) {
         const node = flow.nodes[nodeId];
@@ -174,7 +174,7 @@ export const validateFlowGraph = mem((
 
 
 export const getFlowSignature = (flow: FlowGraph) => {
-    return _getFlowSignature(flow.id, flow.attributes, flow.name, flow.generics, flow.inputs, flow.outputs);
+    return _getFlowSignature(flow.id, flow.attributes, flow.name, flow.generics, flow.inputs, flow.output);
 }
 const _getFlowSignature = mem((
     id:         FlowGraph['id'], 
@@ -182,7 +182,7 @@ const _getFlowSignature = mem((
     name:       FlowGraph['name'], 
     generics:   FlowGraph['generics'], 
     inputs:     FlowGraph['inputs'], 
-    outputs:    FlowGraph['outputs'], 
+    output:    FlowGraph['output'], 
 ) => {
     const flowSignature: FlowSignature = {
         id,
@@ -194,7 +194,7 @@ const _getFlowSignature = mem((
         name,
         generics,
         inputs,
-        outputs,
+        output,
     };
     return flowSignature;
 });
@@ -212,8 +212,8 @@ export const collectFlowDependencies = mem((flow: FlowGraph) => {
 
 const makeUncoloredEdge = mem((
     id: string,
-    sourceNode: string,
-    sourceRow: string,
+    outputNode: string,
+    outputAccessor: string | undefined,
     inputNode: string,
     inputRow: string,
     inputJoint: number,
@@ -221,8 +221,8 @@ const makeUncoloredEdge = mem((
     id,
     source: {
         direction: 'output',
-        nodeId: sourceNode,
-        rowId: sourceRow,
+        nodeId: outputNode,
+        accessor: outputAccessor,
     },
     target: {
         direction: 'input',

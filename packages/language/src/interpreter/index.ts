@@ -1,5 +1,5 @@
 import { baseInterpretations } from "../content/signatures";
-import { DocumentContext, FlowGraphContext, FlowSignature, InitializerValue, MAIN_FLOW_ID } from "../types";
+import { DocumentContext, FlowGraphContext, FlowSignature, InitializerValue, MAIN_FLOW_ID, MapTypeSpecifier } from "../types";
 import { ValueMap } from "../types/local";
 import { assertDef } from "../utils";
 
@@ -25,7 +25,7 @@ export function interpretDocument(doc: DocumentContext, config: InterpreterConfi
 function interpretFlow(doc: DocumentContext, flow: FlowGraphContext, flowArgs: ValueMap) {
     const memoizedOutputs = new Map<string, Record<string, InitializerValue>>();
 
-    function interpretNode(nodeId: string): ValueMap {
+    function interpretNode(nodeId: string): any {
         const node = flow.nodeContexts[nodeId];
         const signature = node.templateSignature!;
 
@@ -41,9 +41,14 @@ function interpretFlow(doc: DocumentContext, flow: FlowGraphContext, flowArgs: V
                 const inputRowSignature = node.templateSignature!.inputs.find(row => row.id === inputId)!;
                 const isListInput = inputRowSignature.rowType === 'input-list';
                 if (connections.length > 0 || isListInput) {
-                    const transportedValues = connections.map(conn =>
-                        interpretNode(conn.nodeId)[conn.outputId]
-                    );
+                    const transportedValues = connections.map(conn => {
+                        const prev = interpretNode(conn.nodeId);
+                        if (conn.accessor != null) {
+                            return prev[conn.accessor];
+                        } else {
+                            return prev;
+                        }
+                    });
                     if (isListInput) {
                         return transportedValues;
                     }
@@ -53,7 +58,7 @@ function interpretFlow(doc: DocumentContext, flow: FlowGraphContext, flowArgs: V
                 }
             }
         });
-        
+
         const returnVal = interpretSignature(doc, signature, inputProxy, flowArgs);
         memoizedOutputs.set(node.ref.id, returnVal);
         return returnVal;
@@ -72,8 +77,9 @@ function interpretSignature(
 
     if (signature.id === '@@input') {
         const vals: ValueMap = {};
-        for (const output of signature.outputs) {
-            vals[output.id] = flowArgs[output.id];
+        const mapOutput = signature.output.specifier as MapTypeSpecifier;
+        for (const outputId of Object.keys(mapOutput.elements)) {
+            vals[outputId] = flowArgs[outputId];
         }
         return vals;
     }
@@ -105,17 +111,8 @@ function assertValidDocument(doc: DocumentContext, config: InterpreterConfig) {
     if (totalProblemCount > 0) {
         throw new InterpretationException(`Document contains ${totalProblemCount} problem(s).`);
     }
-
     const flow = doc.flowContexts[MAIN_FLOW_ID];
-    if (flow == null || flow.ref.outputs[0].id !== 'value') {
-        throw new InterpretationException(`Document is missing a valid 'main' flow with an output named 'value'.`);
+    if (flow == null) {
+        throw new InterpretationException(`Document is missing a valid 'main' flow.`);
     }
-
-    // for (const input of flow.ref.inputs) {
-    //     const arg = flowArgs[input.id];
-    //     try {
-    //         assertElementOfType(input.dataType, arg, flow.flowEnvironment);
-    //     } catch (e) {
-    //         throw new InterpretationException(`Invalid argument (${arg}) found for input ${input.id} in flow ${flow.ref.id}.`);
-    //     }
 }

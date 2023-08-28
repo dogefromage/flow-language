@@ -1,7 +1,7 @@
 import * as lang from '@fluss/language';
 import React from 'react';
 import { FlowNodeNameWrapper, FlowNodeRowNameP } from '../styles/flowStyles';
-import { FlowInputRowSwitch, FlowOutputRow } from './FlowNodeRowComponents';
+import { FlowInputRowSwitch, FlowOutputRowSwitch } from './FlowNodeRowComponents';
 
 interface Props {
     panelId: string;
@@ -17,9 +17,9 @@ const FlowNodeContent = ({ panelId, flowId, context, signature, env }: Props) =>
         flowId,
         nodeId: context.ref.id,
     };
-    const inputType = context.specifier?.parameter;
+    const inputType = context.specifier?.parameters;
     const outputType = context.specifier?.output;
-
+    
     return (<>
         <FlowNodeNameWrapper
             $backColor={signature.attributes.color}
@@ -32,25 +32,21 @@ const FlowNodeContent = ({ panelId, flowId, context, signature, env }: Props) =>
                 {signature.name}
             </FlowNodeRowNameP>
         </FlowNodeNameWrapper>
+        <FlowOutputRowSwitch
+            {...commonProps}
+            key={signature.output.id}
+            row={signature.output}
+            type={outputType || lang.createAnyType()}
+            context={context.outputRow}
+            env={env}
+        />
         {
-            signature.outputs.map(output =>
-                <FlowOutputRow
-                    {...commonProps}
-                    key={output.id}
-                    row={output}
-                    type={outputType?.elements[output.id] || lang.createAnyType()}
-                    context={context.outputRows[output.id]}
-                    env={env}
-                />
-            )
-        }
-        {
-            signature.inputs.map(input =>
+            signature.inputs.map((input, index) =>
                 <FlowInputRowSwitch
                     {...commonProps}
                     key={input.id}
                     row={input}
-                    type={inputType?.elements[input.id] || lang.createAnyType()}
+                    type={inputType?.elements[index] || lang.createAnyType()}
                     context={context.inputRows[input.id]}
                     env={env}
                 />

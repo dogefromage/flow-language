@@ -2,6 +2,7 @@ import * as lang from '@fluss/language';
 import React, { Fragment, PropsWithChildren } from 'react';
 import styled from 'styled-components';
 import { Bold } from '../styles/common';
+import { flowRowTypeNames } from '../utils/flows';
 import { formatSpecifier } from '../utils/typeFormatting';
 import { RowComponentProps } from './FlowNodeRowComponents';
 
@@ -39,16 +40,6 @@ const ToolTipSection = styled.div`
 `;
 
 
-
-type RowTypes = RowComponentProps['row']['rowType'];
-const rowTypeNames: Record<RowTypes, string> = {
-    'output': 'Output',
-    'input-simple': 'Simple Input',
-    'input-list': 'List Input',
-    'input-variable': 'Variable Input',
-    'input-function': 'Function Input',
-};
-
 const colors = {
     'type': '#5effe7',
     'alias': '#00ff00',
@@ -68,7 +59,7 @@ const FlowNodeRowContextToolTip = (props: RowComponentProps) => {
                 <p>
                     Row Type:&nbsp;
                     <Bold $color={colors['rowType']}>
-                        {rowTypeNames[row.rowType]}
+                        {flowRowTypeNames[row.rowType]}
                     </Bold>
                 </p>
                 <p>

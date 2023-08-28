@@ -19,7 +19,21 @@ export type RowComponentProps<R extends RowSignature = RowSignature> = {
     env: lang.FlowEnvironment;
 }
 
-export const FlowOutputRow = (props: RowComponentProps<lang.OutputRowSignature>) => {
+export const FlowOutputRowSwitch = (props: RowComponentProps<lang.OutputRowSignature>) => {
+    switch (props.row.rowType) {
+        case 'output-simple':
+            return <FlowOutputRowSimple {...props as RowComponentProps<lang.SimpleOutputRowSignature>} />
+        case 'output-destructured':
+            return <FlowOutputRowDestructured {...props as RowComponentProps<lang.DestructuredOutputRowSignature>} />
+        case 'output-hidden':
+            return null;
+        default:
+            console.error(`unknown row type ${(props.row as any).rowType}`);
+            return null;
+    }
+}
+
+export const FlowOutputRowSimple = (props: RowComponentProps<lang.SimpleOutputRowSignature>) => {
     const { panelId, flowId, nodeId, row, context, type, env } = props;
 
     return (
@@ -34,7 +48,57 @@ export const FlowOutputRow = (props: RowComponentProps<lang.OutputRowSignature>)
                     location={{
                         direction: 'output',
                         nodeId,
-                        rowId: row.id,
+                        // no accessor
+                    }}
+                    env={env}
+                />
+                <FlowNodeRowNameP
+                    $align='right'
+                >
+                    {row.label}
+                </FlowNodeRowNameP>
+            </FlowNodeRowDiv>
+        </FlowNodeRowContextWrapper>
+    );
+}
+
+export const FlowOutputRowDestructured = (props: RowComponentProps<lang.DestructuredOutputRowSignature>) => {
+    const { panelId, flowId, nodeId, row, context, type, env } = props;
+
+    const resolvedType = lang.tryResolveTypeAlias(type, env);
+
+    const canDestructure =
+        resolvedType != null &&
+        (resolvedType.type === 'map' || resolvedType.type === 'tuple');
+
+    if (!canDestructure) {
+        return (
+            <FlowNodeRowContextWrapper
+                {...props}
+            >
+
+            </FlowNodeRowContextWrapper>
+        );
+    }
+
+    type Entry = {
+        accessor: string;
+
+    }
+
+    return (
+        <FlowNodeRowContextWrapper
+            {...props}
+        >
+            <FlowNodeRowDiv>
+                <FlowJoint
+                    panelId={panelId}
+                    flowId={flowId}
+                    type={type}
+                    location={{
+                        direction: 'output',
+                        nodeId,
+                        // no accessor
                     }}
                     env={env}
                 />
@@ -133,7 +197,7 @@ export const FlowInputRowList = (props: RowComponentProps<lang.ListInputRowSigna
             {
                 connections.map((conn, index) =>
                     <FlowNodeRowDiv
-                        key={[index, conn.nodeId, conn.outputId].join(':')}
+                        key={[index, conn.nodeId, conn.accessor].join(':')}
                     >
                         <FlowJoint
                             panelId={panelId}
@@ -191,9 +255,9 @@ export const FlowInputRowFunction = (props: RowComponentProps<lang.ListInputRowS
         const envContent = lang.collectTotalEnvironmentContent(env);
         return Object.fromEntries(
             Object.entries(envContent.signatures || {})
-                .map(([ _, signature ]) => [ signature.id, signature.name ])
+                .map(([_, signature]) => [signature.id, signature.name])
         )
-    }, [ env ]);
+    }, [env]);
 
     return (
         <FlowNodeRowContextWrapper {...props}>
@@ -210,7 +274,7 @@ export const FlowInputRowFunction = (props: RowComponentProps<lang.ListInputRowS
                     }}
                     env={env}
                 />
-                <FormSelectOption 
+                <FormSelectOption
                     value={context?.ref?.value || ''}
                     options={Object.keys(signatures)}
                     mapName={signatures}

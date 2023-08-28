@@ -19,7 +19,9 @@ export interface VariableInputRowSignature extends BaseRow<'input-variable'> {
     defaultValue: InitializerValue | null;
 };
 
-export type SimpleOutputRowSignature = BaseRow<'output'>;
+export type SimpleOutputRowSignature = BaseRow<'output-simple'>;
+export type DestructuredOutputRowSignature = BaseRow<'output-destructured'>;
+export type HiddenOutputRowSignature = BaseRow<'output-hidden'>;
 
 export type InputRowSignature =
     | SimpleInputRowSignature
@@ -29,25 +31,18 @@ export type InputRowSignature =
 
 export type OutputRowSignature =
     | SimpleOutputRowSignature
+    | DestructuredOutputRowSignature
+    | HiddenOutputRowSignature
 
 export interface GenericTag {
     id: string;
     constraint: TypeSpecifier | null;
 }
 
-/**
- * Minimum data required to instantiate this function either internal, graph or other location.
- * Essentially template or outline of any node which can be used in graph.
- * 
- * Every flow function takes in a dictionary (parameter name -> value) and outputs a dictionary (output name -> value).
- * In the flow graph, parameter and output names match the corresponding rows id.
- * 
- * The order of inputs and outputs in the array should be only used for display.
- */
 export interface AnonymousFlowSignature {
     generics: GenericTag[];
     inputs: InputRowSignature[];
-    outputs: OutputRowSignature[];
+    output: OutputRowSignature;
 }
 
 export type FlowSignatureId = string;

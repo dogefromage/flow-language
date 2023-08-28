@@ -24,8 +24,8 @@ export interface MapTypeSpecifier {
 }
 export interface FunctionTypeSpecifier {
     type: 'function';
-    parameter: MapTypeSpecifier;
-    output: MapTypeSpecifier;
+    parameters: TupleTypeSpecifier;
+    output: TypeSpecifier;
 }
 export interface UnionTypeSpecifier {
     type: 'union';
