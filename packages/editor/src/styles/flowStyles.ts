@@ -48,6 +48,10 @@ export const FlowNodeRowDiv = styled.div`
     grid-template-columns: 100%;
     padding: 0 12px;
     position: relative;
+    
+    p {
+        text-decoration: var(--error-deco);
+    }
 `;
 
 export const FlowNodeNameWrapper = styled(FlowNodeRowDiv) <{
@@ -79,8 +83,6 @@ export const FlowNodeRowNameP = styled.p<{
     ${({ $bold: bold }) => bold && `font-weight: bold;`}
 
     color: ${({ $color }) => $color || 'inherit'};
-
-    text-decoration: var(--error-deco);
 `;
 
 export const FlowJointDiv = styled.div<{
@@ -112,12 +114,12 @@ export const FlowJointDiv = styled.div<{
 
 
         ${({ $jointStyle }) => $jointStyle.background &&
-            `background-color: ${$jointStyle.background};`
-        }
+        `background-color: ${$jointStyle.background};`
+    }
         ${({ $jointStyle }) => $jointStyle.border &&
-            `border: ${$jointStyle.borderStyle} 2px ${$jointStyle.border};`
-        }
-        ${({ $jointStyle }) => $jointStyle.shape === 'round' && 'border-radius: 100%;' }
+        `border: ${$jointStyle.borderStyle} 2px ${$jointStyle.border};`
+    }
+        ${({ $jointStyle }) => $jointStyle.shape === 'round' && 'border-radius: 100%;'}
         ${({ $isHovering }) => $isHovering && `transform: scale(1.3);`}
     }
 

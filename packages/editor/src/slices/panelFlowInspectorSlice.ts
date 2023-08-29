@@ -1,13 +1,12 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import panelStateEnhancer from "../redux/panelStateEnhancer";
 import { CreatePanelStateCallback, ViewTypes } from "../types";
-import { FlowInspectorLists, FlowInspectorPanelState } from "../types/flowInspectorView";
+import { FlowInspectorPanelState, FlowInspectorSelectionItem } from "../types/flowInspectorView";
 import { getPanelState } from "../utils/panelManager";
 
 export const createFlowInspectorPanelState: CreatePanelStateCallback<FlowInspectorPanelState> = () => {
     const panelState: FlowInspectorPanelState = {
         viewType: ViewTypes.FlowInspector,
-        selectedListItems: {},
     };
     return panelState;
 }
@@ -16,16 +15,19 @@ export const flowInspectorPanelsSlice = createSlice({
     name: 'flowInspectorPanels',
     initialState: {} as Record<string, FlowInspectorPanelState>,
     reducers: {
-        selectRow: (s, a: PayloadAction<{ panelId: string, listType: FlowInspectorLists, rowId: string }>) => {
+        selectItem: (s, a: PayloadAction<{ panelId: string, type: FlowInspectorSelectionItem, id: string }>) => {
             const ps = getPanelState(s, a);
             if (!ps) return;
-            ps.selectedListItems[a.payload.listType] = a.payload.rowId;
+            ps.selectedItem = { 
+                type: a.payload.type, 
+                id: a.payload.id, 
+            };
         },
     },
 });
 
 export const {
-    selectRow: flowInspectorPanelsSelectRow,
+    selectItem: flowInspectorPanelsSelectItem,
 } = flowInspectorPanelsSlice.actions;
 
 const flowInspectorPanelsReducer = panelStateEnhancer(

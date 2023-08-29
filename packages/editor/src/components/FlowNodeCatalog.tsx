@@ -43,7 +43,7 @@ const FlowNodeCatalog = ({ panelId }: Props) => {
     const menuShape = useMemo(() => {
         if (!environmentSignatures) return;
         return generateCatalogMenuShape(environmentSignatures, searchValue, addNode);
-    }, [environmentSignatures, searchValue, addNode, ]);
+    }, [environmentSignatures, searchValue, addNode,]);
 
     if (!menuShape || !catalogState) return null;
 
@@ -161,7 +161,7 @@ function createAddFlowAction(flowId: string, signature: FlowSignature, addNodeSt
     // find first opposite sided row with compatible type
     const drag = addNodeState.draggingContext;
     const connectionColumn = drag.fromJoint.direction === 'input' ?
-        signature.outputs : signature.inputs;
+        [signature.output] : signature.inputs;
     let compatibleRowId: string | undefined;
     for (const row of connectionColumn) {
         if (isSubsetType(row.specifier, drag.dataType, drag.environment)) {
@@ -189,12 +189,12 @@ function createAddFlowAction(flowId: string, signature: FlowSignature, addNodeSt
     }
 
     let newLocation: JointLocation = drag.fromJoint.direction === 'input' ?
-        ({ nodeId: '*', rowId: compatibleRowId, direction: 'output', }) :
+        ({ nodeId: '*', direction: 'output', }) :
         ({ nodeId: '*', rowId: compatibleRowId, direction: 'input', jointIndex: 0 });
 
     dispatch(flowsAddLink({
         flowId,
-        locations: [ drag.fromJoint, newLocation ],
+        locations: [drag.fromJoint, newLocation],
         undo: { desc: 'Added link to newly created node.' },
     }));
 }

@@ -1,10 +1,10 @@
 import { findEnvironmentSignature } from "../core/environment";
-import { createAnyType, createMapType, createMissingType, createTupleType, getSignatureFunctionType, memoizeTypeStructure } from "../typeSystem";
+import { createAnyType, createMissingType, createTupleType, getSignatureFunctionType, memoizeTypeStructure } from "../typeSystem";
 import { assertSubsetType } from "../typeSystem/comparison";
 import { TypeSystemException, TypeSystemExceptionData, TypeTreePath } from "../typeSystem/exceptionHandling";
 import { applyInstantiationConstraints, inferGenerics } from "../typeSystem/generics";
 import { tryResolveTypeAlias } from "../typeSystem/resolution";
-import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, InputRowSignature, FlowConnection, RowState, TypeSpecifier } from "../types";
+import { FlowConnection, FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, InputRowSignature, RowState, TupleTypeSpecifier, TypeSpecifier } from "../types";
 import { FlowNodeContext, RowContext, RowProblem } from "../types/context";
 import { Obj } from "../types/utilTypes";
 import { assertTruthy } from "../utils";
@@ -35,7 +35,7 @@ export const validateNode = mem((
                 validateRows(
                     input,
                     node.rowStates[input.id],
-                    instantiatedNodeType.parameters.elements[index],
+                    (instantiatedNodeType.parameter as TupleTypeSpecifier).elements[index],
                     env,
                     rowProblemsMap[input.id],
                 )
@@ -50,7 +50,7 @@ const validateNodeSyntax = mem((
     previousOutputTypes: Obj<TypeSpecifier>,
     env: FlowEnvironment,
 ) => {
-    const incomingTypeMap: Record<string, TypeSpecifier> = {};
+    const argumentTypeList: TypeSpecifier[] = [];
     const rowProblemsMap: Record<string, RowProblem[]> = {};
 
     for (const input of templateSignature.inputs) {
@@ -66,11 +66,11 @@ const validateNodeSyntax = mem((
         const { rowProblems: typeProblems, incomingType } =
             validateIncomingTypes(input, rowState, connectedTypes, env);
             
-        incomingTypeMap[input.id] = incomingType;
+        argumentTypeList.push(incomingType);
         objPushConditional(rowProblemsMap, input.id, ...typeProblems);
     }
 
-    const argumentTypeSignature = createMapType(incomingTypeMap);
+    const argumentsTuple = createTupleType(...argumentTypeList);
     const signatureFunctionType = getSignatureFunctionType(templateSignature);
 
     const genericMap = Object.fromEntries(
@@ -80,8 +80,8 @@ const validateNodeSyntax = mem((
         ]),
     );
     const constraints = inferGenerics(
-        argumentTypeSignature,
-        signatureFunctionType.parameters,
+        argumentsTuple,
+        signatureFunctionType.parameter,
         genericMap,
         env
     );
@@ -91,11 +91,12 @@ const validateNodeSyntax = mem((
     const instantiatedNodeType = memoizeTypeStructure(unmemoizedInstantiatetType);
 
     try {
-        assertSubsetType(argumentTypeSignature, instantiatedNodeType.parameters, env);
+        assertSubsetType(argumentsTuple, instantiatedNodeType.parameter, env);
     } catch (e) {
         if (e instanceof TypeSystemException) {
-            for (const input of templateSignature.inputs) {
-                const rowTypeProblem = getRowsTypeProblem(e.data, input.id);
+            for (let i = 0; i < templateSignature.inputs.length; i++) {
+                const input = templateSignature.inputs[i];
+                const rowTypeProblem = getRowsTypeProblem(e.data, i.toString());
                 objPushConditional(rowProblemsMap, input.id, rowTypeProblem);
             }
         } else {
@@ -295,7 +296,7 @@ function getRowsTypeProblem(typeComparisonProblem: TypeSystemExceptionData | und
     } else {
         return {
             type: 'incompatible-argument-type',
-            message: 'Connected value cannot be used as input for this row.',
+            message: 'Input is not compatible with rows specified type.',
             typeProblem: reducedData,
             connectionIndex,
         };

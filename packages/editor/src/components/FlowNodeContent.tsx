@@ -17,7 +17,11 @@ const FlowNodeContent = ({ panelId, flowId, context, signature, env }: Props) =>
         flowId,
         nodeId: context.ref.id,
     };
-    const inputType = context.specifier?.parameters;
+
+    let inputType: lang.TupleTypeSpecifier | undefined;
+    if (typeof context.specifier?.parameter !== 'string' && context.specifier?.parameter.type === 'tuple') {
+        inputType = context.specifier.parameter;
+    }
     const outputType = context.specifier?.output;
     
     return (<>

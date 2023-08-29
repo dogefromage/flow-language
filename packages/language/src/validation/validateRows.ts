@@ -14,7 +14,7 @@ export const validateRows = mem((
 
     const result: RowContext = {
         ref: rowState,
-        problems: rowProblems || [],
+        problems: rowProblems?.slice() || [],
     };
 
     const isConnected = rowState?.connections.length && rowState.connections.length > 0;

@@ -2,12 +2,13 @@ import React from "react";
 import styled from "styled-components";
 import { selectPanelState } from "../redux/panelStateEnhancer";
 import { useAppDispatch, useAppSelector } from "../redux/stateHooks";
-import { selectFlowContext } from "../slices/contextSlice";
 import { selectEditor } from "../slices/editorSlice";
 import { flowsRename, flowsSetAttribute, selectSingleFlow } from "../slices/flowsSlice";
 import { ViewTypes } from "../types";
-import FlowInspectorPortDetails from "./FlowInspectorPortDetails";
-import FlowInspectorPortList from './FlowInspectorPortList';
+import FlowInspectorGenericList from "./FlowInspectorGenericList";
+import FlowInspectorInputList from './FlowInspectorInputList';
+import FlowInspectorOutput from './FlowInspectorOutput';
+import FlowInspectorPortDetails from './FlowInspectorPortDetails';
 import FormColorPicker from './FormColorPicker';
 import FormExpandableRegion from "./FormExpandableRegion";
 import FormRenameField from "./FormRenameField";
@@ -20,8 +21,8 @@ const InspectorWrapper = styled.div`
 const SettingsTable = styled.div`
     display: grid;
     grid-template-columns: 100px 1fr;
-    grid-auto-rows: var(--list-height);
-    align-items: center;
+    /* grid-auto-rows: var(--list-height); */
+    /* align-items: center; */
     grid-row-gap: var(--list-gap);
 `;
 
@@ -64,25 +65,20 @@ const FlowInspectorContent = ({ panelId }: Props) => {
                         />
                     </SettingsTable>
                 </FormExpandableRegion>
-
-                <FormExpandableRegion name='Inputs' defaultValue={true}>
-                    <FlowInspectorPortList panelId={panelId} flowId={flowId} ports={flow.inputs} portType='inputs' />
-                    {
-                        panelState?.selectedListItems['inputs'] != null &&
-                        <FlowInspectorPortDetails panelId={panelId} flowId={flowId} portType={'inputs'}
-                            portId={panelState?.selectedListItems['inputs']} />
-                    }
+                <FormExpandableRegion name='Ports' defaultValue={true}>
+                    <SettingsTable>
+                        <p>Generics</p>
+                        <FlowInspectorGenericList panelId={panelId} flowId={flowId} />
+                        <p>Inputs</p>
+                        <FlowInspectorInputList panelId={panelId} flowId={flowId} />
+                        <p>Output</p>
+                        <FlowInspectorOutput panelId={panelId} flowId={flowId} />
+                    </SettingsTable>
+                </FormExpandableRegion>
+                <FormExpandableRegion name='Details' defaultValue={true}>
+                    <FlowInspectorPortDetails panelId={panelId} flowId={flowId} />
                 </FormExpandableRegion>
 
-
-                <FormExpandableRegion name='Outputs' defaultValue={true}>
-                    <FlowInspectorPortList panelId={panelId} flowId={flowId} ports={[ flow.output ]} portType='outputs' />
-                    {
-                        panelState?.selectedListItems['outputs'] != null &&
-                        <FlowInspectorPortDetails panelId={panelId} flowId={flowId} portType={'outputs'}
-                            portId={panelState?.selectedListItems['outputs']} />
-                    }
-                </FormExpandableRegion>
             </>) : (
                 <p>No active flow found</p>
             )

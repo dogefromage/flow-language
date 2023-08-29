@@ -34,9 +34,9 @@ const primitiveColors: Record<string, Pick<FlowJointStyling, 'background' | 'bor
     boolean: { background: '#44adb3', border: null, },
     number:  { background: '#347dcf', border: null, },
     string:  { background: '#9249e6', border: null, },
-    null:    { background: '#b5b5b5', border: null, },
+    // null:    { background: '#b5b5b5', border: null, },
 }
-const missingColor = '#ff00ff';
+const missingColor = '#b5b5b5';
 
 function getBaseStyling(argX: lang.TypeSpecifier, env: lang.FlowEnvironment): FlowJointStyling {
     const X = lang.tryResolveTypeAlias(argX, env);

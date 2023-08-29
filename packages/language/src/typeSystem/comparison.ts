@@ -115,7 +115,7 @@ function assertSubsetTuple(path: TypeTreePath, X: TupleTypeSpecifier, Y: TupleTy
     if (X.elements.length !== Y.elements.length) {
         throw new TypeSystemException({
             type: 'incompatible-type',
-            message: `A tuple with ${Y.elements.length} expected, only ${X.elements.length} were provided.`,
+            message: `A tuple with ${Y.elements.length} elements expected, ${X.elements.length} were provided.`,
             path,
         });
     }
@@ -142,7 +142,7 @@ function assertSubsetMap(path: TypeTreePath, X: MapTypeSpecifier, Y: MapTypeSpec
 }
 
 function assertSubsetFunction(path: TypeTreePath, X: FunctionTypeSpecifier, Y: FunctionTypeSpecifier, env: FlowEnvironment) {
-    assertSubsetTuple(path.add({ key: 'parameters', formatting: 'property' }), X.parameters, Y.parameters, env);
+    assertSubsetSwitch(path.add({ key: 'parameter', formatting: 'property' }), X.parameter, Y.parameter, env);
     assertSubsetSwitch(path.add({ key: 'output', formatting: 'property' }), X.output, Y.output, env);
 }
 

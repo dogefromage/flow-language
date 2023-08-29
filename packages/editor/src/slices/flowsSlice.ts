@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { selectDocument } from "../redux/stateHooks";
 import { RootState } from "../redux/store";
 import { FlowsSliceState, UndoAction, Vec2, defaultFlows } from "../types";
-import { FlowPortLists, RowSignatureBlueprint } from "../types/flowInspectorView";
+import { RowSignatureBlueprint } from "../types/flowInspectorView";
 import { getBasePowers } from "../utils/math";
 enableMapSet();
 
@@ -53,6 +53,7 @@ function findUniquePortId<T extends { id: string }>(ports: T[]) {
         }
     }
 }
+type ListedState = lang.InputRowSignature | lang.GenericTag;
 type RowSignature = lang.InputRowSignature | lang.OutputRowSignature;
 
 function createRowSignature(id: string, label: string, blueprint: RowSignatureBlueprint) {
@@ -221,59 +222,72 @@ export const flowsSlice = createSlice({
             const { nodeId, rowId, jointIndex } = a.payload.input;
             g.nodes[nodeId]?.rowStates[rowId]?.connections.splice(jointIndex, 1);
         },
-        addPort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, portType: FlowPortLists, blueprint: RowSignatureBlueprint }>) => {
+        addListItem: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, prop: 'inputs' | 'generics' }>) => {
             const g = getFlow(s, a);
             if (!g) return;
 
-            const ports: RowSignature[] = g[a.payload.portType];
-            const portId = findUniquePortId(ports);
-            const port = createRowSignature(portId, 'New Port', a.payload.blueprint);
-            ports.push(port);
+            const list: ListedState[] = g[a.payload.prop];
+            const nextId = findUniquePortId(list);
+
+            if (a.payload.prop === 'inputs') {
+                const defaultInput: RowSignatureBlueprint = { rowType: 'input-simple', specifier: lang.createAnyType() };
+                const port = createRowSignature(nextId, 'New Input', defaultInput);
+                list.push(port as lang.InputRowSignature);
+            }
+            if (a.payload.prop === 'generics') {
+                list.push({ id: nextId, constraint: null });
+            }
         },
-        replacePort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, portType: FlowPortLists, portId: string, blueprint: RowSignatureBlueprint }>) => {
+        removeListItem: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, portId: string, prop: 'inputs' | 'generics' }>) => {
             const g = getFlow(s, a);
             if (!g) return;
-
-            const ports: RowSignature[] = g[a.payload.portType];
-            const index = ports.findIndex(i => i.id === a.payload.portId);
-            const port = ports[index];
+            const list: ListedState[] = g[a.payload.prop];
+            const index = list.findIndex(i => i.id === a.payload.portId);
+            if (index >= 0) {
+                list.splice(index, 1);
+            }
+        },
+        reorderList: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, newOrder: string[], prop: 'inputs' | 'generics' }>) => {
+            const g = getFlow(s, a);
+            if (!g) return;
+            const list: ListedState[] = g[a.payload.prop];
+            const newRows = a.payload.newOrder
+                .map(rowId => list.find(row => row.id === rowId));
+            if (!newRows.every(row => row != null)) {
+                console.error('Invalid row ids passed');
+                return;
+            }
+            g[a.payload.prop] = newRows as any[];
+        },
+        replaceInput: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, rowId: string, blueprint: RowSignatureBlueprint }>) => {
+            const g = getFlow(s, a);
+            if (!g) return;
+            const index = g.inputs.findIndex(i => i.id === a.payload.rowId);
+            const port = g.inputs[index];
             if (port == null) {
                 return console.error(`Row not found.`);
             }
             const newPort = createRowSignature(port.id, port.label, a.payload.blueprint);
-            ports.splice(index, 1, newPort);
+            g.inputs.splice(index, 1, newPort as lang.InputRowSignature);
         },
-        updatePort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, portType: FlowPortLists, portId: string, newState: Partial<RowSignature> }>) => {
+        updateInput: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, portId: string, newState: Partial<RowSignature> }>) => {
             const g = getFlow(s, a);
             if (!g) return;
-            const ports: RowSignature[] = g[a.payload.portType];
-            const port = ports.find(p => p.id === a.payload.portId);
+            const port = g.inputs.find(p => p.id === a.payload.portId);
             if (port == null) {
                 return console.error(`Row not found`);
             }
             Object.assign(port, a.payload.newState);
         },
-        removePort: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, portType: FlowPortLists, portId: string }>) => {
+        replaceOutput: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, blueprint: RowSignatureBlueprint }>) => {
             const g = getFlow(s, a);
             if (!g) return;
-            const ports = g[a.payload.portType];
-            const index = ports.findIndex(i => i.id === a.payload.portId);
-            if (index >= 0) {
-                ports.splice(index, 1);
-            }
+            g.output = createRowSignature(g.output.id, g.output.label, a.payload.blueprint) as lang.OutputRowSignature;
         },
-        reorderPorts: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, portType: FlowPortLists, newOrder: string[] }>) => {
+        updateOutput: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, newState: Partial<RowSignature> }>) => {
             const g = getFlow(s, a);
             if (!g) return;
-            const rows: RowSignature[] = g[a.payload.portType];
-            const newRows = a.payload.newOrder
-                .map(rowId => rows.find(row => row.id === rowId));
-            if (!newRows.every(row => row != null)) {
-                console.error('Invalid row ids passed');
-                return;
-            }
-            // @ts-ignore
-            g[a.payload.portType] = newRows;
+            Object.assign(g.output, a.payload.newState);
         },
     }
 });
@@ -292,12 +306,15 @@ export const {
     addLink: flowsAddLink,
     removeEdge: flowsRemoveEdge,
     setRowValue: flowsSetRowValue,
-    // // META
-    addPort: flowsAddPort,
-    updatePort: flowsUpdatePort,
-    removePort: flowsRemovePort,
-    replacePort: flowsReplacePort,
-    reorderPorts: flowsReorderPorts,
+    // META LIST CRUD
+    addListItem: flowsAddListItem,
+    removeListItem: flowsRemoveListItem,
+    reorderList: flowsReorderList,
+    // META UPDATE
+    replaceInput: flowsReplaceInput,
+    updateInput: flowsUpdateInput,
+    replaceOutput: flowsReplaceOutput,
+    updateOutput: flowsUpdateOutput,
 } = flowsSlice.actions;
 
 export const selectFlows = (state: RootState) => selectDocument(state).flows;

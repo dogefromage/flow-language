@@ -121,14 +121,22 @@ const TypeSubProblem = ({ problem }: PropsWithChildren<ProblemProps>) => {
     for (const node of problem.typeProblem.path.nodes) {
         if (node.formatting === 'property') {
             if (lines.length) {
-                lines[lines.length - 1] += `.${node.key}`;
+                const isNum = isFinite(parseInt(node.key));
+                let accessor = isNum ? `[${node.key}]` : `.${node.key}`
+                lines.push(accessor);
             }
         } else {
+            if (lines.length) {
+                lines.push(<br/>)
+            }
             lines.push(
-                <Col $color={colors[node.formatting]}>{ indent + node.key + '\n' }</Col>
+                <Col $color={colors[node.formatting]}>{ indent + node.key }</Col>
             );
             indent += '  ';
         }
+    }
+    if (lines.length) {
+        lines.push(<br/>)
     }
     lines.push(
         <Col $color={colors['typeProblemMessage']}>{ indent + problem.typeProblem.message }</Col>

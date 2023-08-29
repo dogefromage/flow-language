@@ -1,12 +1,12 @@
 import * as lang from "@fluss/language";
 import React, { useMemo } from "react";
+import { useAppDispatch } from "../redux/stateHooks";
+import { flowsSetRowValue } from "../slices/flowsSlice";
 import { FlowNodeRowDiv, FlowNodeRowNameP } from "../styles/flowStyles";
 import FlowJoint from "./FlowJoint";
 import FlowNodeRowContextWrapper from "./FlowNodeRow";
 import FlowNodeRowInitializer from "./FlowNodeRowInitializer";
 import FormSelectOption from "./FormSelectOption";
-import { useAppDispatch } from "../redux/stateHooks";
-import { flowsSetRowValue } from "../slices/flowsSlice";
 
 type RowSignature = lang.InputRowSignature | lang.OutputRowSignature;
 export type RowComponentProps<R extends RowSignature = RowSignature> = {
@@ -76,14 +76,39 @@ export const FlowOutputRowDestructured = (props: RowComponentProps<lang.Destruct
             <FlowNodeRowContextWrapper
                 {...props}
             >
-
+                <FlowNodeRowDiv>
+                    <FlowNodeRowNameP
+                        $align='right'
+                    >
+                        {row.label}
+                    </FlowNodeRowNameP>
+                </FlowNodeRowDiv>
             </FlowNodeRowContextWrapper>
         );
     }
 
-    type Entry = {
-        accessor: string;
+    const typeEntries: Array<{
+        elementType: lang.TypeSpecifier,
+        accessor: string,
+        label: string,
+    }> = [];
 
+    if (resolvedType.type === 'tuple') {
+        for (let i = 0; i < resolvedType.elements.length; i++) {
+            typeEntries.push({
+                elementType: resolvedType.elements[i],
+                accessor: i.toString(),
+                label: `[${i}]`,
+            })
+        }
+    } else {
+        for (const [key, elementType] of Object.entries(resolvedType.elements)) {
+            typeEntries.push({
+                elementType,
+                accessor: key,
+                label: key
+            });
+        }
     }
 
     return (
@@ -91,23 +116,35 @@ export const FlowOutputRowDestructured = (props: RowComponentProps<lang.Destruct
             {...props}
         >
             <FlowNodeRowDiv>
-                <FlowJoint
-                    panelId={panelId}
-                    flowId={flowId}
-                    type={type}
-                    location={{
-                        direction: 'output',
-                        nodeId,
-                        // no accessor
-                    }}
-                    env={env}
-                />
                 <FlowNodeRowNameP
                     $align='right'
                 >
                     {row.label}
                 </FlowNodeRowNameP>
             </FlowNodeRowDiv>
+            {
+                typeEntries.map(entry =>
+                    <FlowNodeRowDiv key={entry.label}>
+                        <FlowJoint
+                            panelId={panelId}
+                            flowId={flowId}
+                            type={entry.elementType}
+                            location={{
+                                direction: 'output',
+                                nodeId,
+                                accessor: entry.accessor,
+                            }}
+                            env={env}
+                        />
+                        <FlowNodeRowNameP
+                            $align='right'
+                        >
+                            {entry.label}
+                            {/* { `${row.label} ['${entry.label}']` } */}
+                        </FlowNodeRowNameP>
+                    </FlowNodeRowDiv>
+                )
+            }
         </FlowNodeRowContextWrapper>
     );
 }
@@ -259,6 +296,8 @@ export const FlowInputRowFunction = (props: RowComponentProps<lang.ListInputRowS
         )
     }, [env]);
 
+    const isConnected = !!context?.ref?.connections.length;
+
     return (
         <FlowNodeRowContextWrapper {...props}>
             <FlowNodeRowDiv>
@@ -274,18 +313,22 @@ export const FlowInputRowFunction = (props: RowComponentProps<lang.ListInputRowS
                     }}
                     env={env}
                 />
-                <FormSelectOption
-                    value={context?.ref?.value || ''}
-                    options={Object.keys(signatures)}
-                    mapName={signatures}
-                    onChange={newSignatureId => {
-                        dispatch(flowsSetRowValue({
-                            flowId, nodeId, rowId: row.id,
-                            rowValue: newSignatureId,
-                            undo: { desc: 'Updated function input value.' },
-                        }));
-                    }}
-                />
+                <FlowNodeRowNameP $align="left">{row.label}</FlowNodeRowNameP>
+                {
+                    !isConnected &&
+                    <FormSelectOption
+                        value={context?.ref?.value || ''}
+                        options={Object.keys(signatures)}
+                        mapName={signatures}
+                        onChange={newSignatureId => {
+                            dispatch(flowsSetRowValue({
+                                flowId, nodeId, rowId: row.id,
+                                rowValue: newSignatureId,
+                                undo: { desc: 'Updated function input value.' },
+                            }));
+                        }}
+                    />
+                }
             </FlowNodeRowDiv>
         </FlowNodeRowContextWrapper >
     );

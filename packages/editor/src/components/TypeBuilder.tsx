@@ -74,7 +74,7 @@ const TypeTag = ({ X, env, onChange }: PropsWithChildren<TypeTagProps>) => {
             'tuple': lang.createTupleType(),
             'list': lang.createListType(lang.createAnyType()),
             'map': lang.createMapType({}),
-            'function': lang.createFunctionType(lang.createMapType({}), lang.createMapType({})),
+            'function': lang.createFunctionType(lang.createTupleType(), lang.createAnyType()),
         };
         const nameMap: Record<string, string> = {
             'tuple': 'Tuple<...>',
@@ -162,7 +162,35 @@ const TypeTag = ({ X, env, onChange }: PropsWithChildren<TypeTagProps>) => {
                             onChange?.(lang.createTupleType(...X.elements, lang.createAnyType()));
                         }} />
                     </div>
-                </>}
+                </>
+            } {
+                (typeof X === 'object' && X.type === 'function') && <>
+                    <div className="sub">
+                        <div className="boxur">
+                            {/* {BOTTOM_ANGLE} */}
+                        </div>
+                        <TypeTag
+                            X={X.parameter}
+                            env={env}
+                            onChange={newParam =>
+                                onChange?.(lang.createFunctionType(newParam, X.output))
+                            }
+                        />
+                    </div>
+                    <div className="sub">
+                        <div className="boxur">
+                            {/* {BOTTOM_ANGLE} */}
+                        </div>
+                        <TypeTag
+                            X={X.output}
+                            env={env}
+                            onChange={newOutput =>
+                                onChange?.(lang.createFunctionType(X.parameter, newOutput))
+                            }
+                        />
+                    </div>
+                </>
+            }
         </TypeDiv>
     );
 }

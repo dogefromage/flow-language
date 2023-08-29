@@ -25,6 +25,9 @@ const _generateDefaultValue = mem(
             if (X.name === primitiveTypes.string.name) {
                 return '';
             }
+            // if (X.name === primitiveTypes.null.name) {
+            //     return null;
+            // }
             throw new Error(`Unknown primitive ${X.name}`);
         }
         
@@ -42,6 +45,10 @@ const _generateDefaultValue = mem(
                     [key, _generateDefaultValue(typedPath.add({ key, formatting: 'property' }), Y, env)]
                 );
         }
+        if (X.type === 'function') {
+            return 'id';
+        }
+
 
         throw new Error(`Unhandled specifier ${(X as any).type}`);
     },

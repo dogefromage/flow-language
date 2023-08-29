@@ -1,6 +1,6 @@
 import { upperFirst } from "lodash";
 import { SignatureDefinition } from "../types/local";
-import { GenericTag, ListInputRowSignature, OutputRowSignature, SimpleInputRowSignature, TypeSpecifier, VariableInputRowSignature } from "../types";
+import { FunctionInputRowSignature, FunctionTypeSpecifier, GenericTag, ListInputRowSignature, OutputRowSignature, SimpleInputRowSignature, TypeSpecifier, VariableInputRowSignature } from "../types";
 import { createFunctionType, createListType, createUnionType } from "../typeSystem";
 
 function autoName(id: string) {
@@ -66,6 +66,12 @@ const list = {
         specifier: listSpecifier,
     }),
 }
+const func = (id: string, specifier: FunctionTypeSpecifier): FunctionInputRowSignature => ({
+    id,
+    rowType: 'input-function',
+    label: autoName(id),
+    specifier,
+});
 
 
 const output = {
@@ -332,6 +338,22 @@ localDefinitions.push({
         output: output.generic('element', 'T'),
     },
     interpretation: ({ list, index }) => list.at(index),
+});
+
+localDefinitions.push({
+    signature: {
+        id: 'evaluate',
+        name: 'Evaluate',
+        attributes: { category: 'Functions' },
+        description: null,
+        generics: [generic('P'), generic('R')],
+        inputs: [
+            func('_function', createFunctionType('P', 'R')),
+            simple.generic('argument', 'P'),
+        ],
+        output: output.generic('return_value', 'R'),
+    },
+    interpretation: ({ _function, argument }) => _function(argument),
 });
 
 

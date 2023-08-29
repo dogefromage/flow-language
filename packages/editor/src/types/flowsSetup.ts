@@ -27,6 +27,20 @@ export const emptyFlowSignature: lang.AnonymousFlowSignature = {
             specifier: 'number',
             defaultValue: 0,
         },
+        {
+            id: 'b',
+            label: 'Some Input 2',
+            rowType: 'input-variable',
+            specifier: 'string',
+            defaultValue: '',
+        },
+        {
+            id: 'c',
+            label: 'Some Input 3',
+            rowType: 'input-variable',
+            specifier: 'boolean',
+            defaultValue: true,
+        },
     ],
     output: {
         id: 'value',

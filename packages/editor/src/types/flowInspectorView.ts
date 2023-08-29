@@ -7,9 +7,12 @@ export type RowSignatureBlueprint = {
     rowType: AllRowSignatures['rowType'];
 }
 
-export type FlowPortLists = 'inputs' | 'outputs';
-export type FlowInspectorLists = FlowPortLists | 'generics';
+export type FlowInspectorLists = 'inputs' | 'generics';
+export type FlowInspectorSelectionItem = FlowInspectorLists | 'output';
 
 export interface FlowInspectorPanelState extends PanelState {
-    selectedListItems: Partial<Record<FlowInspectorLists, string>>;
+    selectedItem?: {
+        id: string;
+        type: FlowInspectorSelectionItem;
+    }
 }

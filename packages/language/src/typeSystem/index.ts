@@ -31,7 +31,7 @@ export const createUnionType = mem(
     typeSystemCache,
 );
 export const createFunctionType = mem(
-    (parameters: TupleTypeSpecifier, output: TypeSpecifier): FunctionTypeSpecifier => ({ type: 'function', parameters, output }),
+    (parameter: TypeSpecifier, output: TypeSpecifier): FunctionTypeSpecifier => ({ type: 'function', parameter, output }),
     typeSystemCache,
 );
 
@@ -75,7 +75,7 @@ export const memoizeTypeStructure = mem(<T extends TypeSpecifier>(X: T): T => {
             ) as T;
         case 'function':
             return createFunctionType(
-                memoizeTypeStructure(X.parameters),
+                memoizeTypeStructure(X.parameter),
                 memoizeTypeStructure(X.output),
             ) as T;
         case 'primitive':

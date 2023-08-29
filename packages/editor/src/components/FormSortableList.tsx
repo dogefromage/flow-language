@@ -49,7 +49,7 @@ const AddDiv = styled(ItemDiv)``;
 
 interface Item {
     id: string
-    label: string;
+    label?: string;
 }
 
 type FormSortableListProps = {
@@ -61,16 +61,17 @@ type FormSortableListProps = {
     onSelect?: (id: string) => void;
     onAdd?: () => void;
     addMessage?: string;
+    disableAdd?: boolean;
 }
 
-export const FormSortableList = ({ order, selected, onOrder, onSelect, onRename, onRemove, onAdd, addMessage }: PropsWithChildren<FormSortableListProps>) => {
+export const FormSortableList = ({ order, selected, onOrder, onSelect, onRename, onRemove, onAdd, addMessage, disableAdd }: PropsWithChildren<FormSortableListProps>) => {
     const mutableOrder = useMemo(() => structuredClone(order), [order]);
 
     return (
         <ListDiv /* $disabled={disabled} */>
             <SORTABLE.ReactSortable
                 list={mutableOrder}
-                setList={onOrder}
+                setList={onOrder || (() => {})}
                 className='sortable-div'
                 // disabled={disabled}
                 handle='.handle'
@@ -89,7 +90,7 @@ export const FormSortableList = ({ order, selected, onOrder, onSelect, onRename,
                                 <MaterialSymbol className='handle' $size={20} $cursor='move'
                                     /* $disabled={disabled */>drag_handle</MaterialSymbol>
                                 <FormRenameField
-                                    value={row.label}
+                                    value={row.label || row.id}
                                     onChange={newValue => onRename?.(row.id, newValue)}
                                     // disabled={locked}
                                 />
@@ -102,6 +103,7 @@ export const FormSortableList = ({ order, selected, onOrder, onSelect, onRename,
                     )}
             </SORTABLE.ReactSortable>
             {
+                !disableAdd &&
                 <AddDiv onClick={onAdd}>
                     <p>{ addMessage || 'Add Item' }</p>
                     <MaterialSymbol className='handle' $size={20} $button>add</MaterialSymbol>

@@ -44,7 +44,7 @@ function _assertElementOfType(path: TypeTreePath, T: TypeSpecifier, element: Ini
         if (element.length !== T.elements.length) {
             throw new TypeSystemException({
                 type: 'invalid-value', 
-                message: `A tuple with ${T.elements.length} expected, only ${element.length} were provided.`,
+                message: `A tuple with ${T.elements.length} elements expected, ${element.length} were provided.`,
                 path: typedPath,
             });
         }
