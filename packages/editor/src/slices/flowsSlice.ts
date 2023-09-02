@@ -59,7 +59,6 @@ type RowSignature = lang.InputRowSignature | lang.OutputRowSignature;
 function createRowSignature(id: string, label: string, blueprint: RowSignatureBlueprint) {
     const s = {
         id,
-        label,
         rowType: blueprint.rowType,
         specifier: blueprint.specifier,
     }
@@ -71,7 +70,7 @@ export const flowsSlice = createSlice({
     initialState,
     reducers: {
         create: (s, a: UndoAction<{
-            name: string;
+            // name: string;
             flowId?: string;
             signature: lang.AnonymousFlowSignature,
         }>) => {
@@ -92,11 +91,11 @@ export const flowsSlice = createSlice({
             const flow: lang.FlowGraph = {
                 ...a.payload.signature,
                 id,
-                name: a.payload.name,
+                // name: a.payload.name,
                 attributes: {},
                 nodes: {
-                    a: { id: 'a', signature: lang.getInternalId('input'), position: { x: 400, y: 200 }, rowStates: {} },
-                    b: { id: 'b', signature: lang.getInternalId('output'), position: { x: 1000, y: 200 }, rowStates: {} },
+                    a: { id: 'a', signature: 'input', position: { x: 400, y: 200 }, rowStates: {} },
+                    b: { id: 'b', signature: 'output', position: { x: 1000, y: 200 }, rowStates: {} },
                 },
                 idCounter: 2,
             }
@@ -108,7 +107,7 @@ export const flowsSlice = createSlice({
         rename: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, name: string }>) => {
             const g = getFlow(s, a);
             if (!g) return;
-            g.name = a.payload.name;
+            // g.name = a.payload.name;
         },
         setAttribute: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, key: string, value?: string }>) => {
             const g = getFlow(s, a);
@@ -120,7 +119,7 @@ export const flowsSlice = createSlice({
                 delete g.attributes[a.payload.key];
             }
         },
-        addNode: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, signatureId: lang.FlowSignatureId, position: Vec2, rowStates?: lang.FlowNode['rowStates'] }>) => {
+        addNode: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, signatureId: string, position: Vec2, rowStates?: lang.FlowNode['rowStates'] }>) => {
             const g = getFlow(s, a);
             if (!g) return;
             const node: lang.FlowNode = {
@@ -267,7 +266,7 @@ export const flowsSlice = createSlice({
             if (port == null) {
                 return console.error(`Row not found.`);
             }
-            const newPort = createRowSignature(port.id, port.label, a.payload.blueprint);
+            const newPort = createRowSignature(port.id, port.id, a.payload.blueprint);
             g.inputs.splice(index, 1, newPort as lang.InputRowSignature);
         },
         updateInput: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, portId: string, newState: Partial<RowSignature> }>) => {
@@ -282,7 +281,7 @@ export const flowsSlice = createSlice({
         replaceOutput: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, blueprint: RowSignatureBlueprint }>) => {
             const g = getFlow(s, a);
             if (!g) return;
-            g.output = createRowSignature(g.output.id, g.output.label, a.payload.blueprint) as lang.OutputRowSignature;
+            g.output = createRowSignature(g.output.id, g.output.id, a.payload.blueprint) as lang.OutputRowSignature;
         },
         updateOutput: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, newState: Partial<RowSignature> }>) => {
             const g = getFlow(s, a);

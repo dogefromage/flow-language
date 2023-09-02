@@ -1,8 +1,8 @@
 import { baseEnvironmentContent } from "../content/baseEnvironment";
 import { createEnvironment, pushContent } from "../core/environment";
 import { createAnyType, createMapType } from "../typeSystem";
-import { FlowDocument, FlowEnvironmentContent, FlowSignature, GenericTag, InputRowSignature, OutputRowSignature, getInternalId } from "../types";
-import { DocumentContext, DocumentProblem, FlowGraphContext } from "../types/context";
+import { FlowDocument, FlowEnvironmentContent, FlowSignature, GenericTag, InputRowSignature, OutputRowSignature } from "../types";
+import { FlowDocumentContext, DocumentProblem, FlowGraphContext } from "../types/context";
 import { Obj } from "../types/utilTypes";
 import { mem } from "../utils/functional";
 import { getFlowSignature, validateFlowGraph } from "./validateFlowGraph";
@@ -34,7 +34,7 @@ export const validateDocument = mem((document: FlowDocument) => {
         criticalSubProblems += flowContext.problems.length + flowContext.criticalSubProblems;
     }
 
-    const result: DocumentContext = {
+    const result: FlowDocumentContext = {
         ref: document,
         flowContexts,
         problems,
@@ -63,15 +63,16 @@ function generateFlowSyntaxLayerInitial(
         )
     );
     const input: FlowSignature = {
-        id: getInternalId('input'),
-        name: 'Input',
+        id: 'input',
+        // id: getInternalId('input'),
+        // name: 'Input',
         description: null,
         attributes: { category: 'In/Out' },
         generics,
         inputs: [],
         output: {
             id: 'inputs',
-            label: 'Inputs',
+            // label: 'Inputs',
             specifier: inputSpecifier,
             rowType: 'output-destructured',
         }
@@ -87,21 +88,22 @@ function generateFlowSyntaxLayerInitial(
     if (flowOutput != null) {
         outputInputs.push({
             id: flowOutput.id,
-            label: flowOutput.label,
+            // label: flowOutput.label,
             specifier: flowOutput.specifier,
             rowType: 'input-simple',
         });
     }
     const output: FlowSignature = {
-        id: getInternalId('output'),
-        name: 'Output',
+        id: 'output',
+        // id: getInternalId('output'),
+        // name: 'Output',
         description: null,
         attributes: { category: 'In/Out' },
         generics,
         inputs: outputInputs,
         output: {
             id: 'output',
-            label: 'Output',
+            // label: 'Output',
             rowType: 'output-hidden',
             specifier: createAnyType(),
         },

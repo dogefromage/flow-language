@@ -28,13 +28,13 @@ const FlowInspectorOutput = ({ panelId, flowId }: PropsWithChildren<FlowInspecto
             order={mutableOrder}
             selected={selectedId}
             disableAdd
-            onRename={(portId, label) => {
-                dispatch(flowsUpdateOutput({
-                    flowId,
-                    newState: { label },
-                    undo: { desc: `Renamed output port to '${label}'.` },
-                }));
-            }}
+            // onRename={(portId, label) => {
+            //     dispatch(flowsUpdateOutput({
+            //         flowId,
+            //         newState: { label },
+            //         undo: { desc: `Renamed output port to '${label}'.` },
+            //     }));
+            // }}
             onSelect={id => {
                 dispatch(flowInspectorPanelsSelectItem({
                     panelId,

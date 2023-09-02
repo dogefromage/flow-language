@@ -56,7 +56,7 @@ export class OfflineConsumer extends DocumentConsumer {
         try {
             const result = await validateAndInterpret(this.document, { 
                 skipValidation: forceRun, 
-                args: {} 
+                args: [],
             });
             this.emit('output', result);
         }

@@ -7,6 +7,7 @@ import { FlowNodeRowNameP } from '../styles/flowStyles';
 import FormCheckBox from './FormCheckBox';
 import FormSlideableInput from './FormSlideableInput';
 import FormTextInput from './FormTextInput';
+import { formatFlowLabel } from '../utils/flows';
 
 interface Props {
     flowId: string;
@@ -22,7 +23,7 @@ const FlowNodeRowInitializer = ({ flowId, nodeId, row, context, type }: Props) =
         if (typeof type === 'object' && type.type === 'primitive') {
             const props: InitializerProps = {
                 flowId, nodeId, rowId: row.id,
-                name: row.label,
+                name: row.id,
                 value: context.displayValue,
             }
             switch (type.name) {
@@ -36,16 +37,12 @@ const FlowNodeRowInitializer = ({ flowId, nodeId, row, context, type }: Props) =
         }
     }
 
-    return (
-        <NameRow label={row.label} />
+    return (    
+        <FlowNodeRowNameP $align='left'>{formatFlowLabel(row.id)}</FlowNodeRowNameP>
     );
 }
 
 export default FlowNodeRowInitializer;
-
-const NameRow = ({ label }: { label: string }) => (
-    <FlowNodeRowNameP $align='left'>{label}</FlowNodeRowNameP>
-);
 
 type InitializerProps = {
     flowId: string;
@@ -65,7 +62,7 @@ const NumberInitializer = ({ flowId, nodeId, rowId, name, value }: InitializerPr
 
     return (
         <FormSlideableInput
-            name={name}
+            name={formatFlowLabel(name)}
             value={value}
             onChange={(newValue, actionToken) => {
                 dispatch(flowsSetRowValue({
@@ -94,7 +91,7 @@ const BooleanInitializer = ({ flowId, nodeId, rowId, name, value }: InitializerP
 
     return (
         <BooleanDiv>
-            <FlowNodeRowNameP $align='left'>{name}</FlowNodeRowNameP>
+            <FlowNodeRowNameP $align='left'>{ formatFlowLabel(name) }</FlowNodeRowNameP>
             <FormCheckBox
                 checked={value}
                 setChecked={(newValue) => {
@@ -119,7 +116,7 @@ const StringInitializer = ({ flowId, nodeId, rowId, name, value }: InitializerPr
 
     return (
         <FormTextInput
-            name={name}
+            name={formatFlowLabel(name)}
             value={value}
             onChange={(newValue) => {
                 dispatch(flowsSetRowValue({

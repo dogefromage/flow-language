@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { selectPanelState } from "../redux/panelStateEnhancer";
 import { useAppDispatch, useAppSelector } from "../redux/stateHooks";
 import { selectEditor } from "../slices/editorSlice";
-import { flowsRename, flowsSetAttribute, selectSingleFlow } from "../slices/flowsSlice";
+import { flowsSetAttribute, selectFlows, selectSingleFlow } from "../slices/flowsSlice";
 import { ViewTypes } from "../types";
 import FlowInspectorGenericList from "./FlowInspectorGenericList";
 import FlowInspectorInputList from './FlowInspectorInputList';
@@ -43,12 +43,12 @@ const FlowInspectorContent = ({ panelId }: Props) => {
                     <SettingsTable>
                         <p>Name</p>
                         <FormRenameField
-                            value={flow.name}
-                            onChange={newName => dispatch(flowsRename({
-                                flowId,
-                                name: newName,
-                                undo: { desc: `Renamed flow '${flow.name}' to '${newName}'.` },
-                            }))}
+                            value={flow.id}
+                            // onChange={newName => dispatch(flowsRename({
+                            //     flowId,
+                            //     name: newName,
+                            //     undo: { desc: `Renamed flow '${flow.name}' to '${newName}'.` },
+                            // }))}
                         />
                         <p>Color</p>
                         <FormColorPicker

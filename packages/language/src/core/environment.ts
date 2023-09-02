@@ -1,8 +1,6 @@
-import _ from "lodash";
-import { getSignatureFunctionType } from "../typeSystem";
 import { FlowEnvironment, FlowEnvironmentContent, GenericTypeInference } from "../types";
-import { FlowSignature, InputRowSignature, OutputRowSignature, getInternalId } from "../types/signatures";
-import { MapTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
+import { FlowSignature } from "../types/signatures";
+import { TypeSpecifier } from "../types/typeSystem";
 import { Obj } from "../types/utilTypes";
 import { ListCache } from "../utils/ListCache";
 import { mem } from "../utils/functional";
@@ -24,7 +22,7 @@ export const pushGenericInference = mem(
     (parent: FlowEnvironment, inference: GenericTypeInference): FlowEnvironment => ({
         parent,
         content: {
-            types: { [inference.name]: inference.resolvedSpecifier },
+            types: { [inference.id]: inference.resolvedSpecifier },
         }
     }), environmentCache,
 );

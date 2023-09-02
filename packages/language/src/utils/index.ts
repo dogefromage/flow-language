@@ -6,11 +6,22 @@ export function assertDef<T>(element: T | null | undefined, msg?: string) {
     }
     return element;
 }
-
 export function assertTruthy(value: any, msg?: string) {
     if (!value) {
         throw new Error(msg || `Assertion failed, value false`);
     }
+}
+export function assertNever(msg?: string) {
+    throw new Error(msg || `Assertion failed, code was reached.`);
+}
+export function assertAddress(value: any, msg?: string) {
+    if (typeof value !== 'number' || 
+        !isFinite(value) ||
+        Math.floor(value) != value 
+    ) {
+        throw new Error(msg || `Assertion failed, value not valid address '${value}'.`);
+    }
+    return value;
 }
 
 export function wrapDefined<T>(...items: T[]) {

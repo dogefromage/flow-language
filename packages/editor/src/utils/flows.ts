@@ -2,6 +2,7 @@ import * as lang from "@fluss/language";
 import { JointLocationKey } from "../types";
 import { FlowJointStyling } from "../types/flowRows";
 import { AllRowSignatures } from "../types/flowInspectorView";
+import _ from "lodash";
 
 export function getJointLocationKey(location: lang.JointLocation): JointLocationKey {
     if (location.direction === 'input') {
@@ -94,4 +95,12 @@ export const flowRowTypeNames: Record<RowTypes, string> = {
     'input-list': 'List Input',
     'input-variable': 'Variable Input',
     'input-function': 'Function Input',
+    'input-tuple': 'Tuple Input',
 };
+
+export function formatFlowLabel(label: string) {
+    return label
+        .split('_')
+        .map(_.upperFirst)
+        .join(' ');
+}

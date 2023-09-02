@@ -2,6 +2,7 @@ import * as lang from '@fluss/language';
 import React from 'react';
 import { FlowNodeNameWrapper, FlowNodeRowNameP } from '../styles/flowStyles';
 import { FlowInputRowSwitch, FlowOutputRowSwitch } from './FlowNodeRowComponents';
+import { formatFlowLabel } from '../utils/flows';
 
 interface Props {
     panelId: string;
@@ -23,7 +24,7 @@ const FlowNodeContent = ({ panelId, flowId, context, signature, env }: Props) =>
         inputType = context.specifier.parameter;
     }
     const outputType = context.specifier?.output;
-    
+
     return (<>
         <FlowNodeNameWrapper
             $backColor={signature.attributes.color}
@@ -31,9 +32,8 @@ const FlowNodeContent = ({ panelId, flowId, context, signature, env }: Props) =>
             <FlowNodeRowNameP
                 $align='left'
                 $bold={true}
-            // $color={'black'}
             >
-                {signature.name}
+                {formatFlowLabel(signature.id)}
             </FlowNodeRowNameP>
         </FlowNodeNameWrapper>
         <FlowOutputRowSwitch

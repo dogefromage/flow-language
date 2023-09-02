@@ -1,4 +1,4 @@
-import { FlowSignature, FlowSignatureId, JointLocation, isSubsetType, collectTotalEnvironmentContent } from "@fluss/language";
+import { FlowSignature, JointLocation, isSubsetType, collectTotalEnvironmentContent } from "@fluss/language";
 import React, { useCallback, useMemo } from "react";
 import { selectPanelState } from "../redux/panelStateEnhancer";
 import { useAppDispatch, useAppSelector } from "../redux/stateHooks";
@@ -94,12 +94,12 @@ function generateCatalogMenuShape(
     if (searchValue.length > 0) {
         // render filtered
         const filtered = signatures
-            .filter(t => t.name.toLowerCase().includes(searchValue.toLowerCase()));
+            .filter(t => t.id.toLowerCase().includes(searchValue.toLowerCase()));
 
         const listTemplates: MenuElement[] = filtered.map(signature => ({
             type: 'button',
             key: signature.id,
-            name: signature.name,
+            name: signature.id,
             onClick: () => addNode(signature),
         }));
 
@@ -134,7 +134,7 @@ function generateCatalogMenuShape(
                 list: tempOfGroup.map(template => ({
                     type: 'button',
                     key: template.id,
-                    name: template.name,
+                    name: template.id,
                     onClick: () => addNode(template),
                 }))
             }
@@ -199,7 +199,7 @@ function createAddFlowAction(flowId: string, signature: FlowSignature, addNodeSt
     }));
 }
 
-function createBasicAddNodeAction(flowId: string, signatureId: FlowSignatureId, position: Vec2) {
+function createBasicAddNodeAction(flowId: string, signatureId: string, position: Vec2) {
     return flowsAddNode({
         flowId, signatureId, position,
         undo: { desc: `Added new node to active flow.` },

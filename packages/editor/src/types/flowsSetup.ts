@@ -11,7 +11,7 @@ export const mainSignature: lang.AnonymousFlowSignature = {
     inputs: [],
     output: {
         id: 'value',
-        label: 'Value',
+        // label: 'Value',
         rowType: 'output-simple',
         specifier: 'T',
     },
@@ -22,21 +22,21 @@ export const emptyFlowSignature: lang.AnonymousFlowSignature = {
     inputs: [
         {
             id: 'a',
-            label: 'Some Input',
+            // label: 'Some Input',
             rowType: 'input-variable',
             specifier: 'number',
             defaultValue: 0,
         },
         {
             id: 'b',
-            label: 'Some Input 2',
+            // label: 'Some Input 2',
             rowType: 'input-variable',
             specifier: 'string',
             defaultValue: '',
         },
         {
             id: 'c',
-            label: 'Some Input 3',
+            // label: 'Some Input 3',
             rowType: 'input-variable',
             specifier: 'boolean',
             defaultValue: true,
@@ -44,7 +44,7 @@ export const emptyFlowSignature: lang.AnonymousFlowSignature = {
     ],
     output: {
         id: 'value',
-        label: 'Some output',
+        // label: 'Some output',
         rowType: 'output-simple',
         specifier: 'number',
     },
@@ -52,14 +52,14 @@ export const emptyFlowSignature: lang.AnonymousFlowSignature = {
 
 export const initialDefaultRootFlow: lang.FlowGraph = {
     id: lang.MAIN_FLOW_ID,
-    name: 'Main',
+    // name: 'Main',
     ...mainSignature,
     idCounter: 1,
     attributes: {},
     nodes: {
         a: {
             id: 'a',
-            signature: lang.getInternalId('output'),
+            signature: 'output',
             rowStates: {},
             position: { x: 400, y: 294 }
         },

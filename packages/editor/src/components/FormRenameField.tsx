@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
-import MaterialSymbol from '../styles/MaterialSymbol';
 
 const RenameFieldDiv = styled.div`
 
@@ -31,30 +30,46 @@ const RenameFieldDiv = styled.div`
     }
 `;
 
-interface Props {
-    value: string;
-    onChange: (newValue: string) => void;
-    disabled?: boolean;
-    allowEmpty?: boolean;
+interface NameValidationError {
+    message: string;
 }
 
-const FormRenameField = ({ value, onChange, disabled, allowEmpty }: Props) => {
+interface Props {
+    value: string;
+    onChange?: (newValue: string) => void;
+    onValidate?: (newValue: string) => NameValidationError | undefined;
+    disabled?: boolean;
+}
+
+const FormRenameField = ({ value, onChange, onValidate, disabled }: Props) => {
 
     const inputRef = useRef<HTMLInputElement>(null);
 
     const [localValue, setLocalValue] = useState('');
+    const [validationError, setValidationError] = useState<NameValidationError>();
 
     useEffect(() => {
         setLocalValue(value);
     }, [value]);
 
+    useEffect(() => {
+        validationError && setValidationError(undefined);
+    }, [ localValue ]);
+
     const submit = () => {
-        if (!allowEmpty && localValue.length == 0) {
-            return;
+        const validationError = onValidate?.(localValue);
+        if (validationError != null) {
+            setValidationError(validationError);
+        } else {
+            onChange?.(localValue);
+            inputRef.current?.blur();
         }
-        onChange(localValue);
-        inputRef.current?.blur();
     }
+
+    // debug
+    useEffect(() => {
+        validationError && console.warn(validationError.message);
+    }, [ validationError ]);
 
     return (
         <RenameFieldDiv
@@ -77,7 +92,7 @@ const FormRenameField = ({ value, onChange, disabled, allowEmpty }: Props) => {
                     size={localValue.length || 1}
                     disabled={disabled}
                 />
-            </form> 
+            </form>
             {/* {
                 !disabled &&
                 <MaterialSymbol $size={16}>edit</MaterialSymbol>

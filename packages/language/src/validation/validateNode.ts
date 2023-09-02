@@ -189,6 +189,18 @@ const validateIncomingTypes = (
         return { incomingType, rowProblems };
     }
 
+    if (input.rowType === 'input-tuple') {
+        const incomingType = createTupleType(...connectedTypes);
+        const resolvedSpec = tryResolveTypeAlias(input.specifier, env);
+        if (resolvedSpec && resolvedSpec.type !== 'tuple') {
+            rowProblems.push({
+                type: 'invalid-specifier',
+                message: 'A tuple input row must be of a tuple type.',
+            });
+        }
+        return { incomingType, rowProblems };
+    }
+
     if (input.rowType === 'input-function') {
         // find incoming type
         let functionSpec: TypeSpecifier | undefined;

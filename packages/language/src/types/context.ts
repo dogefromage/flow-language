@@ -29,7 +29,7 @@ export interface FlowEdge {
     color: EdgeColor;
 }
 
-export interface DocumentContext {
+export interface FlowDocumentContext {
     ref: FlowDocument;
     problems: DocumentProblem[];
     criticalSubProblems: number;
@@ -63,7 +63,7 @@ export interface FlowNodeContext {
 }
 
 export interface GenericTypeInference {
-    name: string;
+    id: string;
     resolvedSpecifier: TypeSpecifier;
 }
 

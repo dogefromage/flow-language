@@ -42,14 +42,14 @@ const FlowInspectorInputList = ({ panelId, flowId }: PropsWithChildren<FlowInspe
                     undo: { desc: `Removed input port "${portId}" from active flow.` },
                 }))
             }}
-            onRename={(portId, label) => {
-                dispatch(flowsUpdateInput({
-                    flowId,
-                    portId,
-                    newState: { label },
-                    undo: { desc: `Renamed input port to '${label}'.` },
-                }));
-            }}
+            // onRename={(portId, label) => {
+            //     dispatch(flowsUpdateInput({
+            //         flowId,
+            //         portId,
+            //         newState: { label },
+            //         undo: { desc: `Renamed input port to '${label}'.` },
+            //     }));
+            // }}
             onAdd={() => {
                 dispatch(flowsAddListItem({
                     flowId,

@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { editorSetActiveFlow, selectEditor } from '../slices/editorSlice';
 import { flowsCreate, selectFlows } from '../slices/flowsSlice';
 import { emptyFlowSignature } from '../types';
+import { formatFlowLabel } from '../utils/flows';
 
 const OutlinerListDiv = styled.div`
     display: flex;
@@ -58,7 +59,7 @@ const PageOutlinerList = ({ panelId }: PropsWithChildren<PageOutlinerListProps>)
                         }}
                         $active={editorState.activeFlow == flow.id}
                     >
-                        <p>{ flow.name }</p>
+                        <p>{ formatFlowLabel(flow.id) }</p>
                         {/* <FormRenameField 
                             value={flow.name}
                             onChange={newVal => {
@@ -75,7 +76,6 @@ const PageOutlinerList = ({ panelId }: PropsWithChildren<PageOutlinerListProps>)
             <ListSpacerDiv 
                 onDoubleClick={() => {
                     dispatch(flowsCreate({
-                        name: 'New Flow',
                         signature: emptyFlowSignature,
                         undo: { desc: 'Created new flow.' },
                     }));

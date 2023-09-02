@@ -1,9 +1,8 @@
 import { FlowSignature } from "./signatures";
-import { InitializerValue } from "./typeSystem";
 
-export type ValueMap<T extends InitializerValue = InitializerValue> = Record<string, T>;
+export type InterpreterValue = any;
 
-export type FlowInterpretation = (nodeArgs: ValueMap, flowArgs: ValueMap) => any;
+export type FlowInterpretation = (nodeArgs: InterpreterValue[], flowArgs: InterpreterValue[]) => any;
 
 export interface SignatureDefinition {
     signature: FlowSignature;
