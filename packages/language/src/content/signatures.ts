@@ -2,6 +2,7 @@ import { upperFirst } from "lodash";
 import { SignatureDefinition } from "../types/local";
 import { FunctionInputRowSignature, FunctionTypeSpecifier, GenericTag, ListInputRowSignature, OutputRowSignature, SimpleInputRowSignature, TypeSpecifier, VariableInputRowSignature } from "../types";
 import { createFunctionType, createListType, createUnionType } from "../typeSystem";
+import { ByteInstruction, ByteToken, DataValue } from "../types/byteCode";
 
 const variable = {
     string: (id: string, defaultValue: string): VariableInputRowSignature => ({
@@ -96,6 +97,9 @@ const output = {
 };
 const generic = (name: string, constraint: TypeSpecifier | null = null): GenericTag => ({ id: name, constraint });
 
+const instr = (i: ByteInstruction): ByteToken => ({ type: 'instruction', instruction: i });
+const data = (d: DataValue): ByteToken => ({ type: 'data', data: d });
+
 export const localDefinitions: SignatureDefinition[] = [];
 localDefinitions.push({
     signature: {
@@ -106,6 +110,10 @@ localDefinitions.push({
         generics: [],
         inputs: [variable.number('a', 0), variable.number('b', 0)],
         output: output.number('sum'),
+        byteCode: {
+            type: 'inline',
+            chunk: [instr('+')],
+        }
     },
     interpretation: ([a, b]) => a + b,
 });
@@ -130,6 +138,10 @@ localDefinitions.push({
         generics: [],
         inputs: [variable.number('a', 1), variable.number('b', 1)],
         output: output.number('product'),
+        byteCode: {
+            type: 'inline',
+            chunk: [instr('*')],
+        }
     },
     interpretation: ([a, b]) => a * b,
 });
@@ -142,6 +154,10 @@ localDefinitions.push({
         generics: [],
         inputs: [variable.number('a', 1), variable.number('b', 1)],
         output: output.number('quotient'),
+        byteCode: {
+            type: 'inline',
+            chunk: [instr('/')],
+        }
     },
     interpretation: ([a, b]) => a / b,
 });
@@ -187,6 +203,15 @@ localDefinitions.push({
             simple.generic('match_false', 'T'),
         ],
         output: output.generic('choice', 'T'),
+        byteCode: {
+            type: 'inline',
+            chunk: [
+                // assuming order on stack is [ condition, true, false, ...
+                data(1), instr('JZO'),
+                instr('SWP'),
+                instr('POP'),
+            ],
+        }
     },
     interpretation: args => args[0] ? args[1] : args[2],
 });
@@ -200,6 +225,10 @@ localDefinitions.push({
         generics: [],
         inputs: [variable.number('number', 0)],
         output: output.number('output'),
+        byteCode: {
+            type: 'inline',
+            chunk: [],
+        }
     },
     interpretation: ([number]) => number,
 });
@@ -212,6 +241,10 @@ localDefinitions.push({
         generics: [],
         inputs: [variable.boolean('boolean', false)],
         output: output.boolean('output'),
+        byteCode: {
+            type: 'inline',
+            chunk: [],
+        }
     },
     interpretation: ([boolean]) => boolean,
 });
@@ -224,6 +257,10 @@ localDefinitions.push({
         generics: [],
         inputs: [variable.string('string', '')],
         output: output.string('output'),
+        byteCode: {
+            type: 'inline',
+            chunk: [],
+        }
     },
     interpretation: ([string]) => string,
 });
@@ -236,6 +273,10 @@ localDefinitions.push({
         generics: [],
         inputs: [variable.number('a', 0), variable.number('b', 0)],
         output: output.boolean('output'),
+        byteCode: {
+            type: 'inline',
+            chunk: [instr('GT')],
+        }
     },
     interpretation: ([a, b]) => a > b,
 });

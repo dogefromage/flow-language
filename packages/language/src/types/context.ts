@@ -13,6 +13,7 @@ import { Obj } from './utilTypes';
 
 export type FlowEnvironment = {
     parent: FlowEnvironment | null;
+    slug: string;
     content: FlowEnvironmentContent;
 }
 export interface FlowEnvironmentContent {
@@ -53,6 +54,7 @@ export interface FlowGraphContext {
 
 export interface FlowNodeContext {
     ref: FlowNode;
+    scopedLabel: string;
     problems: NodeProblem[];
     criticalSubProblems: number;
     inputRows: Obj<RowContext>;

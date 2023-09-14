@@ -1,3 +1,4 @@
+import { ByteToken } from "./byteCode";
 import { FlowSignature } from "./signatures";
 
 export type InterpreterValue = any;
@@ -6,5 +7,5 @@ export type FlowInterpretation = (nodeArgs: InterpreterValue[], flowArgs: Interp
 
 export interface SignatureDefinition {
     signature: FlowSignature;
-    interpretation: FlowInterpretation
+    interpretation: FlowInterpretation;
 }

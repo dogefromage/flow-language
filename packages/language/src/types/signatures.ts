@@ -1,3 +1,4 @@
+import { ByteToken } from "./byteCode";
 import { InitializerValue, TypeSpecifier } from "./typeSystem";
 
 /**
@@ -45,6 +46,10 @@ export interface AnonymousFlowSignature {
     generics: GenericTag[];
     inputs: InputRowSignature[];
     output: OutputRowSignature;
+    byteCode?: {
+        chunk: ByteToken[];
+        type: 'inline' | 'call';
+    }
 }
 
 // export function getInternalId(name: 'input' | 'output' | 'combine' | 'separate', ...rest: string[]) {

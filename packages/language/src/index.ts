@@ -33,3 +33,10 @@ export {
 export {
     isSubsetType,
 } from './typeSystem/comparison';
+
+export {
+    compileDocument,
+} from './byteCode/byteCompiler';
+export {
+    StackMachine,
+} from './byteCode/stackMachine';

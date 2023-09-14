@@ -8,22 +8,23 @@ import { mem } from "../utils/functional";
 const environmentCache = new ListCache(5209);
 
 export const createEnvironment = mem(
-    (content: FlowEnvironmentContent): FlowEnvironment => ({ parent: null, content }),
+    (content: FlowEnvironmentContent, slug: string): FlowEnvironment => ({ parent: null, content, slug }),
     environmentCache,
 );
 
 export const pushContent = mem(
-    (parent: FlowEnvironment, content: FlowEnvironmentContent): FlowEnvironment => ({ parent, content }),
+    (parent: FlowEnvironment, content: FlowEnvironmentContent, slug: string): FlowEnvironment => ({ parent, content, slug }),
     environmentCache,
 );
 export const popContent = (env: FlowEnvironment) => env.parent;
 
 export const pushGenericInference = mem(
-    (parent: FlowEnvironment, inference: GenericTypeInference): FlowEnvironment => ({
+    (parent: FlowEnvironment, inference: GenericTypeInference, slug: string): FlowEnvironment => ({
         parent,
         content: {
             types: { [inference.id]: inference.resolvedSpecifier },
-        }
+        },
+        slug,
     }), environmentCache,
 );
 
@@ -42,6 +43,29 @@ export const collectTotalEnvironmentContent = mem(
     },
     environmentCache,
 );
+
+export const getScopedSignature = mem(
+    (env: FlowEnvironment, signatureId: string) => {
+        let signature: FlowSignature | undefined;
+        while (env != null) {
+            if (env.content.signatures?.[signatureId] != null) {
+                signature = env.content.signatures?.[signatureId];
+                return [ signature, getScopePath(env) ] as const;
+            }
+            env = env.parent!;
+        }
+    },
+    environmentCache,
+);
+
+export const getScopePath = (env: FlowEnvironment | null) => {
+    let scopePath: string[] = [];
+    while (env != null) {
+        scopePath.unshift(env.slug);
+        env = env.parent;
+    }
+    return scopePath.join(':');
+}
 
 export const findEnvironmentSignature = (env: FlowEnvironment, signatureId: string) =>
     collectTotalEnvironmentContent(env).signatures?.[signatureId];

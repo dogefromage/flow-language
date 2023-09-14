@@ -15,7 +15,7 @@ export const validateDocument = mem((document: FlowDocument) => {
 
     const flowContexts: Obj<FlowGraphContext> = {};
     const problems: DocumentProblem[] = [];
-    let environment = createEnvironment(baseEnvironmentContent);
+    let environment = createEnvironment(baseEnvironmentContent, 'global');
     let criticalSubProblems = 0;
 
     const flowsSorted = Object.values(rawFlowMap)
@@ -24,11 +24,11 @@ export const validateDocument = mem((document: FlowDocument) => {
     const signatureContent = makeFlowSignaturesContent(
         ...flowsSorted.map(getFlowSignature)
     );
-    environment = pushContent(environment, signatureContent);
+    environment = pushContent(environment, signatureContent, 'document');
 
     for (const flow of flowsSorted) {
         const flowSyntaxContent = generateFlowSyntaxLayer(flow.generics, flow.inputs, flow.output);
-        const flowSyntaxEnv = pushContent(environment, flowSyntaxContent);
+        const flowSyntaxEnv = pushContent(environment, flowSyntaxContent, flow.id);
         const flowContext = validateFlowGraph(flow, flowSyntaxEnv);
         flowContexts[flow.id] = flowContext;
         criticalSubProblems += flowContext.problems.length + flowContext.criticalSubProblems;
@@ -75,6 +75,10 @@ function generateFlowSyntaxLayerInitial(
             // label: 'Inputs',
             specifier: inputSpecifier,
             rowType: 'output-destructured',
+        },
+        byteCode: {
+            type: 'inline',
+            chunk: [],
         }
         // outputs: flowInputs.map(o => ({
         //     id: o.id,
@@ -107,6 +111,10 @@ function generateFlowSyntaxLayerInitial(
             rowType: 'output-hidden',
             specifier: createAnyType(),
         },
+        byteCode: {
+            type: 'inline',
+            chunk: [],
+        }
     }
     
     return {

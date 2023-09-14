@@ -2,7 +2,7 @@ import * as lang from '@fluss/language';
 import { ConsumerInputSignal, ConsumerState, DocumentConsumer } from '@fluss/shared';
 import { wrap } from 'comlink';
 
-type State = ConsumerState 
+type State = ConsumerState
     | { type: 'running', worker: Worker };
 
 export class OfflineConsumer extends DocumentConsumer {
@@ -26,19 +26,19 @@ export class OfflineConsumer extends DocumentConsumer {
     signalInput(input: ConsumerInputSignal): void {
         switch (input) {
             case 'run':
-                this.runInterpreter();
+                this.execute();
                 return;
             case 'force-run':
-                this.runInterpreter(true);
+                this.execute(true);
                 return;
             case 'abort':
-                this.abortInterpreter();
+                this.abort();
                 return;
         }
         throw new Error(`Input signal not implemented '${input}'`);
     }
 
-    private async runInterpreter(forceRun = false) {
+    private async execute(forceRun = false) {
         if (!this.document) {
             return console.error(`No document set.`);
         }
@@ -46,18 +46,35 @@ export class OfflineConsumer extends DocumentConsumer {
         if (this.state.type != 'idle') {
             return;
         }
+        // const worker = new Worker(
+        //     new URL('./interpreterWorker.js', import.meta.url),
+        //     { type: 'module' }
+        // );
+        // this.updateState({ type: 'running', worker });
+
+        // const { validateAndInterpret } = wrap<import('./interpreterWorker').InterpreterWorker>(worker);
+        // try {
+        //     const result = await validateAndInterpret(this.document, { 
+        //         skipValidation: forceRun, 
+        //         args: [],
+        //     });
+        //     this.emit('output', result);
+        // }
+        // finally {
+        //     this.updateState({ type: 'idle' });
+        // }
+
+
+
         const worker = new Worker(
-            new URL('./interpreterWorker.js', import.meta.url),
-            { type: 'module' }
+            new URL('./compilerWorker.js', import.meta.url),
+            { type: 'module' },
         );
         this.updateState({ type: 'running', worker });
 
-        const { validateAndInterpret } = wrap<import('./interpreterWorker').InterpreterWorker>(worker);
+        const { validateCompileInterpret } = wrap<import('./compilerWorker').CompilerWorker>(worker);
         try {
-            const result = await validateAndInterpret(this.document, { 
-                skipValidation: forceRun, 
-                args: [],
-            });
+            const result = await validateCompileInterpret(this.document);
             this.emit('output', result);
         }
         finally {
@@ -65,7 +82,7 @@ export class OfflineConsumer extends DocumentConsumer {
         }
     }
 
-    private abortInterpreter() {
+    private abort() {
         const worker: Worker = (this.state as any).worker;
         if (worker == null) {
             return;

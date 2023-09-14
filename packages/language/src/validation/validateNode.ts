@@ -1,4 +1,4 @@
-import { findEnvironmentSignature } from "../core/environment";
+import { findEnvironmentSignature, getScopedSignature } from "../core/environment";
 import { createAnyType, createMissingType, createTupleType, getSignatureFunctionType, memoizeTypeStructure } from "../typeSystem";
 import { assertSubsetType } from "../typeSystem/comparison";
 import { TypeSystemException, TypeSystemExceptionData, TypeTreePath } from "../typeSystem/exceptionHandling";
@@ -17,16 +17,18 @@ export const validateNode = mem((
     previousOutputTypes: Record<string, TypeSpecifier>,
     isUsed: boolean,
 ): FlowNodeContext => {
-    const templateSignature = findEnvironmentSignature(env, node.signature);
-    if (templateSignature == null) {
+    const searchRes = getScopedSignature(env, node.signature);
+    if (searchRes == null) {
         return noSignatureContext(node, isUsed);
     }
+    const [ templateSignature, scopedLabel ] = searchRes;
 
     const { instantiatedNodeType, rowProblemsMap } =
         validateNodeSyntax(node.rowStates, templateSignature, previousOutputTypes, env);
 
     return bundleNodeContext(
         node,
+        scopedLabel,
         isUsed,
         templateSignature,
         instantiatedNodeType,
@@ -240,6 +242,7 @@ const validateIncomingTypes = (
 const noSignatureContext = mem(
     (node: FlowNode, isUsed: boolean): FlowNodeContext => ({
         ref: node,
+        scopedLabel: 'missing',
         problems: [{
             type: 'missing-signature',
             signature: node.signature,
@@ -256,6 +259,7 @@ const noSignatureContext = mem(
 
 const bundleNodeContext = mem((
     node: FlowNode,
+    scopedLabel: string,
     isUsed: boolean,
     templateSignature: FlowSignature,
     specifier: FunctionTypeSpecifier,
@@ -263,6 +267,7 @@ const bundleNodeContext = mem((
 ): FlowNodeContext => {
     const result: FlowNodeContext = {
         ref: node,
+        scopedLabel,
         problems: [],
         criticalSubProblems: 0,
         templateSignature,
