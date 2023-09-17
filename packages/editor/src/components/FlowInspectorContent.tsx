@@ -34,7 +34,7 @@ const FlowInspectorContent = ({ panelId }: Props) => {
     const dispatch = useAppDispatch();
     const flowId = useAppSelector(selectEditor).activeFlow;
     const flow = useAppSelector(selectSingleFlow(flowId!));
-    const panelState = useAppSelector(selectPanelState(ViewTypes.FlowInspector, panelId));
+    // const panelState = useAppSelector(selectPanelState(ViewTypes.FlowInspector, panelId));
 
     return (
         <InspectorWrapper>{
@@ -61,7 +61,6 @@ const FlowInspectorContent = ({ panelId }: Props) => {
                                     undo: { desc: `Changed active flows color attribute.`, actionToken },
                                 }));
                             }}
-
                         />
                     </SettingsTable>
                 </FormExpandableRegion>
@@ -78,7 +77,6 @@ const FlowInspectorContent = ({ panelId }: Props) => {
                 <FormExpandableRegion name='Details' defaultValue={true}>
                     <FlowInspectorPortDetails panelId={panelId} flowId={flowId} />
                 </FormExpandableRegion>
-
             </>) : (
                 <p>No active flow found</p>
             )

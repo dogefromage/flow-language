@@ -221,20 +221,24 @@ export const flowsSlice = createSlice({
             const { nodeId, rowId, jointIndex } = a.payload.input;
             g.nodes[nodeId]?.rowStates[rowId]?.connections.splice(jointIndex, 1);
         },
-        addListItem: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, prop: 'inputs' | 'generics' }>) => {
+        addListItem: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, /* itemId: string, */ prop: 'inputs' | 'generics' }>) => {
             const g = getFlow(s, a);
             if (!g) return;
 
             const list: ListedState[] = g[a.payload.prop];
-            const nextId = findUniquePortId(list);
+            // if (list.find(el => el.id === a.payload.itemId)) {
+            //     console.error(`Item with id='${a.payload.itemId}' already in list.`);
+            //     return;
+            // }
+            const itemId = findUniquePortId(list);
 
             if (a.payload.prop === 'inputs') {
                 const defaultInput: RowSignatureBlueprint = { rowType: 'input-simple', specifier: lang.createAnyType() };
-                const port = createRowSignature(nextId, 'New Input', defaultInput);
+                const port = createRowSignature(itemId, 'New Input', defaultInput);
                 list.push(port as lang.InputRowSignature);
             }
             if (a.payload.prop === 'generics') {
-                list.push({ id: nextId, constraint: null });
+                list.push({ id: itemId, constraint: null });
             }
         },
         removeListItem: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, portId: string, prop: 'inputs' | 'generics' }>) => {

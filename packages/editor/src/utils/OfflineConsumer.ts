@@ -74,7 +74,9 @@ export class OfflineConsumer extends DocumentConsumer {
 
         const { validateCompileInterpret } = wrap<import('./compilerWorker').CompilerWorker>(worker);
         try {
-            const result = await validateCompileInterpret(this.document);
+            const result = await validateCompileInterpret(this.document, { 
+                skipValidation: forceRun, 
+            });
             this.emit('output', result);
         }
         finally {

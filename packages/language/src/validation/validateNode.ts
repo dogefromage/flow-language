@@ -21,14 +21,15 @@ export const validateNode = mem((
     if (searchRes == null) {
         return noSignatureContext(node, isUsed);
     }
-    const [ templateSignature, scopedLabel ] = searchRes;
+    const [ templateSignature, baseScopeLabel ] = searchRes;
+    const scopedNodeLabel = `${baseScopeLabel}:${templateSignature.id}`;
 
     const { instantiatedNodeType, rowProblemsMap } =
         validateNodeSyntax(node.rowStates, templateSignature, previousOutputTypes, env);
 
     return bundleNodeContext(
         node,
-        scopedLabel,
+        scopedNodeLabel,
         isUsed,
         templateSignature,
         instantiatedNodeType,

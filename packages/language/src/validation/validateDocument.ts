@@ -1,7 +1,7 @@
 import { baseEnvironmentContent } from "../content/baseEnvironment";
 import { createEnvironment, pushContent } from "../core/environment";
 import { createAnyType, createMapType } from "../typeSystem";
-import { FlowDocument, FlowEnvironmentContent, FlowSignature, GenericTag, InputRowSignature, OutputRowSignature } from "../types";
+import { ByteInstruction, ByteOperation, FlowDocument, FlowEnvironmentContent, FlowSignature, GenericTag, InputRowSignature, OutputRowSignature } from "../types";
 import { FlowDocumentContext, DocumentProblem, FlowGraphContext } from "../types/context";
 import { Obj } from "../types/utilTypes";
 import { mem } from "../utils/functional";
@@ -62,6 +62,24 @@ function generateFlowSyntaxLayerInitial(
             flowInputs.map(input => [input.id, input.specifier])
         )
     );
+
+    // add arguments and keys back to back onto stack
+    // then specify prop count and pack them into an object
+    const instructions: ByteInstruction[] = [];
+    for (let i = 0; i < flowInputs.length; i++) {
+        // args are stacked reverse
+        const stackIndex = flowInputs.length - i - 1;
+        instructions.push(
+            { type: 'data', data: stackIndex },
+            { type: 'operation', operation: ByteOperation.narg },
+            { type: 'data', data: flowInputs[i].id },
+        );
+    }
+    instructions.push(
+        { type: 'data', data: flowInputs.length },
+        { type: 'operation', operation: ByteOperation.opack },  
+    );
+
     const input: FlowSignature = {
         id: 'input',
         // id: getInternalId('input'),
@@ -78,7 +96,7 @@ function generateFlowSyntaxLayerInitial(
         },
         byteCode: {
             type: 'inline',
-            chunk: [],
+            instructions,
         }
         // outputs: flowInputs.map(o => ({
         //     id: o.id,
@@ -113,7 +131,7 @@ function generateFlowSyntaxLayerInitial(
         },
         byteCode: {
             type: 'inline',
-            chunk: [],
+            instructions: [],
         }
     }
     

@@ -6,20 +6,6 @@ import { ButtonMenuElement } from '../types';
 import { useFocusMoveHandlers, useFocusNavigation } from '../utils/menus';
 import { MenuElementProps } from './MenuFloating';
 
-// function useFocusNavigate(
-//     // ref: React.RefObject<HTMLElement>,
-//     focusPath: number[],
-// ) {
-//     return {
-//         handlers: {
-//             onKeyDown: (e: React.KeyboardEvent) => {
-//                 console.log(focusPath.join('.'));
-//                 console.log(e.code);
-//             }
-//         }
-//     }
-// }
-
 const MenuButton = ({ menuId, element, focusPath, neightbourCount }: MenuElementProps<ButtonMenuElement>) => {
     const dispatch = useAppDispatch();
     const divRef = useRef<HTMLDivElement>(null);

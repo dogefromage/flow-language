@@ -11,7 +11,7 @@ export function assertTruthy(value: any, msg?: string) {
         throw new Error(msg || `Assertion failed, value false`);
     }
 }
-export function assertNever(msg?: string) {
+export function assertNever(msg?: string): never {
     throw new Error(msg || `Assertion failed, code was reached.`);
 }
 export function assertAddress(value: any, msg?: string) {

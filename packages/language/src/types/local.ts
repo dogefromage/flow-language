@@ -1,4 +1,4 @@
-import { ByteToken } from "./byteCode";
+import { ByteInstruction } from "./byteCode";
 import { FlowSignature } from "./signatures";
 
 export type InterpreterValue = any;

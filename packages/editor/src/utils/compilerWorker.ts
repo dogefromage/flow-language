@@ -2,12 +2,12 @@ import * as lang from '@fluss/language';
 import { ConsumerOutput } from '@fluss/shared';
 import { expose } from 'comlink';
 
-function validateCompileInterpret(document: lang.FlowDocument): ConsumerOutput {
+function validateCompileInterpret(document: lang.FlowDocument, config: lang.ByteCompilerConfig): ConsumerOutput {
     const context = lang.validateDocument(document);
     try {
-        const program = lang.compileDocument(context);
-        const sm = new lang.StackMachine();
-        sm.interpret(program);
+        const program = lang.compileDocument(context, config);
+        const sm = new lang.StackMachine(program);
+        sm.interpret('global:document:main');
         return {
             data: sm.dpop()!.toString() + '\n',
         }
