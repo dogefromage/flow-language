@@ -70,14 +70,14 @@ function generateFlowSyntaxLayerInitial(
         // args are stacked reverse
         const stackIndex = flowInputs.length - i - 1;
         instructions.push(
-            { type: 'data', data: stackIndex },
+            { type: 'data', data: { type: 'concrete', dataType: 'integer', value: stackIndex } },
             { type: 'operation', operation: ByteOperation.narg },
-            { type: 'data', data: flowInputs[i].id },
+            { type: 'data', data: { type: 'concrete', dataType: 'integer', value: flowInputs[i].id } },
         );
     }
     instructions.push(
-        { type: 'data', data: flowInputs.length },
-        { type: 'operation', operation: ByteOperation.opack },  
+        { type: 'data', data: { type: 'concrete', dataType: 'integer', value: flowInputs.length } },
+        { type: 'operation', operation: ByteOperation.opack },
     );
 
     const input: FlowSignature = {
@@ -134,7 +134,7 @@ function generateFlowSyntaxLayerInitial(
             instructions: [],
         }
     }
-    
+
     return {
         signatures: Object.fromEntries([input, output].map(sig => [sig.id, sig])),
         types: {},

@@ -1,6 +1,7 @@
+import _ from "lodash";
 import { createFunctionType, createListType } from "../typeSystem";
-import { FunctionInputRowSignature, FunctionTypeSpecifier, GenericTag, ListInputRowSignature, OutputRowSignature, SimpleInputRowSignature, TypeSpecifier, VariableInputRowSignature } from "../types";
-import { ByteInstruction, ByteOperation, ConcreteValue } from "../types/byteCode";
+import { AnonymousFlowSignature, FunctionInputRowSignature, FunctionTypeSpecifier, GenericTag, ListInputRowSignature, OutputRowSignature, SimpleInputRowSignature, TypeSpecifier, VariableInputRowSignature } from "../types";
+import { ByteInstruction, ByteOperation, DataByteInstruction, OperationByteInstruction, StackValue } from "../types/byteCode";
 import { SignatureDefinition } from "../types/local";
 
 const variable = {
@@ -96,8 +97,39 @@ const output = {
 };
 const generic = (name: string, constraint: TypeSpecifier | null = null): GenericTag => ({ id: name, constraint });
 
-const op = (o: ByteOperation): ByteInstruction => ({ type: 'operation', operation: o });
-const data = (d: ConcreteValue): ByteInstruction => ({ type: 'data', data: d });
+const op = (operation: ByteOperation): OperationByteInstruction => ({ type: 'operation', operation });
+const data = (data: StackValue): DataByteInstruction => ({ type: 'data', data });
+
+const evalthunks = (...evaluateArgs: boolean[]) => {
+    // assume order doesn't matter
+    const instructions: OperationByteInstruction[] = [];
+
+    for (let i = 0; i < evaluateArgs.length; i++) {
+        instructions.push(op(ByteOperation.moveaside));
+    }
+    for (let i = evaluateArgs.length - 1; i >= 0; i--) {
+        instructions.push(op(ByteOperation.moveback));
+        if (evaluateArgs[i]) {
+            instructions.push(op(ByteOperation.evaluate));
+        }
+    }
+
+    // optimize
+    for (let i = 0; i < instructions.length - 1; i++) {
+        if (instructions[i + 0].operation === ByteOperation.moveaside &&
+            instructions[i + 1].operation === ByteOperation.moveback) {
+            instructions.splice(i, 2);
+            i--;
+        }
+    }
+
+    return instructions;
+}
+
+const callable = (arity: number, instructions: ByteInstruction[]): AnonymousFlowSignature['byteCode'] => ({
+    type: 'callable',
+    chunk: { arity, instructions },
+});
 
 export const localDefinitions: SignatureDefinition[] = [];
 localDefinitions.push({
@@ -109,10 +141,11 @@ localDefinitions.push({
         generics: [],
         inputs: [variable.number('a', 0), variable.number('b', 0)],
         output: output.number('sum'),
-        byteCode: {
-            type: 'inline',
-            instructions: [op(ByteOperation.nadd)],
-        }
+        byteCode: callable(2, [
+            ...evalthunks(true, true),
+            op(ByteOperation.nadd),
+            op(ByteOperation.return),
+        ]),
     },
     interpretation: ([a, b]) => a + b,
 });
@@ -125,10 +158,10 @@ localDefinitions.push({
         generics: [],
         inputs: [variable.number('a', 0)],
         output: output.number('a_truncated'),
-        byteCode: {
-            type: 'inline',
-            instructions: [ op(ByteOperation.ntrunc) ],
-        }
+        // byteCode: {
+        //     type: 'inline',
+        //     instructions: [op(ByteOperation.ntrunc)],
+        // }
     },
     interpretation: ([a]) => Math.floor(a),
 });
@@ -141,10 +174,10 @@ localDefinitions.push({
         generics: [],
         inputs: [variable.number('a', 1), variable.number('b', 1)],
         output: output.number('product'),
-        byteCode: {
-            type: 'inline',
-            instructions: [op(ByteOperation.nmul)],
-        }
+        // byteCode: {
+        //     type: 'inline',
+        //     instructions: [op(ByteOperation.nmul)],
+        // }
     },
     interpretation: ([a, b]) => a * b,
 });
@@ -157,10 +190,10 @@ localDefinitions.push({
         generics: [],
         inputs: [variable.number('a', 1), variable.number('b', 1)],
         output: output.number('quotient'),
-        byteCode: {
-            type: 'inline',
-            instructions: [op(ByteOperation.ndiv)],
-        }
+        // byteCode: {
+        //     type: 'inline',
+        //     instructions: [op(ByteOperation.ndiv)],
+        // }
     },
     interpretation: ([a, b]) => a / b,
 });
@@ -206,15 +239,24 @@ localDefinitions.push({
             simple.generic('match_false', 'T'),
         ],
         output: output.generic('choice', 'T'),
-        byteCode: {
-            type: 'inline',
-            instructions: [
-                op(ByteOperation.bneg),
-                data(1), op(ByteOperation.jc),
-                op(ByteOperation.swp),
-                op(ByteOperation.pop),
-            ],
-        }
+        byteCode: callable(3, [
+            op(ByteOperation.evaluate),
+            op(ByteOperation.bneg),
+            data(1), op(ByteOperation.jc),
+            op(ByteOperation.swp),
+            op(ByteOperation.pop),
+            op(ByteOperation.evaluate),
+            op(ByteOperation.return),
+        ]),
+        // byteCode: {
+        //     type: 'inline',
+        //     instructions: [
+        //         op(ByteOperation.bneg),
+        //         data(1), op(ByteOperation.jc),
+        //         op(ByteOperation.swp),
+        //         op(ByteOperation.pop),
+        //     ],
+        // }
     },
     interpretation: args => args[0] ? args[1] : args[2],
 });
@@ -228,10 +270,14 @@ localDefinitions.push({
         generics: [],
         inputs: [variable.number('number', 0)],
         output: output.number('output'),
-        byteCode: {
-            type: 'inline',
-            instructions: [],
-        }
+        byteCode: callable(1, [
+            op(ByteOperation.evaluate),
+            op(ByteOperation.return),
+        ]),
+        // byteCode: {
+        //     type: 'inline',
+        //     instructions: [],
+        // }
     },
     interpretation: ([number]) => number,
 });
@@ -244,10 +290,14 @@ localDefinitions.push({
         generics: [],
         inputs: [variable.boolean('boolean', false)],
         output: output.boolean('output'),
-        byteCode: {
-            type: 'inline',
-            instructions: [],
-        }
+        byteCode: callable(1, [
+            op(ByteOperation.evaluate),
+            op(ByteOperation.return),
+        ]),
+        // byteCode: {
+        //     type: 'inline',
+        //     instructions: [],
+        // }
     },
     interpretation: ([boolean]) => boolean,
 });
@@ -260,10 +310,14 @@ localDefinitions.push({
         generics: [],
         inputs: [variable.string('string', '')],
         output: output.string('output'),
-        byteCode: {
-            type: 'inline',
-            instructions: [],
-        }
+        byteCode: callable(1, [
+            op(ByteOperation.evaluate),
+            op(ByteOperation.return),
+        ]),
+        // byteCode: {
+        //     type: 'inline',
+        //     instructions: [],
+        // }
     },
     interpretation: ([string]) => string,
 });
@@ -276,10 +330,15 @@ localDefinitions.push({
         generics: [],
         inputs: [variable.number('a', 0), variable.number('b', 0)],
         output: output.boolean('output'),
-        byteCode: {
-            type: 'inline',
-            instructions: [op(ByteOperation.ngt)],
-        }
+        byteCode: callable(2, [
+            ...evalthunks(true, true),
+            op(ByteOperation.ngt),
+            op(ByteOperation.return),
+        ]),
+        // byteCode: {
+        //     type: 'inline',
+        //     instructions: [op(ByteOperation.ngt)],
+        // }
     },
     interpretation: ([a, b]) => a > b,
 });
@@ -296,10 +355,10 @@ localDefinitions.push({
             variable.string('right', ''),
         ],
         output: output.string('concatenated'),
-        byteCode: {
-            type: 'inline',
-            instructions: [ op(ByteOperation.sconcat) ],
-        },
+        // byteCode: {
+        //     type: 'inline',
+        //     instructions: [op(ByteOperation.sconcat)],
+        // },
     },
     interpretation: ([left, right]) => left + right,
 });
@@ -316,10 +375,10 @@ localDefinitions.push({
             variable.number('length', 1),
         ],
         output: output.string('substring'),
-        byteCode: {
-            type: 'inline',
-            instructions: [ op(ByteOperation.ssub) ],
-        },
+        // byteCode: {
+        //     type: 'inline',
+        //     instructions: [op(ByteOperation.ssub)],
+        // },
     },
     interpretation: ([string, start, length]) => string.slice(start, Math.max(0, start + length)),
 });
@@ -336,10 +395,10 @@ localDefinitions.push({
             list.generic('elements', createListType('T'))
         ],
         output: output.generic('list', createListType('T')),
-        byteCode: {
-            type: 'inline',
-            instructions: [],
-        }
+        // byteCode: {
+        //     type: 'inline',
+        //     instructions: [],
+        // }
     },
     interpretation: ([elements]) => elements,
 });
@@ -355,10 +414,10 @@ localDefinitions.push({
             simple.generic('right', createListType('T')),
         ],
         output: output.generic('concatenated', createListType('T')),
-        byteCode: {
-            type: 'inline',
-            instructions: [ op(ByteOperation.aconcat) ],
-        }
+        // byteCode: {
+        //     type: 'inline',
+        //     instructions: [op(ByteOperation.aconcat)],
+        // }
     },
     interpretation: ([left, right]) => left.concat(right),
 });
@@ -375,10 +434,10 @@ localDefinitions.push({
             variable.number('length', 1),
         ],
         output: output.generic('sublist', createListType('T')),
-        byteCode: {
-            type: 'inline',
-            instructions: [ op(ByteOperation.asub) ],
-        },
+        // byteCode: {
+        //     type: 'inline',
+        //     instructions: [op(ByteOperation.asub)],
+        // },
     },
     interpretation: ([list, start, length]) => list.slice(start, Math.max(0, start + length)),
 });
@@ -394,13 +453,13 @@ localDefinitions.push({
             variable.number('index', 0),
         ],
         output: output.generic('element', 'T'),
-        byteCode: {
-            type: 'inline',
-            instructions: [
-                op(ByteOperation.swp),
-                op(ByteOperation.aget),
-            ],
-        }
+        // byteCode: {
+        //     type: 'inline',
+        //     instructions: [
+        //         op(ByteOperation.swp),
+        //         op(ByteOperation.aget),
+        //     ],
+        // }
     },
     interpretation: ([list, index]) => list.at(index),
 });
@@ -415,14 +474,14 @@ localDefinitions.push({
             simple.generic('list', createListType('T')),
         ],
         output: output.number('length'),
-        byteCode: {
-            type: 'inline',
-            instructions: [ 
-                // get length attribute from array obj
-                data('length'),
-                op(ByteOperation.oget),
-            ],
-        },
+        // byteCode: {
+        //     type: 'inline',
+        //     instructions: [
+        //         // get length attribute from array obj
+        //         data('length', 'string'),
+        //         op(ByteOperation.oget),
+        //     ],
+        // },
     },
     interpretation: ([list]) => list.length,
 });

@@ -1,10 +1,11 @@
 import { getScopePath } from "../core/environment";
 import { FlowDocumentContext, FlowNodeContext, MAIN_FLOW_ID, TupleTypeSpecifier } from "../types";
-import { ByteCompilerConfig, ByteInstruction, ByteOperation, ByteProgram, CallableChunk, ConcreteValue, operationNameTags } from "../types/byteCode";
+import { ByteCompilerConfig, ByteInstruction, ByteOperation, ByteProgram, CallableChunk, StackValue } from "../types/byteCode";
 import { assertDef, assertNever, assertTruthy } from "../utils";
+import { byteProgramToString } from "./byteCodeUtils";
 
-const byteOp = (i: ByteOperation): ByteInstruction => ({ type: 'operation', operation: i });
-const byteData = (d: ConcreteValue): ByteInstruction => ({ type: 'data', data: d });
+const op = (operation: ByteOperation): ByteInstruction => ({ type: 'operation', operation });
+const data = (data: StackValue): ByteInstruction => ({ type: 'data', data });
 
 class Compiler {
     private flowQueue: string[] = [];
@@ -30,6 +31,13 @@ class Compiler {
         return this.program;
     }
 
+    private addChunk(label: string, chunk: CallableChunk) {
+        if (this.program.chunks.has(label)) {
+            throw new Error(`Chunk already in program '${label}'.`);
+        }
+        this.program.chunks.set(label, chunk);
+    }
+
     compileFlowChunk(flowId: string) {
         const flow = assertDef(this.doc.flowContexts[flowId], `A definition for flow '${flowId}' could not be found.`);
         const flowLabel = getScopePath(flow.flowEnvironment);
@@ -37,16 +45,31 @@ class Compiler {
             return;
         }
 
-        const chunk: CallableChunk = {
-            instructions: [],
-            arity: flow.flowSignature.inputs.length,
-            locals: 0,
+        const pushChunk = (label: string, arity: number, instructions: ByteInstruction[]): ByteInstruction[] => {
+            this.addChunk(label, { arity, instructions });
+            return [];
         }
 
-        const pushNode = (nodeId: string) => {
+        const makeConstant = (value: any, nodeId: string, rowId: string) => {
+            const constantLabel = `${flowLabel}.${nodeId}.${rowId}.constant`;
+            pushChunk(constantLabel, 0, [
+                data(value),
+                op(ByteOperation.return),
+            ]);
+            return constantLabel;
+        }
+
+        let instructions: ByteInstruction[] = [];
+
+        const makeNode = (nodeId: string): string => {
             const node = assertDef(flow.nodeContexts[nodeId]);
-            // calculate deps
             const inputRows = node.templateSignature!.inputs;
+
+            // const chunk: CallableChunk = {
+            //     arity: inputRows.length,
+            //     instructions: [],
+            // }
+
             for (let i = inputRows.length - 1; i >= 0; i--) {
                 const inputRowSignature = inputRows[i];
                 const rowContext = node.inputRows[inputRowSignature.id];
@@ -54,27 +77,31 @@ class Compiler {
                 const connections = rowContext.ref?.connections || [];
                 for (let j = connections.length - 1; j >= 0; j--) {
                     const conn = connections[j];
-                    pushNode(conn.nodeId);
+                    const nodeLabel = makeNode(conn.nodeId);
+                    instructions.push(
+                        data(nodeLabel),
+                        op(ByteOperation.thunk),
+                    );
                     if (conn.accessor != null) {
-                        chunk.instructions.push(
-                            byteData(conn.accessor),
-                            byteOp(ByteOperation.oget),
+                        instructions.push(
+                            data(conn.accessor),
+                            op(ByteOperation.oget),
                         );
                     }
                 }
 
                 if (inputRowSignature.rowType === 'input-list') {
                     chunk.instructions.push(
-                        byteData(connections.length),
-                        byteOp(ByteOperation.apack),
+                        data(connections.length),
+                        op(ByteOperation.apack),
                     );
                 }
                 if (inputRowSignature.rowType === 'input-tuple') {
                     const tupleSpec = inputRowSignature.specifier as TupleTypeSpecifier; 
                     assertTruthy(connections.length === tupleSpec.elements.length);
                     chunk.instructions.push(
-                        byteData(connections.length),
-                        byteOp(ByteOperation.apack),
+                        data(connections.length),
+                        op(ByteOperation.apack),
                     );
                 }
                 if (inputRowSignature.rowType === 'input-simple') {
@@ -82,8 +109,9 @@ class Compiler {
                 }
                 if (inputRowSignature.rowType === 'input-variable') {
                     if (connections.length == 0) {
-                        const byteDataValue = this.validateByteData(rowContext.displayValue);
-                        chunk.instructions.push(byteData(byteDataValue));
+                        const constantRoutine = makeConstant(rowContext.displayValue, nodeId, inputRowSignature.id);
+                        chunk.instructions.push()
+                        // chunk.instructions.push(byteDataValue);
                     } else {
                         assertTruthy(connections.length === 1);
                     }
@@ -108,23 +136,27 @@ class Compiler {
         }
 
         const lastNode = flow.sortedUsedNodes.at(-1)!;
-        pushNode(lastNode);
+        makeNode(lastNode);
 
-        chunk.instructions.push(byteOp(ByteOperation.return));
+        chunk.instructions.push(op(ByteOperation.return));
 
         this.program.chunks.set(flowLabel, chunk);
     }
 
-    validateByteData(input: any): ConcreteValue {
-        switch (typeof input) {
-            case 'number':
-            case 'boolean':
-            case 'string':
-            case 'object':
-                return input;
-        }
-        assertNever(`Invalid type of input '${typeof input}'.`);
-    }
+    // makeDataInstruction(input: any): ByteInstruction {
+    //     switch (typeof input) {
+    //         case 'number':
+    //             return data(input, 'number');
+    //         case 'boolean':
+    //             return data(input, 'boolean');
+    //         case 'string':
+    //             return data(input, 'string');
+    //         case 'object':
+    //             if (Array.isArray(input))   return data(input, 'array'); 
+    //             else                        return data(input, 'object');
+    //     }
+    //     assertNever(`Invalid type of input '${typeof input}'.`);
+    // }
 
     generateNodeInstructions(node: FlowNodeContext): ByteInstruction[] {
         const nodeRoutine = node.templateSignature!.byteCode;
@@ -142,8 +174,8 @@ class Compiler {
         }
         // execute call
         return [
-            byteData(node.scopedLabel),
-            byteOp(ByteOperation.call),
+            data(node.scopedLabel, 'string'),
+            op(ByteOperation.call),
         ];
     }
 }
@@ -165,26 +197,4 @@ function assertValidDocument(doc: FlowDocumentContext) {
     if (flow == null) {
         throw new Error(`Document is missing a valid 'main' flow.`);
     }
-}
-
-export function byteProgramToString(program: ByteProgram) {
-    const lines: string[] = [];
-    for (const [label, chunk] of program.chunks) {
-        lines.push(`.${label}`);
-        for (let i = 0; i < chunk.instructions.length; i++) {
-            const instr = chunk.instructions[i];
-            let line = '?';
-            switch (instr.type) {
-                case 'data':
-                    line = instr.data.toString();
-                    break;
-                case 'operation':
-                    line = assertDef(operationNameTags[instr.operation]);
-                    break;
-            }
-            lines.push(`${i.toString().padStart(6)} ${line}`);
-        }
-        lines.push('\n');
-    }
-    return lines.join('\n');
 }

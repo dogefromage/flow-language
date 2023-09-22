@@ -8,9 +8,10 @@ function validateCompileInterpret(document: lang.FlowDocument, config: lang.Byte
         const program = lang.compileDocument(context, config);
         const sm = new lang.StackMachine(program);
         sm.interpret('global:document:main');
+        const result = sm.dpop() as lang.ConcreteValue;
         return {
-            data: sm.dpop()!.toString() + '\n',
-        }
+            data: result.value.toString() + '\n',
+        };
     } catch (e: any) {
         console.error(e);
         return {
