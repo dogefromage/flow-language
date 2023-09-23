@@ -1,31 +1,39 @@
-import { ByteInstruction, ByteOperation, ByteProgram, CallFrame, CallableChunk, StackValue, ThunkValue } from "../types/byteCode";
+import { ByteInstruction, ByteOperation, ByteProgram, CallFrame, CallableChunk, StackValue, ThunkValue, byteCodeConstructors, operationNameTags } from "../types/byteCode";
 import { assertDef, assertNever, assertTruthy } from "../utils";
 import { instructionToString } from "./byteCodeUtils";
 
-const thunk = (
-    args: ThunkValue['args'], chunk: ThunkValue['chunk'], label: string,
-): ThunkValue => ({ args, chunk, label });
+const { thunk } = byteCodeConstructors;
+
+interface StackMachineArgs {
+    trace: boolean;
+    countExecutedInstructions: boolean;
+}
 
 export class StackMachine {
     stack: StackValue[] = [];
     sideStack: StackValue[] = [];
     callStack: CallFrame[] = [];
+    instructionTimer = 0;
 
     constructor(
         private program: ByteProgram,
+        private args: StackMachineArgs,
     ) {}
 
     reset() {
         this.stack = [];
+        this.sideStack = [];
         this.callStack = [];
+        this.instructionTimer = 0;
     }
 
     getChunk(label: string) {
         return assertDef(this.program.chunks.get(label), `Could not find chunk with label '${label}'`);
     }
 
-    interpret(entryLabel: string) {
+    interpret() {
         try {
+            const entryLabel = this.program.entryChunk;
             this.execCall(entryLabel, this.getChunk(entryLabel));
 
             while (this.callStack.length) {
@@ -39,6 +47,11 @@ export class StackMachine {
         } catch (e: any) {
             e.message += '\n' + this.stackFrameToString();
             throw e;
+        }
+        finally {
+            if (this.args.countExecutedInstructions) {
+                console.log(`Executed ${this.instructionTimer} dynamic instructions in total.`);
+            }
         }
     }
 
@@ -54,6 +67,19 @@ export class StackMachine {
     }
 
     runInstruction(instr: ByteInstruction) {
+        this.instructionTimer++;
+
+        if (this.args.trace) {
+            if (instr.type === 'data') {
+                console.groupCollapsed(`INSTR data(${instr.data.toString()})`);
+                console.log(instr.data);
+            } else {
+                console.groupCollapsed(`INSTR op(${operationNameTags[instr.operation]})`);
+            }
+            console.log(this.stack.slice());
+            console.groupEnd();
+        }
+
         if (instr.type === 'data') {
             this.dpush(instr.data);
             return;
@@ -160,17 +186,26 @@ export class StackMachine {
             case ByteOperation.moveback:
                 this.dpush(assertDef(this.sideStack.pop()));
                 break;
+            case ByteOperation.getarg: {
+                const index = this.dpop();
+                const args = this.getFrame().args;
+                assertTruthy(0 <= index && index < args.length, 'Arg access out of bounds.');
+                this.dpush(args[index]);
+                break;
+            }
             case ByteOperation.getlocal: {
                 const index = this.dpop();
                 const locals = this.getFrame().locals;
                 assertTruthy(0 <= index && index < locals.length, 'Local access out of bounds.');
                 this.dpush(locals[index]);
+                break;
             }
             case ByteOperation.setlocal: {
                 const index = this.dpop();
                 const val = this.dpop();
                 const locals = this.getFrame().locals;
                 locals[index] = val;
+                break;
             }
 
             // CONTROL FLOW
@@ -184,10 +219,14 @@ export class StackMachine {
             }
             case ByteOperation.evaluate: {
                 const thunk: ThunkValue = this.dpop();
-                for (let i = thunk.chunk.arity - 1; i >= 0; i--) {
-                    this.dpush(thunk.args[i]);
+                if (thunk.result != null) {
+                    this.dpush(thunk.result);
+                } else {
+                    for (let i = thunk.chunk.arity - 1; i >= 0; i--) {
+                        this.dpush(thunk.args[i]);
+                    }
+                    this.execCall(thunk.label, thunk.chunk, thunk);
                 }
-                this.execCall(thunk.label, thunk.chunk);
                 break;
             }
             case ByteOperation.thunk: {
@@ -217,21 +256,38 @@ export class StackMachine {
         }
     }
 
-    execCall(label: string, chunk: CallableChunk) {
+    execCall(label: string, chunk: CallableChunk, thunk?: ThunkValue) {
+        if (this.args.trace) {
+            console.groupCollapsed(`CALL ${label}`);
+            console.log(chunk);
+            console.groupEnd();
+        }
+
         if (this.callStack.length >= 100000) {
             assertNever(`Stack overflow (call stack has ${this.callStack.length} entries).`);
         }
         this.callStack.push({
             label,
             chunk,
+            thunk,
             ip: 0,
             baseIndex: this.stack.length - chunk.arity,
             locals: [],
+            // copy arguments into arg array AND REVERSE
+            args: this.stack
+                .slice(this.stack.length - chunk.arity, chunk.arity)
+                .reverse(),
         });
     }
     execReturn() {
+        if (this.args.trace) {
+            console.log(`RETURN`);
+        }
         const frame = assertDef(this.callStack.pop(), 'Cannot pop call stack');
-        this.stack = this.stack.slice(0, frame.baseIndex);
+        // memoize result
+        if (frame.thunk != null) {
+            frame.thunk.result = this.dpeek(0);
+        }
     }
     getFrame() {
         return assertDef(this.callStack.at(-1), 'Call stack is empty.');

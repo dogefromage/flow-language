@@ -48,7 +48,7 @@ export interface AnonymousFlowSignature {
     output: OutputRowSignature;
     byteCode?: 
         | { type: 'callable', chunk: CallableChunk }
-        | { type: 'inline', instructions: ByteInstruction[] }
+        // | { type: 'inline', instructions: ByteInstruction[] }
 }
 
 // export function getInternalId(name: 'input' | 'output' | 'combine' | 'separate', ...rest: string[]) {

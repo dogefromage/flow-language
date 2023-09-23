@@ -6,11 +6,13 @@ function validateCompileInterpret(document: lang.FlowDocument, config: lang.Byte
     const context = lang.validateDocument(document);
     try {
         const program = lang.compileDocument(context, config);
-        const sm = new lang.StackMachine(program);
-        sm.interpret('global:document:main');
-        const result = sm.dpop() as lang.ConcreteValue;
+        const sm = new lang.StackMachine(program, { 
+            trace: true, 
+            countExecutedInstructions: true 
+        });
+        sm.interpret();
         return {
-            data: result.value.toString() + '\n',
+            data: sm.dpop().toString() + '\n',
         };
     } catch (e: any) {
         console.error(e);

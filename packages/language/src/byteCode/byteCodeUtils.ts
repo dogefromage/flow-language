@@ -4,12 +4,12 @@ import { assertDef, assertNever } from "../utils";
 export function byteProgramToString(program: ByteProgram) {
     const lines: string[] = [];
     for (const [label, chunk] of program.chunks) {
-        lines.push(`.${label}`);
+        lines.push(`.${label}  (${chunk.arity}-ary)`);
         for (let i = 0; i < chunk.instructions.length; i++) {
             const instrLine = instructionToString(chunk.instructions[i]);
             lines.push(`${i.toString().padStart(6)} ${instrLine}`);
         }
-        lines.push('\n');
+        lines.push('');
     }
     return lines.join('\n');
 }

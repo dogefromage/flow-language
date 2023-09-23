@@ -1,7 +1,6 @@
-import _ from "lodash";
 import { createFunctionType, createListType } from "../typeSystem";
 import { AnonymousFlowSignature, FunctionInputRowSignature, FunctionTypeSpecifier, GenericTag, ListInputRowSignature, OutputRowSignature, SimpleInputRowSignature, TypeSpecifier, VariableInputRowSignature } from "../types";
-import { ByteInstruction, ByteOperation, DataByteInstruction, OperationByteInstruction, StackValue } from "../types/byteCode";
+import { ByteInstruction, ByteOperation, CallableChunk, DataByteInstruction, OperationByteInstruction, StackValue, byteCodeConstructors } from "../types/byteCode";
 import { SignatureDefinition } from "../types/local";
 
 const variable = {
@@ -97,8 +96,7 @@ const output = {
 };
 const generic = (name: string, constraint: TypeSpecifier | null = null): GenericTag => ({ id: name, constraint });
 
-const op = (operation: ByteOperation): OperationByteInstruction => ({ type: 'operation', operation });
-const data = (data: StackValue): DataByteInstruction => ({ type: 'data', data });
+const { op, data } = byteCodeConstructors; 
 
 const evalthunks = (...evaluateArgs: boolean[]) => {
     // assume order doesn't matter
@@ -510,3 +508,17 @@ export const baseInterpretations = Object.fromEntries(
 export const baseSignatures = Object.fromEntries(
     localDefinitions.map(def => [def.signature.id, def.signature])
 );
+
+
+export const helperChunks: Record<string, CallableChunk> = {
+    obj_get: {
+        arity: 2,
+        instructions: [
+            // expects: ( propName, () -> obj )
+            // returns: () -> obj
+            ...evalthunks(false, true),
+            op(ByteOperation.oget),
+            op(ByteOperation.return),
+        ]
+    }
+}

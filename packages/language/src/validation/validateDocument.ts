@@ -1,11 +1,13 @@
 import { baseEnvironmentContent } from "../content/baseEnvironment";
 import { createEnvironment, pushContent } from "../core/environment";
 import { createAnyType, createMapType } from "../typeSystem";
-import { ByteInstruction, ByteOperation, FlowDocument, FlowEnvironmentContent, FlowSignature, GenericTag, InputRowSignature, OutputRowSignature } from "../types";
-import { FlowDocumentContext, DocumentProblem, FlowGraphContext } from "../types/context";
+import { ByteInstruction, ByteOperation, FlowDocument, FlowEnvironmentContent, FlowSignature, GenericTag, InputRowSignature, OutputRowSignature, byteCodeConstructors } from "../types";
+import { DocumentProblem, FlowDocumentContext, FlowGraphContext } from "../types/context";
 import { Obj } from "../types/utilTypes";
 import { mem } from "../utils/functional";
 import { getFlowSignature, validateFlowGraph } from "./validateFlowGraph";
+
+const { op, data } = byteCodeConstructors;
 
 export const validateDocument = mem((document: FlowDocument) => {
     const {
@@ -63,22 +65,23 @@ function generateFlowSyntaxLayerInitial(
         )
     );
 
-    // add arguments and keys back to back onto stack
-    // then specify prop count and pack them into an object
-    const instructions: ByteInstruction[] = [];
-    for (let i = 0; i < flowInputs.length; i++) {
-        // args are stacked reverse
-        const stackIndex = flowInputs.length - i - 1;
-        instructions.push(
-            { type: 'data', data: { type: 'concrete', dataType: 'integer', value: stackIndex } },
-            { type: 'operation', operation: ByteOperation.narg },
-            { type: 'data', data: { type: 'concrete', dataType: 'integer', value: flowInputs[i].id } },
-        );
-    }
-    instructions.push(
-        { type: 'data', data: { type: 'concrete', dataType: 'integer', value: flowInputs.length } },
-        { type: 'operation', operation: ByteOperation.opack },
-    );
+    // // add arguments and keys back to back onto stack
+    // // then specify prop count and pack them into an object
+    // const instructions: ByteInstruction[] = [];
+    // for (let i = 0; i < flowInputs.length; i++) {
+    //     // args are stacked reverse
+    //     const stackIndex = flowInputs.length - i - 1;
+    //     instructions.push(
+    //         data(stackIndex),
+    //         op(ByteOperation.getarg),
+    //         op(ByteOperation.evaluate),
+    //         data(flowInputs[i].id),
+    //     );
+    // }
+    // instructions.push(
+    //     { type: 'data', data: { type: 'concrete', dataType: 'integer', value: flowInputs.length } },
+    //     { type: 'operation', operation: ByteOperation.opack },
+    // );
 
     const input: FlowSignature = {
         id: 'input',
@@ -94,10 +97,10 @@ function generateFlowSyntaxLayerInitial(
             specifier: inputSpecifier,
             rowType: 'output-destructured',
         },
-        byteCode: {
-            type: 'inline',
-            instructions,
-        }
+        // byteCode: {
+        //     type: 'inline',
+        //     instructions,
+        // }
         // outputs: flowInputs.map(o => ({
         //     id: o.id,
         //     label: o.label,
@@ -130,8 +133,14 @@ function generateFlowSyntaxLayerInitial(
             specifier: createAnyType(),
         },
         byteCode: {
-            type: 'inline',
-            instructions: [],
+            type: 'callable',
+            chunk: {
+                arity: 1,
+                instructions: [
+                    op(ByteOperation.evaluate),
+                    op(ByteOperation.return),
+                ]
+            }
         }
     }
 

@@ -19,6 +19,7 @@ export enum ByteOperation {
     moveaside, moveback,
     // Call frame ops
     getlocal, setlocal,
+    getarg,
     call, return, j, jc,
     evaluate, thunk,
 }
@@ -44,21 +45,16 @@ export const operationNameTags = [
     'moveaside', 'moveback',
     // Call frame ops
     'getlocal', 'setlocal',
-    'callname', 'return', 'j', 'jc',
-    'callthunk', 'thunk',
+    'getarg',
+    'call', 'return', 'j', 'jc',
+    'evaluate', 'thunk',
 ];
-
-// export interface ConcreteValue {
-//     type: 'concrete';
-//     value:     object |  string  |  number  |  boolean;
-//     // dataType: 'object' | 'array' | 'string' | 'number' | 'boolean';
-// }
 
 export interface ThunkValue {
     label: string;
     args: StackValue[];
     chunk: CallableChunk;
-    // result: StackValue | null;
+    result: StackValue | null;
 }
 
 export type StackValue = object |  string  |  number  |  boolean | ThunkValue;
@@ -77,15 +73,25 @@ export interface CallableChunk {
 export interface CallFrame {
     label: string;
     chunk: CallableChunk;
+    thunk?: ThunkValue;
     ip: number;
     baseIndex: number;
     locals: StackValue[];
+    args: StackValue[];
 }
 
 export interface ByteProgram {
+    entryChunk: string;
     chunks: Map<string, CallableChunk>;
 }
 
 export interface ByteCompilerConfig {
     skipValidation?: boolean;
 }
+
+export const byteCodeConstructors = {
+    op: (operation: ByteOperation): OperationByteInstruction => ({ type: 'operation', operation }),
+    data: (data: StackValue): DataByteInstruction => ({ type: 'data', data }),
+    thunk: (args: ThunkValue['args'], chunk: ThunkValue['chunk'], label: string,
+        ): ThunkValue => ({ args, chunk, label }),
+};
