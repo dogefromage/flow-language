@@ -292,7 +292,7 @@ export const FlowInputRowTuple = (props: RowComponentProps<lang.TupleInputRowSig
 
     const tupleType = lang.tryResolveTypeAlias(type, env) as lang.TupleTypeSpecifier;
     const connections = context?.ref?.connections || [];
-
+    
     return (
         <FlowNodeRowContextWrapper {...props}>
             {

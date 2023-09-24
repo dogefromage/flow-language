@@ -7,5 +7,5 @@ export type FlowInterpretation = (nodeArgs: InterpreterValue[], flowArgs: Interp
 
 export interface SignatureDefinition {
     signature: FlowSignature;
-    interpretation: FlowInterpretation;
+    interpretation?: FlowInterpretation;
 }

@@ -11,7 +11,7 @@ export enum ByteOperation {
     // Strings
     sconcat, ssub,
     // Arrays
-    apack, aget, aconcat, asub,
+    apack, aget, aconcat, asub, aspread, apop, apush,
     // Objects
     opack, oget,
     // Stack ops
@@ -22,6 +22,7 @@ export enum ByteOperation {
     getarg,
     call, return, j, jc,
     evaluate, thunk,
+    thunk_id,
 }
 
 // just copy same representation and make array
@@ -37,7 +38,7 @@ export const operationNameTags = [
     // Strings
     'sconcat', 'ssub',
     // Arrays
-    'apack', 'aget', 'aconcat', 'asub',
+    'apack', 'aget', 'aconcat', 'asub', 'aspread', 'apophelp', 'apush',
     // Objects
     'opack', 'oget',
     // Stack ops
@@ -48,6 +49,7 @@ export const operationNameTags = [
     'getarg',
     'call', 'return', 'j', 'jc',
     'evaluate', 'thunk',
+    'thunk_identity',
 ];
 
 export interface ThunkValue {
@@ -92,6 +94,7 @@ export interface ByteCompilerConfig {
 export const byteCodeConstructors = {
     op: (operation: ByteOperation): OperationByteInstruction => ({ type: 'operation', operation }),
     data: (data: StackValue): DataByteInstruction => ({ type: 'data', data }),
-    thunk: (args: ThunkValue['args'], chunk: ThunkValue['chunk'], label: string,
-        ): ThunkValue => ({ args, chunk, label }),
+    thunk: (args: ThunkValue['args'], chunk: ThunkValue['chunk'], label: string, result: ThunkValue['result'] = null,
+        ): ThunkValue => ({ args, chunk, label, result }),
+    chunk: (arity: number, instructions: ByteInstruction[]): CallableChunk => ({ arity, instructions }),
 };

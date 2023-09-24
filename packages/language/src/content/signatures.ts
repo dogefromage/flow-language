@@ -1,5 +1,5 @@
-import { createFunctionType, createListType } from "../typeSystem";
-import { AnonymousFlowSignature, FunctionInputRowSignature, FunctionTypeSpecifier, GenericTag, ListInputRowSignature, OutputRowSignature, SimpleInputRowSignature, TypeSpecifier, VariableInputRowSignature } from "../types";
+import { createAnyType, createFunctionType, createListType, createMapType, createTupleType } from "../typeSystem";
+import { AnonymousFlowSignature, DestructuredOutputRowSignature, FunctionInputRowSignature, FunctionTypeSpecifier, GenericTag, ListInputRowSignature, OutputRowSignature, SimpleInputRowSignature, TypeSpecifier, VariableInputRowSignature } from "../types";
 import { ByteInstruction, ByteOperation, CallableChunk, DataByteInstruction, OperationByteInstruction, StackValue, byteCodeConstructors } from "../types/byteCode";
 import { SignatureDefinition } from "../types/local";
 
@@ -60,7 +60,7 @@ const list = {
         specifier: listSpecifier,
     }),
 }
-const func = (id: string, specifier: FunctionTypeSpecifier): FunctionInputRowSignature => ({
+const func = (id: string, specifier: FunctionTypeSpecifier | string): FunctionInputRowSignature => ({
     id,
     rowType: 'input-function',
     // label: autoName(id),
@@ -93,10 +93,15 @@ const output = {
         // label: autoName(id),
         specifier,
     }),
+    destructured: (id: string, specifier: TypeSpecifier): DestructuredOutputRowSignature => ({
+        id,
+        rowType: 'output-destructured',
+        specifier,
+    }),
 };
 const generic = (name: string, constraint: TypeSpecifier | null = null): GenericTag => ({ id: name, constraint });
 
-const { op, data } = byteCodeConstructors; 
+const { op, data, chunk } = byteCodeConstructors;
 
 const evalthunks = (...evaluateArgs: boolean[]) => {
     // assume order doesn't matter
@@ -124,16 +129,15 @@ const evalthunks = (...evaluateArgs: boolean[]) => {
     return instructions;
 }
 
-const callable = (arity: number, instructions: ByteInstruction[]): AnonymousFlowSignature['byteCode'] => ({
-    type: 'callable',
-    chunk: { arity, instructions },
-});
+const callable = (arity: number, instructions: ByteInstruction[]): AnonymousFlowSignature['byteCode'] =>
+    ({ type: 'callable', chunk: { arity, instructions } });
+const inline = (instructions: ByteInstruction[]): AnonymousFlowSignature['byteCode'] =>
+    ({ type: 'inline', instructions });
 
 export const localDefinitions: SignatureDefinition[] = [];
 localDefinitions.push({
     signature: {
         id: 'add',
-        // name: 'Add',
         attributes: { category: 'Numbers' },
         description: null,
         generics: [],
@@ -150,82 +154,55 @@ localDefinitions.push({
 localDefinitions.push({
     signature: {
         id: 'truncate',
-        // name: 'Truncate',
         attributes: { category: 'Numbers' },
         description: null,
         generics: [],
         inputs: [variable.number('a', 0)],
         output: output.number('a_truncated'),
-        // byteCode: {
-        //     type: 'inline',
-        //     instructions: [op(ByteOperation.ntrunc)],
-        // }
+        byteCode: callable(1, [
+            op(ByteOperation.evaluate),
+            op(ByteOperation.ntrunc),
+            op(ByteOperation.return),
+        ]),
     },
     interpretation: ([a]) => Math.floor(a),
 });
 localDefinitions.push({
     signature: {
         id: 'multiply',
-        // name: 'Multiply',
         attributes: { category: 'Numbers' },
         description: null,
         generics: [],
         inputs: [variable.number('a', 1), variable.number('b', 1)],
         output: output.number('product'),
-        // byteCode: {
-        //     type: 'inline',
-        //     instructions: [op(ByteOperation.nmul)],
-        // }
+        byteCode: callable(2, [
+            ...evalthunks(true, true),
+            op(ByteOperation.nmul),
+            op(ByteOperation.return),
+        ]),
     },
     interpretation: ([a, b]) => a * b,
 });
 localDefinitions.push({
     signature: {
         id: 'divide',
-        // name: 'Divide',
         attributes: { category: 'Numbers' },
         description: null,
         generics: [],
         inputs: [variable.number('a', 1), variable.number('b', 1)],
         output: output.number('quotient'),
-        // byteCode: {
-        //     type: 'inline',
-        //     instructions: [op(ByteOperation.ndiv)],
-        // }
+        byteCode: callable(2, [
+            ...evalthunks(true, true),
+            op(ByteOperation.ndiv),
+            op(ByteOperation.return),
+        ]),
     },
     interpretation: ([a, b]) => a / b,
 });
 
-// localDefinitions.push({
-//     signature: {
-//         id: 'sine',
-//         // name: 'Sine',
-//         attributes: { category: 'Math', color: '#b32248' },
-//         description: null,
-//         generics: [],
-//         inputs: [variable.number('angle', 0)],
-//         output: output.number('sine'),
-//     },
-//     interpretation: ([angle]) => Math.sin(angle),
-// });
-
-// localDefinitions.push({
-//     signature: {
-//         id: 'random',
-//         // name: 'Random [0,1)',
-//         attributes: { category: 'Math', color: '#b32248' },
-//         description: null,
-//         generics: [],
-//         inputs: [],
-//         output: output.number('value'),
-//     },
-//     interpretation: () => Math.random(),
-// });
-
 localDefinitions.push({
     signature: {
         id: 'choose',
-        // name: 'Choose',
         attributes: { category: 'Logic' },
         description: null,
         generics: [
@@ -246,15 +223,6 @@ localDefinitions.push({
             op(ByteOperation.evaluate),
             op(ByteOperation.return),
         ]),
-        // byteCode: {
-        //     type: 'inline',
-        //     instructions: [
-        //         op(ByteOperation.bneg),
-        //         data(1), op(ByteOperation.jc),
-        //         op(ByteOperation.swp),
-        //         op(ByteOperation.pop),
-        //     ],
-        // }
     },
     interpretation: args => args[0] ? args[1] : args[2],
 });
@@ -262,67 +230,56 @@ localDefinitions.push({
 localDefinitions.push({
     signature: {
         id: 'number',
-        // name: 'Number',
         attributes: { category: 'Numbers' },
         description: null,
         generics: [],
         inputs: [variable.number('number', 0)],
         output: output.number('output'),
-        byteCode: callable(1, [
-            op(ByteOperation.evaluate),
-            op(ByteOperation.return),
-        ]),
-        // byteCode: {
-        //     type: 'inline',
-        //     instructions: [],
-        // }
+        byteCode: inline([]),
     },
     interpretation: ([number]) => number,
 });
 localDefinitions.push({
     signature: {
         id: 'boolean',
-        // name: 'Boolean',
         attributes: { category: 'Logic' },
         description: null,
         generics: [],
         inputs: [variable.boolean('boolean', false)],
         output: output.boolean('output'),
-        byteCode: callable(1, [
-            op(ByteOperation.evaluate),
-            op(ByteOperation.return),
-        ]),
-        // byteCode: {
-        //     type: 'inline',
-        //     instructions: [],
-        // }
+        byteCode: inline([]),
     },
     interpretation: ([boolean]) => boolean,
 });
 localDefinitions.push({
     signature: {
         id: 'string',
-        // name: 'String',
         attributes: { category: 'Strings' },
         description: null,
         generics: [],
         inputs: [variable.string('string', '')],
         output: output.string('output'),
-        byteCode: callable(1, [
-            op(ByteOperation.evaluate),
-            op(ByteOperation.return),
-        ]),
-        // byteCode: {
-        //     type: 'inline',
-        //     instructions: [],
-        // }
+        byteCode: inline([]),
     },
     interpretation: ([string]) => string,
 });
+
+localDefinitions.push({
+    signature: {
+        id: 'function',
+        attributes: { category: 'Functions' },
+        description: null,
+        generics: [ generic('T', createFunctionType(createAnyType(), createAnyType())) ],
+        inputs: [func('_function', 'T')],
+        output: output.generic('output', 'T'),
+        byteCode: inline([]),
+    },
+    interpretation: ([string]) => string,
+});
+
 localDefinitions.push({
     signature: {
         id: 'greater',
-        // name: 'Greater Than',
         attributes: { category: 'Numbers' },
         description: null,
         generics: [],
@@ -333,10 +290,6 @@ localDefinitions.push({
             op(ByteOperation.ngt),
             op(ByteOperation.return),
         ]),
-        // byteCode: {
-        //     type: 'inline',
-        //     instructions: [op(ByteOperation.ngt)],
-        // }
     },
     interpretation: ([a, b]) => a > b,
 });
@@ -344,7 +297,6 @@ localDefinitions.push({
 localDefinitions.push({
     signature: {
         id: 'concat_strings',
-        // name: 'Concat Strings',
         attributes: { category: 'Strings' },
         description: null,
         generics: [],
@@ -353,17 +305,17 @@ localDefinitions.push({
             variable.string('right', ''),
         ],
         output: output.string('concatenated'),
-        // byteCode: {
-        //     type: 'inline',
-        //     instructions: [op(ByteOperation.sconcat)],
-        // },
+        byteCode: callable(2, [
+            ...evalthunks(true, true),
+            op(ByteOperation.sconcat),
+            op(ByteOperation.return),
+        ]),
     },
     interpretation: ([left, right]) => left + right,
 });
 localDefinitions.push({
     signature: {
         id: 'substring',
-        // name: 'Substring',
         attributes: { category: 'Strings' },
         description: null,
         generics: [],
@@ -373,10 +325,11 @@ localDefinitions.push({
             variable.number('length', 1),
         ],
         output: output.string('substring'),
-        // byteCode: {
-        //     type: 'inline',
-        //     instructions: [op(ByteOperation.ssub)],
-        // },
+        byteCode: callable(3, [
+            ...evalthunks(true, true, true),
+            op(ByteOperation.ssub),
+            op(ByteOperation.return),
+        ]),
     },
     interpretation: ([string, start, length]) => string.slice(start, Math.max(0, start + length)),
 });
@@ -385,7 +338,6 @@ localDefinitions.push({
 localDefinitions.push({
     signature: {
         id: 'pack',
-        // name: 'Pack List',
         attributes: { category: 'Lists' },
         description: null,
         generics: [generic('T')],
@@ -393,17 +345,13 @@ localDefinitions.push({
             list.generic('elements', createListType('T'))
         ],
         output: output.generic('list', createListType('T')),
-        // byteCode: {
-        //     type: 'inline',
-        //     instructions: [],
-        // }
+        byteCode: inline([]),
     },
     interpretation: ([elements]) => elements,
 });
 localDefinitions.push({
     signature: {
         id: 'concat_lists',
-        // name: 'Concat Lists',
         attributes: { category: 'Lists' },
         description: null,
         generics: [generic('T')],
@@ -412,17 +360,17 @@ localDefinitions.push({
             simple.generic('right', createListType('T')),
         ],
         output: output.generic('concatenated', createListType('T')),
-        // byteCode: {
-        //     type: 'inline',
-        //     instructions: [op(ByteOperation.aconcat)],
-        // }
+        byteCode: callable(2, [
+            ...evalthunks(true, true),
+            op(ByteOperation.aconcat),
+            op(ByteOperation.return),
+        ]),
     },
     interpretation: ([left, right]) => left.concat(right),
 });
 localDefinitions.push({
     signature: {
         id: 'sublist',
-        // name: 'Sublist',
         attributes: { category: 'Lists' },
         description: null,
         generics: [generic('T')],
@@ -432,17 +380,17 @@ localDefinitions.push({
             variable.number('length', 1),
         ],
         output: output.generic('sublist', createListType('T')),
-        // byteCode: {
-        //     type: 'inline',
-        //     instructions: [op(ByteOperation.asub)],
-        // },
+        byteCode: callable(3, [
+            ...evalthunks(true, true, true),
+            op(ByteOperation.asub),
+            op(ByteOperation.return),
+        ]),
     },
     interpretation: ([list, start, length]) => list.slice(start, Math.max(0, start + length)),
 });
 localDefinitions.push({
     signature: {
         id: 'access_list',
-        // name: 'Access List',
         attributes: { category: 'Lists' },
         description: null,
         generics: [generic('T')],
@@ -451,20 +399,62 @@ localDefinitions.push({
             variable.number('index', 0),
         ],
         output: output.generic('element', 'T'),
-        // byteCode: {
-        //     type: 'inline',
-        //     instructions: [
-        //         op(ByteOperation.swp),
-        //         op(ByteOperation.aget),
-        //     ],
-        // }
+        byteCode: callable(2, [
+            ...evalthunks(true, true),
+            op(ByteOperation.swp),
+            op(ByteOperation.aget),
+            op(ByteOperation.evaluate),
+            op(ByteOperation.return),
+        ]),
     },
     interpretation: ([list, index]) => list.at(index),
 });
 localDefinitions.push({
     signature: {
+        id: 'pop',
+        attributes: { category: 'Lists' },
+        description: null,
+        generics: [generic('T')],
+        inputs: [
+            simple.generic('list', createListType('T')),
+        ],
+        output: output.destructured('popped',
+            createMapType({ head: 'T', tail: createListType('T') })),
+        byteCode: callable(1, [
+            op(ByteOperation.evaluate),
+            op(ByteOperation.apop),
+            op(ByteOperation.moveaside),
+            op(ByteOperation.thunk_id),
+            data('tail'),
+            op(ByteOperation.moveback),
+            data('head'),
+            data(2),
+            op(ByteOperation.opack),
+            op(ByteOperation.return),
+        ]),
+    },
+});
+localDefinitions.push({
+    signature: {
+        id: 'push',
+        attributes: { category: 'Lists' },
+        description: null,
+        generics: [generic('T')],
+        inputs: [
+            simple.generic('head', 'T'),
+            simple.generic('tail', createListType('T')),
+        ],
+        output: output.generic('combined', createListType('T')),
+        byteCode: callable(1, [
+            ...evalthunks(false, true),
+            op(ByteOperation.apush),
+            op(ByteOperation.return),
+        ]),
+    },
+});
+localDefinitions.push({
+    signature: {
         id: 'length',
-        // name: 'Access List',
         attributes: { category: 'Lists' },
         description: null,
         generics: [generic('T')],
@@ -472,14 +462,12 @@ localDefinitions.push({
             simple.generic('list', createListType('T')),
         ],
         output: output.number('length'),
-        // byteCode: {
-        //     type: 'inline',
-        //     instructions: [
-        //         // get length attribute from array obj
-        //         data('length', 'string'),
-        //         op(ByteOperation.oget),
-        //     ],
-        // },
+        byteCode: callable(1, [
+            op(ByteOperation.evaluate),
+            data('length'),
+            op(ByteOperation.oget),
+            op(ByteOperation.return),
+        ]),
     },
     interpretation: ([list]) => list.length,
 });
@@ -487,7 +475,6 @@ localDefinitions.push({
 localDefinitions.push({
     signature: {
         id: 'evaluate',
-        // name: 'Evaluate',
         attributes: { category: 'Functions' },
         description: null,
         generics: [generic('P'), generic('R')],
@@ -496,6 +483,17 @@ localDefinitions.push({
             { id: 'argument', rowType: 'input-tuple', specifier: 'P' },
         ],
         output: output.generic('return_value', 'R'),
+        byteCode: callable(2, [
+            // spread arg tuple onto stack
+            op(ByteOperation.moveaside),
+            op(ByteOperation.evaluate),
+            op(ByteOperation.aspread),
+            op(ByteOperation.moveback),
+            // call by thunked name
+            op(ByteOperation.evaluate),
+            op(ByteOperation.call),
+            op(ByteOperation.return),
+        ])
     },
     interpretation: ([_function, argument]) => _function(argument),
 });
@@ -514,11 +512,21 @@ export const helperChunks: Record<string, CallableChunk> = {
     obj_get: {
         arity: 2,
         instructions: [
-            // expects: ( propName, () -> obj )
-            // returns: () -> obj
-            ...evalthunks(false, true),
+            // object get but thunked.
+            // expects: ( k, () -> { k: () -> v } )
+            // returns: v
+            ...evalthunks(false, true), // eval objects thunk
             op(ByteOperation.oget),
+            op(ByteOperation.evaluate), // eval members thunk
             op(ByteOperation.return),
         ]
-    }
+    },
+    wrap_value: {
+        arity: 1,
+        instructions: [
+            // simply returns an UNTHUNKED object such that we can
+            // thunk a plain object using this helper 
+            op(ByteOperation.return),
+        ]
+    },
 }

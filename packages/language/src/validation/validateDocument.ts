@@ -85,8 +85,6 @@ function generateFlowSyntaxLayerInitial(
 
     const input: FlowSignature = {
         id: 'input',
-        // id: getInternalId('input'),
-        // name: 'Input',
         description: null,
         attributes: { category: 'In/Out' },
         generics,
@@ -97,16 +95,14 @@ function generateFlowSyntaxLayerInitial(
             specifier: inputSpecifier,
             rowType: 'output-destructured',
         },
-        // byteCode: {
-        //     type: 'inline',
-        //     instructions,
-        // }
-        // outputs: flowInputs.map(o => ({
-        //     id: o.id,
-        //     label: o.label,
-        //     specifier: o.specifier,
-        //     rowType: 'output',
-        // })),
+        byteCode: {
+            type: 'inline',
+            instructions: [
+                // assuming args are stored in frame.locals[0]
+                data(0),
+                op(ByteOperation.getlocal),
+            ],
+        }
     }
 
     const outputInputs: InputRowSignature[] = [];
@@ -132,16 +128,7 @@ function generateFlowSyntaxLayerInitial(
             rowType: 'output-hidden',
             specifier: createAnyType(),
         },
-        byteCode: {
-            type: 'callable',
-            chunk: {
-                arity: 1,
-                instructions: [
-                    op(ByteOperation.evaluate),
-                    op(ByteOperation.return),
-                ]
-            }
-        }
+        byteCode: { type: 'inline', instructions: [] },
     }
 
     return {

@@ -2,11 +2,12 @@ import { ByteInstruction, ByteOperation, ByteProgram, CallFrame, CallableChunk, 
 import { assertDef, assertNever, assertTruthy } from "../utils";
 import { instructionToString } from "./byteCodeUtils";
 
-const { thunk } = byteCodeConstructors;
+const { op, thunk } = byteCodeConstructors;
 
 interface StackMachineArgs {
-    trace: boolean;
-    countExecutedInstructions: boolean;
+    trace?: boolean;
+    countExecutedInstructions?: boolean;
+    recordMaximumStackHeights?: boolean;
 }
 
 export class StackMachine {
@@ -14,6 +15,16 @@ export class StackMachine {
     sideStack: StackValue[] = [];
     callStack: CallFrame[] = [];
     instructionTimer = 0;
+    maxMainStackHeight = 0;
+    maxCallStackHeight = 0;
+
+    private identityChunk: CallableChunk = {
+        arity: 1,
+        instructions: [
+            // expecting non-thunked value
+            op(ByteOperation.return),
+        ],
+    }
 
     constructor(
         private program: ByteProgram,
@@ -52,16 +63,24 @@ export class StackMachine {
             if (this.args.countExecutedInstructions) {
                 console.log(`Executed ${this.instructionTimer} dynamic instructions in total.`);
             }
+            if (this.args.recordMaximumStackHeights) {
+                console.log(`Max main stack height: ${this.maxMainStackHeight}, max call stack height: ${this.maxCallStackHeight}`);
+            }
         }
     }
 
     stackFrameToString() {
         let callStackLines: string[] = [];
-        for (let i = this.callStack.length - 1; i >= 0; i--) {
-            const frame = this.callStack[i];
+        const maxLines = Math.min(20, this.callStack.length);
+        const remainingFrames = this.callStack.length - maxLines;
+        for (let i = 0; i < maxLines; i++) {
+            const frame = this.callStack.at(-i-1)!;
             const lastIp = frame.ip - 1;
             const instrString = instructionToString(frame.chunk.instructions[lastIp]);
             callStackLines.push(`    ${instrString}  ${frame.label}:${lastIp}`);
+        }
+        if (remainingFrames > 0) {
+            callStackLines.push(`${remainingFrames} further stack frames hidden.`);
         }
         return callStackLines.join('\n');
     }
@@ -124,7 +143,7 @@ export class StackMachine {
                 this.dpush(this.dpop() + this.dpop());
                 break;
             // arrays
-            case ByteOperation.apack:
+            case ByteOperation.apack: {
                 const arr: any[] = [];
                 const n = this.dpop();
                 for (let i = 0; i < n; i++) {
@@ -132,9 +151,29 @@ export class StackMachine {
                 }
                 this.dpush(arr);
                 break;
+            }
+            case ByteOperation.aspread: {
+                const arr: any[] = this.dpop();
+                for (let i = arr.length-1; i >= 0; i--) {
+                    this.dpush(arr[i]);
+                }
+                break;
+            }
+            case ByteOperation.apop: {
+                const arr: any[] = this.dpop();
+                assertTruthy(arr.length > 0, 'Cannot pop array of length zero.');
+                this.dpush(arr.slice(1));
+                this.dpush(arr[0]);
+                break;
+            }
+            case ByteOperation.apush:
+                this.dpush([ this.dpop(), ...this.dpop() ]);
+                break;
             case ByteOperation.aget: {
-                const index = this.dpop();
-                this.dpush(this.dpop().at(index));
+                const i = this.dpop();
+                const arr = this.dpop();
+                assertTruthy(i >= -arr.length && i < arr.length, `Index out of bounds (length=${arr.length}, index=${i}).`);
+                this.dpush(arr.at(i));
                 break;
             }
             case ByteOperation.aconcat:
@@ -239,6 +278,10 @@ export class StackMachine {
                 this.dpush(thunk(args, chunk, label));
                 break;
             }
+            case ByteOperation.thunk_id: {
+                this.dpush(thunk([ this.dpop() ], this.identityChunk, 'identity'));
+                break;
+            }
             case ByteOperation.j: {
                 const ipOffset = this.dpop();
                 this.getFrame().ip += ipOffset;
@@ -262,6 +305,8 @@ export class StackMachine {
             console.log(chunk);
             console.groupEnd();
         }
+
+        this.maxCallStackHeight = Math.max(this.maxCallStackHeight, this.callStack.length);
 
         if (this.callStack.length >= 100000) {
             assertNever(`Stack overflow (call stack has ${this.callStack.length} entries).`);
@@ -300,8 +345,11 @@ export class StackMachine {
         return x;
     }
     dpop() {
-        const x = assertDef(this.stack.pop(), 'Data stack is empty.');
-        return x as any;
+        assertTruthy(this.stack.length > 0, 'Data stack is empty.');
+        return this.stack.pop() as any;
     }
-    dpush(d: StackValue) { this.stack.push(d); }
+    dpush(d: StackValue) { 
+        this.stack.push(d); 
+        this.maxMainStackHeight = Math.max(this.maxMainStackHeight, this.stack.length);
+    }
 }
