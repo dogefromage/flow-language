@@ -2,7 +2,7 @@ import React, { PropsWithChildren } from 'react';
 import { selectPanelState } from '../redux/panelStateEnhancer';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { flowInspectorPanelsSelectItem } from '../slices/panelFlowInspectorSlice';
-import { ViewTypes } from '../types';
+import { ViewTypes, listItemRegex } from '../types';
 import { FormSortableList } from './FormSortableList';
 import { flowsAddListItem, flowsRemoveListItem, flowsReorderList, flowsUpdateInput, selectSingleFlow } from '../slices/flowsSlice';
 
@@ -20,6 +20,8 @@ const FlowInspectorGenericList = ({ panelId, flowId }: PropsWithChildren<FlowIns
 
     const selected = panelState?.selectedItem?.type === 'generics' ?
         panelState.selectedItem.id : '';
+
+    const genericNames = new Set(flow.generics.map(g => g.id));
 
     return (
         <FormSortableList
@@ -50,11 +52,24 @@ const FlowInspectorGenericList = ({ panelId, flowId }: PropsWithChildren<FlowIns
             //         undo: { desc: `Renamed input port to '${label}'.` },
             //     }));
             // }}
-            onAdd={() => {
+            addMessage='Add Generic'
+            onValidateNewName={name => {
+                if (name.length == 0) {
+                    return { message: 'Please provide a name.' };
+                }
+                if (!listItemRegex.test(name)) {
+                    return { message: 'Please provide a valid name. A name should only contain letters, digits, underscores and should not start with a number.' };
+                }
+                if (genericNames.has(name)) {
+                    return { message: `There is already a generic named '${name}'. Please use a different name.` };
+                }
+            }}
+            onAdd={name => {
                 dispatch(flowsAddListItem({
                     flowId,
+                    itemId: name,
                     prop: 'generics',
-                    undo: { desc: `Added generic tag to active flow.` },
+                    undo: { desc: `Added generic constraint to active flow.` },
                 }));
             }}
             onSelect={rowId => {

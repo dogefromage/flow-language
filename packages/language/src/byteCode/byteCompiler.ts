@@ -1,8 +1,8 @@
 import { helperChunks } from "../content/signatures";
-import { findEnvironmentSignature, getScopePath } from "../core/environment";
-import { FlowDocumentContext, FlowGraphContext, FlowNodeContext, MAIN_FLOW_ID, TupleTypeSpecifier } from "../types";
-import { ByteCompilerConfig, ByteInstruction, ByteOperation, ByteProgram, CallableChunk, StackValue, byteCodeConstructors } from "../types/byteCode";
-import { assertDef, assertNever, assertTruthy } from "../utils";
+import { getScopePath } from "../core/environment";
+import { FlowDocumentContext, FlowNodeContext, MAIN_FLOW_ID, TupleTypeSpecifier } from "../types";
+import { ByteCompilerConfig, ByteInstruction, ByteOperation, ByteProgram, CallableChunk, byteCodeConstructors } from "../types/byteCode";
+import { assertDef, assertTruthy } from "../utils";
 import { byteProgramToString } from "./byteCodeUtils";
 
 const { op, data } = byteCodeConstructors;

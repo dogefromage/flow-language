@@ -1,103 +1,143 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
+const RelativeWrapper = styled.div`
+    width: 100%;
+    position: relative;
+`
+
 const RenameFieldDiv = styled.div`
-
-    /* height: 1.4rem; */
-    height: calc(0.8 * var(--list-height));
-    padding: 0 0.5rem;
-    display: flex;
-    /* gap: 0.5rem; */
-    align-items: center;
-
-    cursor: text;
-
-    background-color: var(--color-2);
-    border-radius: var(--border-radius);
-
-    /* &:hover,
-    &:has(form > input:focus) {
-        font-style: italic;
-    } */
     form {
         input {
             width: 100%;
+            height: calc(0.8 * var(--list-height));
+
             background-color: unset;
             border: none;
             outline: none;
             font-style: inherit;
+            
+            padding: 0 0.5rem;
+            display: flex;
+            align-items: center;
+
+            background-color: var(--color-2);
+            border-radius: var(--border-radius);
+            cursor: text;
+            
+            &:focus {
+                outline: 1px solid white;
+            }
+
+            &:disabled {
+                cursor: not-allowed;
+            }
         }
     }
+
 `;
 
-interface NameValidationError {
+const RenameFieldError = styled.div`
+    position: absolute;
+    z-index: 1;
+    min-width: 200px;
+    width: 100%;
+    top: calc(var(--list-gap) + 100%);
+    background-color: #460000;
+    outline: 1px solid red;
+    padding: 0 0.5rem;
+`;
+
+export interface NameValidationError {
     message: string;
 }
 
 interface Props {
     value: string;
     onChange?: (newValue: string) => void;
+    onBlur?: () => void;
     onValidate?: (newValue: string) => NameValidationError | undefined;
     disabled?: boolean;
+    autofocus?: boolean;
 }
 
-const FormRenameField = ({ value, onChange, onValidate, disabled }: Props) => {
+const FormRenameField = ({ value: initialValue, onChange, onValidate, disabled, autofocus, onBlur }: Props) => {
 
     const inputRef = useRef<HTMLInputElement>(null);
 
     const [localValue, setLocalValue] = useState('');
     const [validationError, setValidationError] = useState<NameValidationError>();
+    const [ active, setActive ] = useState(false);
 
+    // initial or external change in value
     useEffect(() => {
-        setLocalValue(value);
-    }, [value]);
+        updateInternally(initialValue || '');
+    }, [initialValue]);
 
-    useEffect(() => {
-        validationError && setValidationError(undefined);
-    }, [ localValue ]);
-
-    const submit = () => {
-        const validationError = onValidate?.(localValue);
-        if (validationError != null) {
-            setValidationError(validationError);
-        } else {
-            onChange?.(localValue);
-            inputRef.current?.blur();
-        }
+    function updateInternally(changedValue: string) {
+        setLocalValue(changedValue);
+        setValidationError(onValidate?.(changedValue));
     }
 
-    // debug
+    const submit = () => {
+        if (validationError != null) {
+            return;
+        }
+        onChange?.(localValue);
+        handleBlur();
+    }
+
+    const handleFocus = () => {
+        setActive(true);
+    }
+    const handleBlur = () => {
+        onBlur?.();
+        inputRef.current?.blur();
+        setActive(false);
+        setLocalValue(initialValue);
+    }
+
     useEffect(() => {
-        validationError && console.warn(validationError.message);
-    }, [ validationError ]);
+        if (autofocus) {
+            setTimeout(() => {
+                inputRef.current?.focus();
+                inputRef.current?.select();
+            }, 10);
+        }
+    }, []);
 
     return (
-        <RenameFieldDiv
-            onClick={() => {
-                inputRef.current?.select();
-            }}
-        >
-            <form onSubmit={e => {
-                e.preventDefault();
-                submit();
-            }}>
-                <input
-                    type='text'
-                    value={localValue}
-                    onChange={e => {
-                        setLocalValue((e.currentTarget as HTMLInputElement).value);
-                    }}
-                    ref={inputRef}
-                    onBlur={submit}
-                    size={localValue.length || 1}
-                    disabled={disabled}
-                />
-            </form>
-            {/* {
-                !disabled &&
-                <MaterialSymbol $size={16}>edit</MaterialSymbol>
-            } */}
-        </RenameFieldDiv>
+        <RelativeWrapper>
+            <RenameFieldDiv
+                onClick={() => {
+                    inputRef.current?.select();
+                }}
+            >
+                <form onSubmit={e => {
+                    e.preventDefault();
+                    submit();
+                }}>
+                    <input
+                        type='text'
+                        value={localValue}
+                        onChange={e => {
+                            updateInternally((e.currentTarget as HTMLInputElement).value);
+                        }}
+                        ref={inputRef}
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
+                        size={localValue.length || 1}
+                        disabled={disabled}
+                    />
+                </form>
+            </RenameFieldDiv>
+            {
+                validationError && active &&
+                <RenameFieldError>
+                    <p>{validationError.message}</p>
+                </RenameFieldError>
+            }
+        </RelativeWrapper>
     );
 }
 

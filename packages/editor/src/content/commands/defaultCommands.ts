@@ -1,6 +1,7 @@
 import { undo, redo } from "../../redux/undoableEnhancer";
 import { Command } from "../../types";
 import { flowEditorCommands } from "./flowEditorCommands";
+import { pageOutlinerCommands } from "./pageOutlinerCommands";
 
 export const defaultCommands: Command[] = [
     /**
@@ -35,4 +36,5 @@ export const defaultCommands: Command[] = [
     //     },
     // },
     ...flowEditorCommands,
+    ...pageOutlinerCommands,
 ]

@@ -5,7 +5,7 @@ import { useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { selectDocument } from "../redux/stateHooks";
 import { RootState } from "../redux/store";
-import { FlowsSliceState, UndoAction, Vec2, defaultFlows } from "../types";
+import { FlowsSliceState, UndoAction, Vec2, defaultFlows, flowsIdRegex, listItemRegex } from "../types";
 import { RowSignatureBlueprint } from "../types/flowInspectorView";
 import { getBasePowers } from "../utils/math";
 enableMapSet();
@@ -70,22 +70,15 @@ export const flowsSlice = createSlice({
     initialState,
     reducers: {
         create: (s, a: UndoAction<{
-            // name: string;
-            flowId?: string;
+            flowId: string;
             signature: lang.AnonymousFlowSignature,
         }>) => {
             let id = a.payload.flowId;
-            if (id == null) {
-                do {
-                    id = uuidv4();
-                } while (s[id] != null);
-            } else {
-                if (!/^\w+$/.test(id)) {
-                    return console.error(`Invalid characters in id '${id}'`);
-                }
-                if (s[id!] != null) {
-                    return console.error(`Flow with id '${id}' already exists!`);
-                }
+            if (!flowsIdRegex.test(id)) {
+                return console.error(`Invalid characters in id '${id}'`);
+            }
+            if (s[id] != null) {
+                return console.error(`Flow with id '${id}' already exists!`);
             }
 
             const flow: lang.FlowGraph = {
@@ -221,16 +214,21 @@ export const flowsSlice = createSlice({
             const { nodeId, rowId, jointIndex } = a.payload.input;
             g.nodes[nodeId]?.rowStates[rowId]?.connections.splice(jointIndex, 1);
         },
-        addListItem: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, /* itemId: string, */ prop: 'inputs' | 'generics' }>) => {
+        addListItem: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, itemId: string, prop: 'inputs' | 'generics' }>) => {
             const g = getFlow(s, a);
             if (!g) return;
 
             const list: ListedState[] = g[a.payload.prop];
-            // if (list.find(el => el.id === a.payload.itemId)) {
-            //     console.error(`Item with id='${a.payload.itemId}' already in list.`);
-            //     return;
-            // }
-            const itemId = findUniquePortId(list);
+            const itemId = a.payload.itemId;
+            if (!listItemRegex.test(itemId)) {
+                console.error(`Invalid item name.`);
+                return;
+            }
+            if (list.find(el => el.id === itemId)) {
+                console.error(`Item with id='${itemId}' already in list.`);
+                return;
+            }
+            // const itemId = findUniquePortId(list);
 
             if (a.payload.prop === 'inputs') {
                 const defaultInput: RowSignatureBlueprint = { rowType: 'input-simple', specifier: lang.createAnyType() };

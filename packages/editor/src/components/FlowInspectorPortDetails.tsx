@@ -26,9 +26,17 @@ const FlowInspectorPortDetails = ({ panelId, flowId }: PropsWithChildren<FlowIns
     const flowContext = useAppSelector(selectFlowContext(flowId));
     const panelState = useAppSelector(selectPanelState(ViewTypes.FlowInspector, panelId));
 
+    const notSelected = <p>Nothing selected.</p>;
+    if (!flow) {
+        return notSelected;
+    }
+
     if (panelState?.selectedItem?.type === 'inputs') {
-        const inputRow = flow?.inputs.find(input => input.id === panelState.selectedItem?.id);
-        if (!inputRow) return null;
+        const rowId = panelState.selectedItem?.id;
+        const inputRow = flow?.inputs.find(input => input.id === rowId);
+        if (!inputRow) {
+            return notSelected;
+        }
         return (
             <RowDetails
                 rowTypes={inputRowTypes}
@@ -59,7 +67,6 @@ const FlowInspectorPortDetails = ({ panelId, flowId }: PropsWithChildren<FlowIns
     }
 
     if (panelState?.selectedItem?.type === 'output') {
-        if (!flow) return null;
         return (
             <RowDetails
                 rowTypes={outputRowTypes}
@@ -88,8 +95,11 @@ const FlowInspectorPortDetails = ({ panelId, flowId }: PropsWithChildren<FlowIns
     }
 
     if (panelState?.selectedItem?.type === 'generics') {
-        const selectedTag = flow?.generics.find(g => g.id === panelState.selectedItem?.id);
-        if (selectedTag == null) return null;
+        const genId = panelState.selectedItem?.id;
+        const selectedTag = flow?.generics.find(g => g.id === genId);
+        if (selectedTag == null) {
+            return notSelected;
+        }
         return (<>
             <p>Constraint</p>
             <TypeBuilder
@@ -100,7 +110,7 @@ const FlowInspectorPortDetails = ({ panelId, flowId }: PropsWithChildren<FlowIns
         </>)
     }
 
-    return null;
+    return notSelected;
 }
 
 export default FlowInspectorPortDetails;

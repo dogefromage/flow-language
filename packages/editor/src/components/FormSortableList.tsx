@@ -2,8 +2,8 @@ import React, { PropsWithChildren, useMemo, useState } from 'react';
 import * as SORTABLE from 'react-sortablejs';
 import styled from 'styled-components';
 import MaterialSymbol from '../styles/MaterialSymbol';
-import FormRenameField from './FormRenameField';
-import FormSelectOption from './FormSelectOption';
+import FormRenameField, { NameValidationError } from './FormRenameField';
+import { listItemRegex } from '../types';
 
 const ListDiv = styled.div<{ $disabled?: boolean }>`
     width: 100%;
@@ -56,56 +56,77 @@ type FormSortableListProps = {
     order: Item[];
     selected?: string;
     onOrder?: (newOrder: Item[]) => void;
-    onRename?: (id: string, newName: string) => void;
+    onRename?: (id: string, newId: string) => void;
     onRemove?: (id: string) => void;
     onSelect?: (id: string) => void;
-    onAdd?: () => void;
+    onAdd?: (name: string) => void;
+    onValidateNewName?: (newValue: string) => NameValidationError | undefined;
     addMessage?: string;
     disableAdd?: boolean;
 }
 
-export const FormSortableList = ({ order, selected, onOrder, onSelect, onRename, onRemove, onAdd, addMessage, disableAdd }: PropsWithChildren<FormSortableListProps>) => {
+export const FormSortableList = ({ order, selected, onOrder, onSelect, onRename, 
+    onRemove, onAdd, addMessage, disableAdd, onValidateNewName }: PropsWithChildren<FormSortableListProps>) => {
     const mutableOrder = useMemo(() => structuredClone(order), [order]);
+    const [ additional, setAdditional ] = useState(false);
 
     return (
-        <ListDiv /* $disabled={disabled} */>
-            <SORTABLE.ReactSortable
-                list={mutableOrder}
-                setList={onOrder || (() => {})}
-                className='sortable-div'
-                // disabled={disabled}
-                handle='.handle'
-                animation={100}
-            >{
-                    order.map((row, index) =>
-                        <ItemDiv
-                            key={row.id + index}
-                            // $disabled={locked}
-                            $selected={/* !locked && */ row.id === selected}
-                            onClick={() => {
-                                onSelect?.(row.id);
-                            }}
-                        >
-                            <div className='left'>
-                                <MaterialSymbol className='handle' $size={20} $cursor='move'
-                                    /* $disabled={disabled */>drag_handle</MaterialSymbol>
-                                <FormRenameField
-                                    value={row.label || row.id}
-                                    onChange={newValue => onRename?.(row.id, newValue)}
-                                    // disabled={locked}
-                                />
-                            </div>
-                            <div className='right'>
-                                <MaterialSymbol $button $size={22} /* $disabled={locked} */
-                                    onClick={() => onRemove?.(row.id)}>close</MaterialSymbol>
-                            </div>
-                        </ItemDiv>
-                    )}
-            </SORTABLE.ReactSortable>
+        <ListDiv>
             {
+                order.length ?
+                    <SORTABLE.ReactSortable
+                        list={mutableOrder}
+                        setList={onOrder || (() => {})}
+                        className='sortable-div'
+                        // disabled={disabled}
+                        handle='.handle'
+                        animation={100}
+                    >{
+                            order.map((row, index) =>
+                                <ItemDiv
+                                    key={row.id + index}
+                                    // $disabled={locked}
+                                    $selected={/* !locked && */ row.id === selected}
+                                    onClick={() => {
+                                        onSelect?.(row.id);
+                                    }}
+                                >
+                                    <div className='left'>
+                                        <MaterialSymbol className='handle' $size={20} $cursor='move'
+                                    /* $disabled={disabled */>drag_handle</MaterialSymbol>
+                                        <FormRenameField
+                                            disabled={!onRename}
+                                            value={row.label || row.id}
+                                            onChange={newId => onRename?.(row.id, newId)}
+                                            onValidate={onValidateNewName}
+                                        />
+                                    </div>
+                                    <div className='right'>
+                                        <MaterialSymbol $button $size={22} /* $disabled={locked} */
+                                            onClick={() => onRemove?.(row.id)}>close</MaterialSymbol>
+                                    </div>
+                                </ItemDiv>
+                            )}
+                    </SORTABLE.ReactSortable>
+                    : null
+            }{
+                additional &&
+                <FormRenameField
+                    value={''}
+                    onValidate={onValidateNewName}
+                    onChange={newName => {
+                        onAdd?.(newName);
+                        setAdditional(false);
+                    }}
+                    onBlur={() => {
+                        setAdditional(false);
+                    }}
+                    autofocus
+                />
+            }{
                 !disableAdd &&
-                <AddDiv onClick={onAdd}>
-                    <p>{ addMessage || 'Add Item' }</p>
+                <AddDiv onClick={() => setAdditional(true)}>
+                    <p>{addMessage || 'Add Item'}</p>
                     <MaterialSymbol className='handle' $size={20} $button>add</MaterialSymbol>
                 </AddDiv>
             }

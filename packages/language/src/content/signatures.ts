@@ -1,6 +1,6 @@
-import { createAnyType, createFunctionType, createListType, createMapType, createTupleType } from "../typeSystem";
+import { createAnyType, createFunctionType, createListType, createMapType } from "../typeSystem";
 import { AnonymousFlowSignature, DestructuredOutputRowSignature, FunctionInputRowSignature, FunctionTypeSpecifier, GenericTag, ListInputRowSignature, OutputRowSignature, SimpleInputRowSignature, TypeSpecifier, VariableInputRowSignature } from "../types";
-import { ByteInstruction, ByteOperation, CallableChunk, DataByteInstruction, OperationByteInstruction, StackValue, byteCodeConstructors } from "../types/byteCode";
+import { ByteInstruction, ByteOperation, CallableChunk, OperationByteInstruction, byteCodeConstructors } from "../types/byteCode";
 import { SignatureDefinition } from "../types/local";
 
 const variable = {
@@ -149,7 +149,51 @@ localDefinitions.push({
             op(ByteOperation.return),
         ]),
     },
-    interpretation: ([a, b]) => a + b,
+});
+localDefinitions.push({
+    signature: {
+        id: 'subtract',
+        attributes: { category: 'Numbers' },
+        description: null,
+        generics: [],
+        inputs: [variable.number('a', 0), variable.number('b', 0)],
+        output: output.number('difference'),
+        byteCode: callable(2, [
+            ...evalthunks(true, true),
+            op(ByteOperation.nsub),
+            op(ByteOperation.return),
+        ]),
+    },
+});
+localDefinitions.push({
+    signature: {
+        id: 'logical_and',
+        attributes: { category: 'Logic' },
+        description: null,
+        generics: [],
+        inputs: [variable.boolean('a', false), variable.boolean('b', false)],
+        output: output.boolean('a_and_b'),
+        byteCode: callable(2, [
+            ...evalthunks(true, true),
+            op(ByteOperation.band),
+            op(ByteOperation.return),
+        ]),
+    },
+});
+localDefinitions.push({
+    signature: {
+        id: 'logical_or',
+        attributes: { category: 'Logic' },
+        description: null,
+        generics: [],
+        inputs: [variable.boolean('a', false), variable.boolean('b', false)],
+        output: output.boolean('a_or_b'),
+        byteCode: callable(2, [
+            ...evalthunks(true, true),
+            op(ByteOperation.bor),
+            op(ByteOperation.return),
+        ]),
+    },
 });
 localDefinitions.push({
     signature: {

@@ -2,7 +2,7 @@ import React, { PropsWithChildren } from 'react';
 import { selectPanelState } from '../redux/panelStateEnhancer';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { flowInspectorPanelsSelectItem } from '../slices/panelFlowInspectorSlice';
-import { ViewTypes } from '../types';
+import { ViewTypes, listItemRegex } from '../types';
 import { FormSortableList } from './FormSortableList';
 import { flowsAddListItem, flowsRemoveListItem, flowsReorderList, flowsUpdateInput, selectSingleFlow } from '../slices/flowsSlice';
 
@@ -20,6 +20,8 @@ const FlowInspectorInputList = ({ panelId, flowId }: PropsWithChildren<FlowInspe
 
     const selected = panelState?.selectedItem?.type === 'inputs' ?
         panelState.selectedItem.id : '';
+        
+    const inputNames = new Set(flow.inputs.map(input => input.id));
 
     return (
         <FormSortableList
@@ -50,9 +52,23 @@ const FlowInspectorInputList = ({ panelId, flowId }: PropsWithChildren<FlowInspe
             //         undo: { desc: `Renamed input port to '${label}'.` },
             //     }));
             // }}
-            onAdd={() => {
+
+            addMessage='Add Input'
+            onValidateNewName={name => {
+                if (name.length == 0) {
+                    return { message: 'Please provide a name.' };
+                }
+                if (!listItemRegex.test(name)) {
+                    return { message: 'Please provide a valid name. A name should only contain letters, digits, underscores and should not start with a number.' };
+                }
+                if (inputNames.has(name)) {
+                    return { message: `There is already a generic named '${name}'. Please use a different name.` };
+                }
+            }}
+            onAdd={itemId => {
                 dispatch(flowsAddListItem({
                     flowId,
+                    itemId,
                     prop: 'inputs',
                     undo: { desc: `Added input port to active flow.` },
                 }));

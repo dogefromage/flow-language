@@ -1,18 +1,20 @@
 import { AnyAction } from "@reduxjs/toolkit";
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import { selectPanels, useAppDispatch, useAppSelector } from "../redux/stateHooks";
 import { RootState } from "../redux/store";
 import { selectCommands } from "../slices/commandsSlice";
-import { CommandParameterMap, CommandCallTypes, CommandBaseArgs, GlobalCommandArgs, ViewCommandArgs, PanelState, ViewTypes } from "../types";
-import { offsetToClientPos, clientToOffsetPos } from "./panelManager";
-import { useDirectRef } from "./useDirectRef";
+import { selectEditor } from "../slices/editorSlice";
 import { selectPanelManager } from "../slices/panelManagerSlice";
+import { CommandBaseArgs, CommandCallTypes, CommandParameterMap, GlobalCommandArgs, ViewCommandArgs } from "../types";
+import { clientToOffsetPos, offsetToClientPos } from "./panelManager";
+import { useDirectRef } from "./useDirectRef";
 
 export default function useDispatchCommand() {
     const dispatch = useAppDispatch();
     const commandsRef = useDirectRef(useAppSelector(selectCommands).commands);
     const panelsRef = useDirectRef(useAppSelector(selectPanels));
     const panelManagerRef = useDirectRef(useAppSelector(selectPanelManager));
+    const editorStateRef = useDirectRef(useAppSelector(selectEditor));
 
     return useCallback((
         commandId: string,
@@ -26,6 +28,7 @@ export default function useDispatchCommand() {
 
         const baseArgs: CommandBaseArgs = {
             callType,
+            editorState: editorStateRef.current,
         };
         let actionOrActions: AnyAction[] | AnyAction | void;
 
