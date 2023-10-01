@@ -27,10 +27,10 @@ export interface FunctionTypeSpecifier {
     parameter: TypeSpecifier;
     output: TypeSpecifier;
 }
-export interface UnionTypeSpecifier {
-    type: 'union';
-    elements: TypeSpecifier[];
-}
+// export interface UnionTypeSpecifier {
+//     type: 'union';
+//     elements: TypeSpecifier[];
+// }
 
 export type InstantiationConstraints = Record<string, TypeSpecifier>;
 
@@ -43,6 +43,6 @@ export type TypeSpecifier =
     | ListTypeSpecifier
     | TupleTypeSpecifier
     | FunctionTypeSpecifier
-    | UnionTypeSpecifier
+    // | UnionTypeSpecifier
 
 export type InitializerValue = any;

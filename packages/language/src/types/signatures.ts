@@ -1,40 +1,50 @@
 import { ByteInstruction, CallableChunk } from "./byteCode";
 import { InitializerValue, TypeSpecifier } from "./typeSystem";
 
-/**
- * Rows are either inputs or outputs of node.
- * The signature defines the shape or display 
- * of a row but not its state or connections.
- */
 interface BaseRow<R extends string> {
     id: string;
     specifier: TypeSpecifier;
     rowType: R;
+    hidden?: boolean;
 }
 
+// export interface SimpleInputRowSignature extends BaseRow<'input-simple'> {};
+// export interface ListInputRowSignature extends BaseRow<'input-list'> {};
+// export interface TupleInputRowSignature extends BaseRow<'input-tuple'> {};
+// export interface FunctionInputRowSignature extends BaseRow<'input-function'> {};
+// export interface VariableInputRowSignature extends BaseRow<'input-variable'> {
+//     defaultValue: InitializerValue | null;
+// };
+
+// export type SimpleOutputRowSignature = BaseRow<'output-simple'>;
+// export type DestructuredOutputRowSignature = BaseRow<'output-destructured'>;
+// export type HiddenOutputRowSignature = BaseRow<'output-hidden'>;
+
+// export type InputRowSignature =
+//     | SimpleInputRowSignature
+//     | ListInputRowSignature
+//     | TupleInputRowSignature
+//     | VariableInputRowSignature
+//     | FunctionInputRowSignature
+
+// export type OutputRowSignature =
+//     | SimpleOutputRowSignature
+//     | DestructuredOutputRowSignature
+//     | HiddenOutputRowSignature
+
 export interface SimpleInputRowSignature extends BaseRow<'input-simple'> {};
-export interface ListInputRowSignature extends BaseRow<'input-list'> {};
-export interface TupleInputRowSignature extends BaseRow<'input-tuple'> {};
-export interface FunctionInputRowSignature extends BaseRow<'input-function'> {};
 export interface VariableInputRowSignature extends BaseRow<'input-variable'> {
     defaultValue: InitializerValue | null;
-};
-
+}
 export type SimpleOutputRowSignature = BaseRow<'output-simple'>;
 export type DestructuredOutputRowSignature = BaseRow<'output-destructured'>;
-export type HiddenOutputRowSignature = BaseRow<'output-hidden'>;
 
 export type InputRowSignature =
     | SimpleInputRowSignature
-    | ListInputRowSignature
-    | TupleInputRowSignature
     | VariableInputRowSignature
-    | FunctionInputRowSignature
-
 export type OutputRowSignature =
     | SimpleOutputRowSignature
     | DestructuredOutputRowSignature
-    | HiddenOutputRowSignature
 
 export interface GenericTag {
     id: string;

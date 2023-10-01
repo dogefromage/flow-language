@@ -1,5 +1,5 @@
 import { FlowSignature } from "../types/signatures";
-import { FunctionTypeSpecifier, ListTypeSpecifier, MapTypeSpecifier, MissingTypeSpecifier, PrimitiveTypeSpecifier, TupleTypeSpecifier, TypeSpecifier, AnyTypeSpecifier, UnionTypeSpecifier } from "../types/typeSystem";
+import { AnyTypeSpecifier, FunctionTypeSpecifier, ListTypeSpecifier, MapTypeSpecifier, MissingTypeSpecifier, PrimitiveTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
 import { assertTruthy } from "../utils";
 import { ListCache } from "../utils/ListCache";
 import { always, mem } from "../utils/functional";
@@ -26,10 +26,10 @@ export const createTupleType = mem(
     (...elements: TypeSpecifier[]): TupleTypeSpecifier => ({ type: 'tuple', elements }),
     typeSystemCache,
 );
-export const createUnionType = mem(
-    (...elements: TypeSpecifier[]): UnionTypeSpecifier => ({ type: 'union', elements }),
-    typeSystemCache,
-);
+// export const createUnionType = mem(
+//     (...elements: TypeSpecifier[]): UnionTypeSpecifier => ({ type: 'union', elements }),
+//     typeSystemCache,
+// );
 export const createFunctionType = mem(
     (parameter: TypeSpecifier, output: TypeSpecifier): FunctionTypeSpecifier => ({ type: 'function', parameter, output }),
     typeSystemCache,

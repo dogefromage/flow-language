@@ -73,11 +73,11 @@ const inferGenericsSwitch = (
     X = resolveTypeAlias(path, X, env);
     G = resolveTypeAlias(path, G, env);
 
-    if (G.type === 'union') {
-        return G.elements
-            .map(Gi => inferGenericsSwitch(path, X, Gi, generics, env))
-            .reduce(combineInstantiation, {});
-    }
+    // if (G.type === 'union') {
+    //     return G.elements
+    //         .map(Gi => inferGenericsSwitch(path, X, Gi, generics, env))
+    //         .reduce(combineInstantiation, {});
+    // }
 
     const pathWithType = path.add({ key: X.type, formatting: 'type' });
 

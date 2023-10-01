@@ -13,8 +13,8 @@ interface MemOptions {
 }
 
 export function mem<F extends (...args: any[]) => any>(
-    fn: F, 
-    cache = new ListCache(1009), 
+    fn: F,
+    cache = new ListCache(1009),
     options?: MemOptions
 ) {
     let hits = 0;
@@ -22,7 +22,7 @@ export function mem<F extends (...args: any[]) => any>(
     const handlerTag = randomU32(); // unique for every handler instance
 
     return ((...plainArgs: Parameters<F>) => {
-        const taggedArgs = [ handlerTag, ...plainArgs ];
+        const taggedArgs = [handlerTag, ...plainArgs];
 
         const cached = cache.get(taggedArgs);
         if (typeof cached !== 'undefined') {
@@ -35,7 +35,7 @@ export function mem<F extends (...args: any[]) => any>(
             // }
             return cached;
         }
-        
+
         if (options?.debugHitMiss) {
             console.log(`Cache miss: ${options.tag}`);
         }
@@ -53,7 +53,7 @@ export function mem<F extends (...args: any[]) => any>(
         //     console.log(cache);
         // }
         if (options?.debugHitMissRate) {
-            console.log(`Hits/Misses: ${options.tag} ${(hits/misses).toFixed(4)}`);
+            console.log(`Hits/Misses: ${options.tag} ${(hits / misses).toFixed(4)}`);
         }
         return result;
     }) as F;
@@ -78,15 +78,23 @@ export const memoObjectByFlatEntries = mem(
 export function memoObject<T extends any>(obj: Obj<T>): Obj<T> {
     const flatEntries: (string | T)[] = Object.entries(obj).flat();
     return memoObjectByFlatEntries(...flatEntries);
-} 
+}
 
 export const memoList = mem(<T>(...items: T[]) => items);
 
 export const zipInner = <X, Y>(x: X[], y: Y[]) => {
-    const pairs: [ X, Y ][] = [];
+    const pairs: [X, Y][] = [];
     const sharedLength = Math.min(x.length, y.length);
     for (let i = 0; i < sharedLength; i++) {
-        pairs.push([ x[i], y[i] ]);
+        pairs.push([x[i], y[i]]);
     }
     return pairs;
+}
+
+export function mapObj<X, Y>(
+    obj: Record<string, X>, map: (value: X, key: string) => Y
+): Record<string, Y> {
+    const pairs = Object.entries(obj);
+    const mapped = pairs.map<[ string, Y ]>(([ k, x ]) => [ k, map(x, k) ]);
+    return Object.fromEntries(mapped);
 }

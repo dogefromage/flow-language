@@ -21,8 +21,8 @@ export const validateFlowGraph = mem((
         sortedUsedNodes: [],
     };
 
-    const missingNodes = new Set<string>();
     // edge information and adjacency list
+    // const missingNodes = new Set<string>();
     const nodeEntries = Object.entries(flow.nodes);
     const numberedAdjacency = new Array(nodeEntries.length)
         .fill([]).map(_ => [] as number[]);
@@ -33,27 +33,30 @@ export const validateFlowGraph = mem((
 
         for (const [inputRowId, inputRow] of Object.entries(inputNode.rowStates)) {
             const { connections } = inputRow!;
-            for (let inputIndex = 0; inputIndex < connections.length; inputIndex++) {
-                const { nodeId: outputNodeId, accessor } = connections[inputIndex];
+            for (const [ inputAccessor, connection ] of Object.entries(connections)) {
+                const { 
+                    nodeId: outputNodeId, 
+                    accessor: outputAccessor 
+                } = connection;
                 // check if present
                 const depIndex = nodeEntries
                     .findIndex(entry => entry[0] === outputNodeId);
                 if (depIndex < 0) {
-                    missingNodes.add(outputNodeId);
+                    // missingNodes.add(outputNodeId);
                     continue;
                 }
                 // adjacency
                 inputNodeDepIndices.add(depIndex);
                 // edge list
-                const edgeId = `${outputNodeId}.${accessor || ''}_${inputNodeId}.${inputRowId}.${inputIndex}`;
+                const edgeId = `${outputNodeId}.${outputAccessor || '@'}_${inputNodeId}.${inputRowId}.${inputAccessor}`;
                 uncoloredEdges.push(
                     makeUncoloredEdge(
                         edgeId,
                         outputNodeId,
-                        accessor,
+                        outputAccessor,
                         inputNodeId,
                         inputRowId,
-                        inputIndex,
+                        inputAccessor,
                     )
                 );
             }
@@ -63,13 +66,14 @@ export const validateFlowGraph = mem((
         }
     }
 
-    for (const missingId of missingNodes) {
-        result.problems.push({
-            type: 'missing-node',
-            nodeId: missingId,
-            message: `A node with id '${missingId}' is referenced but missing.`,
-        });
-    }
+    // REPLACED BY ROW PROBLEM
+    // for (const missingId of missingNodes) {
+    //     result.problems.push({
+    //         type: 'missing-node',
+    //         nodeId: missingId,
+    //         message: `A node with id '${missingId}' is referenced but missing.`,
+    //     });
+    // }
 
     const topSortResult = sortTopologically(numberedAdjacency);
     const namedTopSort = topSortResult.topologicalSorting
@@ -214,7 +218,7 @@ const makeUncoloredEdge = mem((
     outputAccessor: string | undefined,
     inputNode: string,
     inputRow: string,
-    inputJoint: number,
+    inputAccessor: string,
 ) => ({
     id,
     source: {
@@ -226,7 +230,7 @@ const makeUncoloredEdge = mem((
         direction: 'input',
         nodeId: inputNode,
         rowId: inputRow,
-        jointIndex: inputJoint,
+        accessor: inputAccessor,
     },
 }) satisfies Partial<FlowEdge>);
 

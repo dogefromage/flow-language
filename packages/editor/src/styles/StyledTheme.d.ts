@@ -1,9 +1,8 @@
 // https://styled-components.com/docs/api#typescript
-import 'styled-components';
-import { DataTypes, SelectionStatus } from '.';
-import { EdgeColor } from '@marble/language';
-import { TypeSpecifier } from '@fluss/language';
 import { ConsumerOutput } from '@fluss/shared';
+import { EdgeColor } from '@marble/language';
+import 'styled-components';
+import { SelectionStatus } from '.';
 
 declare module 'styled-components' {
     export interface DefaultTheme {

@@ -1,3 +1,4 @@
+import { map } from "lodash";
 import { findEnvironmentSignature, getScopedSignature } from "../core/environment";
 import { createAnyType, createMissingType, createTupleType, getSignatureFunctionType, memoizeTypeStructure } from "../typeSystem";
 import { assertSubsetType } from "../typeSystem/comparison";
@@ -8,7 +9,7 @@ import { FlowConnection, FlowEnvironment, FlowNode, FlowSignature, FunctionTypeS
 import { FlowNodeContext, RowContext, RowProblem } from "../types/context";
 import { Obj } from "../types/utilTypes";
 import { assertTruthy } from "../utils";
-import { mem, memoList } from "../utils/functional";
+import { mapObj, mem, memoList } from "../utils/functional";
 import { validateRows } from "./validateRows";
 
 export const validateNode = mem((
@@ -21,7 +22,7 @@ export const validateNode = mem((
     if (searchRes == null) {
         return noSignatureContext(node, isUsed);
     }
-    const [ templateSignature, baseScopeLabel ] = searchRes;
+    const [templateSignature, baseScopeLabel] = searchRes;
     const scopedNodeLabel = `${baseScopeLabel}:${templateSignature.id}`;
 
     const { instantiatedNodeType, rowProblemsMap } =
@@ -50,7 +51,7 @@ export const validateNode = mem((
 const validateNodeSyntax = mem((
     rowStates: Obj<RowState>,
     templateSignature: FlowSignature,
-    previousOutputTypes: Obj<TypeSpecifier>,
+    nodeOutputTypes: Obj<TypeSpecifier>,
     env: FlowEnvironment,
 ) => {
     const argumentTypeList: TypeSpecifier[] = [];
@@ -59,18 +60,11 @@ const validateNodeSyntax = mem((
     for (const input of templateSignature.inputs) {
         const rowState = rowStates[input.id] as RowState | undefined;
 
-        const connectedTypes: TypeSpecifier[] = [];
-        for (const connection of rowState?.connections || []) {
-            const { connectedType, accessorProblem } = validateNodeAccessor(connection, previousOutputTypes, env);
-            connectedTypes.push(connectedType || createMissingType());
-            objPushConditional(rowProblemsMap, input.id, accessorProblem);
-        }
+        const { rowProblems, incomingType } =
+            validateRowInputType(input, rowState, env, nodeOutputTypes);
 
-        const { rowProblems: typeProblems, incomingType } =
-            validateIncomingTypes(input, rowState, connectedTypes, env);
-            
         argumentTypeList.push(incomingType);
-        objPushConditional(rowProblemsMap, input.id, ...typeProblems);
+        objPushConditional(rowProblemsMap, input.id, ...rowProblems);
     }
 
     const argumentsTuple = createTupleType(...argumentTypeList);
@@ -110,23 +104,24 @@ const validateNodeSyntax = mem((
     return { instantiatedNodeType, rowProblemsMap };
 });
 
-const validateNodeAccessor = (
+const validateNodeAccessors = (
     connection: FlowConnection,
     previousOutputTypes: Obj<TypeSpecifier>,
     env: FlowEnvironment,
 ): { connectedType?: TypeSpecifier, accessorProblem?: RowProblem } => {
     const outputType = previousOutputTypes[connection.nodeId];
     if (!outputType) {
-        return {};
-    }
-
-    if (connection.accessor == null) {
-        return { connectedType: outputType }
+        return {
+            accessorProblem: {
+                type: 'invalid-accessor',
+                message: `Cannot find node with id '${connection.nodeId}' which should be connected to this row.`,
+            },
+        };
     }
 
     const resolvedType = tryResolveTypeAlias(outputType, env);
-    if (resolvedType == null) {
-        return {}
+    if (connection.accessor == null || resolvedType == null) {
+        return { connectedType: outputType };
     }
 
     if (resolvedType.type === 'tuple') {
@@ -136,7 +131,7 @@ const validateNodeAccessor = (
                 accessorProblem: {
                     type: 'invalid-accessor',
                     message: `Cannot access tuple type with accessor '${connection.accessor}'.`,
-                }
+                },
             };
         }
         const tupleLength = resolvedType.elements.length;
@@ -145,12 +140,11 @@ const validateNodeAccessor = (
                 accessorProblem: {
                     type: 'invalid-accessor',
                     message: `Accessor with index ${accessorIndex} out of range for tuple with length ${tupleLength}.`,
-                }
+                },
             };
         }
         return { connectedType: resolvedType.elements[accessorIndex] };
     }
-
     if (resolvedType.type === 'map') {
         const hasKey = resolvedType.elements.hasOwnProperty(connection.accessor);
         if (!hasKey) {
@@ -158,7 +152,7 @@ const validateNodeAccessor = (
                 accessorProblem: {
                     type: 'invalid-accessor',
                     message: `Object type does not contain key '${connection.accessor}'.`,
-                }
+                },
             };
         }
         return { connectedType: resolvedType.elements[connection.accessor] };
@@ -167,18 +161,24 @@ const validateNodeAccessor = (
     return {
         accessorProblem: {
             type: 'invalid-accessor',
-            message: `Type of category '${resolvedType.type}' cannot be destructured.`,
-        }
+            message: `Type of category '${resolvedType.type}' cannot be accessed.`,
+        },
     };
 }
 
-const validateIncomingTypes = (
+const validateRowInputType = (
     input: InputRowSignature,
     rowState: RowState | undefined,
-    connectedTypes: TypeSpecifier[],
     env: FlowEnvironment,
+    previousOutputTypes: Obj<TypeSpecifier>,
 ): { incomingType: TypeSpecifier, rowProblems: RowProblem[] } => {
     const rowProblems: RowProblem[] = [];
+
+    mapObj(rowState?.connections || {}, connection => {
+        const { connectedType, accessorProblem } = validateNodeAccessors(connection, previousOutputTypes, env);
+        accessorProblem && rowProblems.push(accessorProblem);
+        return connectedType || createAnyType();
+    });
 
     if (input.rowType === 'input-list') {
         const incomingType = createTupleType(...connectedTypes);
@@ -306,19 +306,19 @@ function getRowsTypeProblem(typeComparisonProblem: TypeSystemExceptionData | und
         connectionIndex = parseInt(tupleIndex);
     }
 
-    if (reducedData.type === 'required-type') {
-        return {
-            type: 'required-parameter',
-            message: 'This row requires a connection.'
-        };
-    } else {
-        return {
-            type: 'incompatible-argument-type',
-            message: 'Input is not compatible with rows specified type.',
-            typeProblem: reducedData,
-            connectionIndex,
-        };
-    }
+    // if (reducedData.type === 'required-type') {
+    //     return {
+    //         type: 'required-parameter',
+    //         message: 'This row requires a connection.'
+    //     };
+    // } else {
+    // }
+    return {
+        type: 'incompatible-argument-type',
+        message: 'Input is not compatible with rows specified type.',
+        typeProblem: reducedData,
+        connectionIndex,
+    };
 }
 
 function objPushConditional<T>(obj: Record<string, T[]>, key: string, ...elements: (T | undefined)[]) {

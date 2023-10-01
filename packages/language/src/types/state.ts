@@ -6,11 +6,12 @@ export interface InputJointLocation {
     direction: 'input';
     nodeId: string;
     rowId: string;
-    jointIndex: number;
+    accessor: string;
 }
 export interface OutputJointLocation {
     direction: 'output';
     nodeId: string;
+    // only one row here
     accessor?: string;
 }
 export type JointLocation = InputJointLocation | OutputJointLocation
@@ -21,7 +22,7 @@ export interface FlowConnection {
 }
 
 export interface RowState {
-    connections: FlowConnection[];
+    connections: Obj<FlowConnection>;
     value: InitializerValue | null;
 }
 

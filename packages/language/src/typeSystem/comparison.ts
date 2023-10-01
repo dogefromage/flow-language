@@ -44,29 +44,29 @@ function assertSubsetSwitch(path: TypeTreePath, argX: TypeSpecifier, argY: TypeS
         return;
     }
 
-    if (X.type === 'union') {
-        for (const Xi of X.elements) {
-            assertSubsetSwitch(pathWithTypeX, Xi, Y, env);
-        }
-        return;
-    }
-    if (Y.type === 'union') {
-        let fitsOne = false;
-        for (const Yi of Y.elements) {
-            try {
-                assertSubsetSwitch(path, X, Yi, env);
-                fitsOne = true;
-                break;
-            } catch {}
-        }
-        if (!fitsOne) {
-            throw new TypeSystemException({
-                type: 'incompatible-type',
-                message: `Found no compatible subtype in union.`,
-                path,
-            });
-        }
-    }
+    // if (X.type === 'union') {
+    //     for (const Xi of X.elements) {
+    //         assertSubsetSwitch(pathWithTypeX, Xi, Y, env);
+    //     }
+    //     return;
+    // }
+    // if (Y.type === 'union') {
+    //     let fitsOne = false;
+    //     for (const Yi of Y.elements) {
+    //         try {
+    //             assertSubsetSwitch(path, X, Yi, env);
+    //             fitsOne = true;
+    //             break;
+    //         } catch {}
+    //     }
+    //     if (!fitsOne) {
+    //         throw new TypeSystemException({
+    //             type: 'incompatible-type',
+    //             message: `Found no compatible subtype in union.`,
+    //             path,
+    //         });
+    //     }
+    // }
 
     // special case
     if (X.type === 'tuple' && Y.type === 'list') {

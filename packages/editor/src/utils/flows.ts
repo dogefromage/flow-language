@@ -64,12 +64,12 @@ function getBaseStyling(argX: lang.TypeSpecifier, env: lang.FlowEnvironment): Fl
         case 'function':
         case 'map':
         case 'tuple':
-        case 'union':
-            return style(
-                missingColor,
-                null,
-                'square',
-            );
+        // case 'union':
+        //     return style(
+        //         missingColor,
+        //         null,
+        //         'square',
+        //     );
         default:
             throw new Error(`Unknown type`);
     }

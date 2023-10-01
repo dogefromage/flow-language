@@ -1,21 +1,19 @@
 import { AnyAction } from "@reduxjs/toolkit";
 import { useCallback } from "react";
-import { selectPanels, useAppDispatch, useAppSelector } from "../redux/stateHooks";
+import { selectPanels, useAppDispatch, useAppSelector, useAppStore } from "../redux/stateHooks";
 import { RootState } from "../redux/store";
 import { selectCommands } from "../slices/commandsSlice";
-import { selectEditor } from "../slices/editorSlice";
 import { selectPanelManager } from "../slices/panelManagerSlice";
 import { CommandBaseArgs, CommandCallTypes, CommandParameterMap, GlobalCommandArgs, ViewCommandArgs } from "../types";
 import { clientToOffsetPos, offsetToClientPos } from "./panelManager";
 import { useDirectRef } from "./useDirectRef";
-import { identity } from "lodash";
 
 export default function useDispatchCommand() {
     const dispatch = useAppDispatch();
     const commandsRef = useDirectRef(useAppSelector(selectCommands).commands);
     const panelsRef = useDirectRef(useAppSelector(selectPanels));
     const panelManagerRef = useDirectRef(useAppSelector(selectPanelManager));
-    const appStateRef = useDirectRef(useAppSelector(identity<RootState>));
+    const store = useAppStore();
 
     return useCallback((
         commandId: string,
@@ -29,7 +27,7 @@ export default function useDispatchCommand() {
 
         const baseArgs: CommandBaseArgs = {
             callType,
-            appState: appStateRef.current,
+            appState: store.getState(),
         };
         let actionOrActions: AnyAction[] | AnyAction | void;
 

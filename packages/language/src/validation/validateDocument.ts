@@ -65,24 +65,6 @@ function generateFlowSyntaxLayerInitial(
         )
     );
 
-    // // add arguments and keys back to back onto stack
-    // // then specify prop count and pack them into an object
-    // const instructions: ByteInstruction[] = [];
-    // for (let i = 0; i < flowInputs.length; i++) {
-    //     // args are stacked reverse
-    //     const stackIndex = flowInputs.length - i - 1;
-    //     instructions.push(
-    //         data(stackIndex),
-    //         op(ByteOperation.getarg),
-    //         op(ByteOperation.evaluate),
-    //         data(flowInputs[i].id),
-    //     );
-    // }
-    // instructions.push(
-    //     { type: 'data', data: { type: 'concrete', dataType: 'integer', value: flowInputs.length } },
-    //     { type: 'operation', operation: ByteOperation.opack },
-    // );
-
     const input: FlowSignature = {
         id: 'input',
         description: null,
@@ -91,7 +73,6 @@ function generateFlowSyntaxLayerInitial(
         inputs: [],
         output: {
             id: 'inputs',
-            // label: 'Inputs',
             specifier: inputSpecifier,
             rowType: 'output-destructured',
         },
@@ -109,24 +90,21 @@ function generateFlowSyntaxLayerInitial(
     if (flowOutput != null) {
         outputInputs.push({
             id: flowOutput.id,
-            // label: flowOutput.label,
             specifier: flowOutput.specifier,
             rowType: 'input-simple',
         });
     }
     const output: FlowSignature = {
         id: 'output',
-        // id: getInternalId('output'),
-        // name: 'Output',
         description: null,
         attributes: { category: 'In/Out' },
         generics,
         inputs: outputInputs,
         output: {
             id: 'output',
-            // label: 'Output',
-            rowType: 'output-hidden',
+            rowType: 'output-simple',
             specifier: createAnyType(),
+            hidden: true,
         },
         byteCode: { type: 'inline', instructions: [] },
     }

@@ -19,8 +19,8 @@ export function getSpecifierLabel(X: lang.TypeSpecifier) {
             return `Tuple`;
         case 'map':
             return `Map`;
-        case 'union':
-            return `Union`;
+        // case 'union':
+        //     return `Union`;
     }
     throw new Error(`Unknown type`);
 }
@@ -44,7 +44,7 @@ export function formatSpecifier(X: lang.TypeSpecifier, env: lang.FlowEnvironment
                 .join(', ');
             return `${getSpecifierLabel(X)}<${entries}>`;
         case 'tuple':
-        case 'union':
+        // case 'union':
             return `${getSpecifierLabel(X)}<${X.elements.map(Y => formatSpecifier(Y, env)).join(', ')}>`;
     }
     throw new Error(`Unknown type`);

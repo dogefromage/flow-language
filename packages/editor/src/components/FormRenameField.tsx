@@ -74,9 +74,10 @@ const FormRenameField = ({ value: initialValue, onChange, onValidate, disabled, 
         updateInternally(initialValue || '');
     }, [initialValue]);
 
-    function updateInternally(changedValue: string) {
-        setLocalValue(changedValue);
-        setValidationError(onValidate?.(changedValue));
+    function updateInternally(rawVal: string) {
+        const newVal = rawVal.trimStart();
+        setLocalValue(newVal);
+        setValidationError(onValidate?.(newVal));
     }
 
     const submit = () => {
@@ -121,7 +122,8 @@ const FormRenameField = ({ value: initialValue, onChange, onValidate, disabled, 
                         type='text'
                         value={localValue}
                         onChange={e => {
-                            updateInternally((e.currentTarget as HTMLInputElement).value);
+                            const rawVal = (e.currentTarget as HTMLInputElement).value;
+                            updateInternally(rawVal);
                         }}
                         ref={inputRef}
                         onFocus={handleFocus}
