@@ -8,13 +8,14 @@ import { selectPanelManager } from "../slices/panelManagerSlice";
 import { CommandBaseArgs, CommandCallTypes, CommandParameterMap, GlobalCommandArgs, ViewCommandArgs } from "../types";
 import { clientToOffsetPos, offsetToClientPos } from "./panelManager";
 import { useDirectRef } from "./useDirectRef";
+import { identity } from "lodash";
 
 export default function useDispatchCommand() {
     const dispatch = useAppDispatch();
     const commandsRef = useDirectRef(useAppSelector(selectCommands).commands);
     const panelsRef = useDirectRef(useAppSelector(selectPanels));
     const panelManagerRef = useDirectRef(useAppSelector(selectPanelManager));
-    const editorStateRef = useDirectRef(useAppSelector(selectEditor));
+    const appStateRef = useDirectRef(useAppSelector(identity<RootState>));
 
     return useCallback((
         commandId: string,
@@ -28,7 +29,7 @@ export default function useDispatchCommand() {
 
         const baseArgs: CommandBaseArgs = {
             callType,
-            editorState: editorStateRef.current,
+            appState: appStateRef.current,
         };
         let actionOrActions: AnyAction[] | AnyAction | void;
 

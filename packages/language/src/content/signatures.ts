@@ -209,7 +209,6 @@ localDefinitions.push({
             op(ByteOperation.return),
         ]),
     },
-    interpretation: ([a]) => Math.floor(a),
 });
 localDefinitions.push({
     signature: {
@@ -225,7 +224,6 @@ localDefinitions.push({
             op(ByteOperation.return),
         ]),
     },
-    interpretation: ([a, b]) => a * b,
 });
 localDefinitions.push({
     signature: {
@@ -241,7 +239,6 @@ localDefinitions.push({
             op(ByteOperation.return),
         ]),
     },
-    interpretation: ([a, b]) => a / b,
 });
 
 localDefinitions.push({
@@ -268,7 +265,6 @@ localDefinitions.push({
             op(ByteOperation.return),
         ]),
     },
-    interpretation: args => args[0] ? args[1] : args[2],
 });
 
 localDefinitions.push({
@@ -281,7 +277,6 @@ localDefinitions.push({
         output: output.number('output'),
         byteCode: inline([]),
     },
-    interpretation: ([number]) => number,
 });
 localDefinitions.push({
     signature: {
@@ -293,7 +288,6 @@ localDefinitions.push({
         output: output.boolean('output'),
         byteCode: inline([]),
     },
-    interpretation: ([boolean]) => boolean,
 });
 localDefinitions.push({
     signature: {
@@ -305,7 +299,6 @@ localDefinitions.push({
         output: output.string('output'),
         byteCode: inline([]),
     },
-    interpretation: ([string]) => string,
 });
 
 localDefinitions.push({
@@ -318,7 +311,6 @@ localDefinitions.push({
         output: output.generic('output', 'T'),
         byteCode: inline([]),
     },
-    interpretation: ([string]) => string,
 });
 
 localDefinitions.push({
@@ -335,7 +327,6 @@ localDefinitions.push({
             op(ByteOperation.return),
         ]),
     },
-    interpretation: ([a, b]) => a > b,
 });
 
 localDefinitions.push({
@@ -355,7 +346,6 @@ localDefinitions.push({
             op(ByteOperation.return),
         ]),
     },
-    interpretation: ([left, right]) => left + right,
 });
 localDefinitions.push({
     signature: {
@@ -375,7 +365,6 @@ localDefinitions.push({
             op(ByteOperation.return),
         ]),
     },
-    interpretation: ([string, start, length]) => string.slice(start, Math.max(0, start + length)),
 });
 
 
@@ -391,7 +380,6 @@ localDefinitions.push({
         output: output.generic('list', createListType('T')),
         byteCode: inline([]),
     },
-    interpretation: ([elements]) => elements,
 });
 localDefinitions.push({
     signature: {
@@ -410,7 +398,6 @@ localDefinitions.push({
             op(ByteOperation.return),
         ]),
     },
-    interpretation: ([left, right]) => left.concat(right),
 });
 localDefinitions.push({
     signature: {
@@ -430,7 +417,6 @@ localDefinitions.push({
             op(ByteOperation.return),
         ]),
     },
-    interpretation: ([list, start, length]) => list.slice(start, Math.max(0, start + length)),
 });
 localDefinitions.push({
     signature: {
@@ -451,7 +437,6 @@ localDefinitions.push({
             op(ByteOperation.return),
         ]),
     },
-    interpretation: ([list, index]) => list.at(index),
 });
 localDefinitions.push({
     signature: {
@@ -513,7 +498,6 @@ localDefinitions.push({
             op(ByteOperation.return),
         ]),
     },
-    interpretation: ([list]) => list.length,
 });
 
 localDefinitions.push({
@@ -539,13 +523,7 @@ localDefinitions.push({
             op(ByteOperation.return),
         ])
     },
-    interpretation: ([_function, argument]) => _function(argument),
 });
-
-
-export const baseInterpretations = Object.fromEntries(
-    localDefinitions.map(def => [def.signature.id, def.interpretation])
-);
 
 export const baseSignatures = Object.fromEntries(
     localDefinitions.map(def => [def.signature.id, def.signature])

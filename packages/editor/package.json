@@ -5,7 +5,8 @@
     "main": "lib/index.js",
     "scripts": {
         "dev": "tsc --watch",
-        "build": "tsc"
+        "build": "tsc",
+        "schemagen": "sh src/dev/schemagen.sh"
     },
     "author": "",
     "license": "MIT",
@@ -41,6 +42,7 @@
         "@types/sortablejs": "^1.15.1",
         "@types/styled-components": "^5.1.26",
         "@types/uuid": "^9.0.2",
-        "typescript": "^5.0.2"
+        "typescript": "^5.0.2",
+        "typescript-json-schema": "^0.61.0"
     }
 }

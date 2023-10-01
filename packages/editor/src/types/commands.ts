@@ -1,7 +1,8 @@
 import { AnyAction } from '@reduxjs/toolkit';
-import { ViewTypes, PanelStateMap } from './panelManager';
-import { Rect, Vec2 } from './utils';
+import { RootState } from '../redux/store';
 import { EditorSliceState } from './editor';
+import { PanelStateMap, ViewTypes } from './panelManager';
+import { Rect, Vec2 } from './utils';
 
 export interface KeyCombination {
     key: string;
@@ -16,7 +17,7 @@ export type CommandCallTypes = 'toolbar' | 'contextmenu' | 'keycombination' | 'v
 
 export interface CommandBaseArgs {
     callType: CommandCallTypes;
-    editorState: EditorSliceState;
+    appState: RootState;
 }
 
 export interface GlobalCommandArgs extends CommandBaseArgs { }

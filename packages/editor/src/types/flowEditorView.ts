@@ -1,4 +1,4 @@
-import { FlowEnvironment, JointLocation, TypeSpecifier } from "@fluss/language";
+import * as lang from "@fluss/language";
 import { Vec2 } from "./utils";
 import { PanelState } from "./panelManager";
 
@@ -12,9 +12,9 @@ interface EditorActionLocation {
     clientPosition: Vec2;
 }
 export interface DraggingJointContext {
-    fromJoint: JointLocation;
-    dataType: TypeSpecifier;
-    environment: FlowEnvironment;
+    fromJoint: lang.JointLocation;
+    dataType: lang.TypeSpecifier;
+    environment: lang.FlowEnvironment;
 }
 
 export interface EditorActionNeutralState {
@@ -43,10 +43,13 @@ export type EditorActionState =
 
 export type JointLocationKey = `${string}.${string}.${number}` | `${string}.${string}`;
 
+export type EditorClipboardNodeContent = lang.FlowNode[];
+
 export interface FlowEditorPanelState extends PanelState {
     flowStack: string[];
     camera: PlanarCamera;
     selection: string[];
     state: EditorActionState;
     relativeJointPosition: Map<JointLocationKey, Vec2>;
+    clipboard: EditorClipboardNodeContent | null;
 }

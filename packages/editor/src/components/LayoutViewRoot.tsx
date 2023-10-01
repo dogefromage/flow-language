@@ -7,7 +7,9 @@ import ConsoleView from './ConsoleView';
 
 const LayoutViewRoot = () => {
     return (
-        <ReflexContainer orientation='vertical'>
+        <ReflexContainer orientation='vertical' style={{
+            overflow: 'hidden',
+        }}>
             <ReflexElement minSize={200} size={250}>
                 <PageOutlinerView panelId={'outliner'} />
             </ReflexElement>

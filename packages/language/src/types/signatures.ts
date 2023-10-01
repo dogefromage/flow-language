@@ -8,7 +8,6 @@ import { InitializerValue, TypeSpecifier } from "./typeSystem";
  */
 interface BaseRow<R extends string> {
     id: string;
-    // label: string;
     specifier: TypeSpecifier;
     rowType: R;
 }
@@ -51,16 +50,11 @@ export interface AnonymousFlowSignature {
         | { type: 'inline', instructions: ByteInstruction[] }
 }
 
-// export function getInternalId(name: 'input' | 'output' | 'combine' | 'separate', ...rest: string[]) {
-//     return '@@' + [name, ...rest].join('_');
-// }
-
 export const reserverNodeIds = ['input', 'output'] as const;
 export type ReservedNodeIds = (typeof reserverNodeIds)[number];
 
 export interface FlowSignature extends AnonymousFlowSignature {
     id: string;
-    // name: string;
     description: string | null;
     attributes: Record<string, string>;
 }

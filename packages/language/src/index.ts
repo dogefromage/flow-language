@@ -5,12 +5,6 @@ export {
 } from './validation/validateDocument';
 
 export {
-    interpretDocument,
-    InterpreterConfig,
-    InterpretationException
-} from './interpreter';
-
-export {
     collectTotalEnvironmentContent,
     findEnvironmentSignature,
     findEnvironmentType,

@@ -3,7 +3,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { useCallback } from "react";
 import panelStateEnhancer, { selectPanelState } from "../redux/panelStateEnhancer";
 import { RootState } from "../redux/store";
-import { CreatePanelStateCallback, DraggingJointContext, FlowEditorPanelState, JointLocationKey, PlanarCamera, Vec2, ViewTypes } from "../types";
+import { CreatePanelStateCallback, DraggingJointContext, EditorClipboardNodeContent, FlowEditorPanelState, JointLocationKey, PlanarCamera, Vec2, ViewTypes } from "../types";
 import { clamp } from "../utils/math";
 import { castDraft } from "immer";
 import { getPanelState } from "../utils/panelManager";
@@ -20,6 +20,7 @@ export const createFlowEditorPanelState: CreatePanelStateCallback<FlowEditorPane
         selection: [],
         state: { type: 'neutral' },
         relativeJointPosition: new Map(),
+        clipboard: null,
     };
     return panelState;
 }
@@ -116,6 +117,11 @@ export const flowEditorPanelsSlice = createSlice({
             const relativeWorldPos = vectorScreenToWorld(ps.camera, a.payload.relativeClientPosition);
             ps.relativeJointPosition.set(a.payload.jointKey, relativeWorldPos);
         },
+        setClipboard: (s, a: PayloadAction<{ panelId: string, clipboard: EditorClipboardNodeContent }>) => {
+            const ps = getPanelState(s, a);
+            if (!ps) return;
+            ps.clipboard = a.payload.clipboard;
+        },
     }
 });
 
@@ -130,6 +136,7 @@ export const {
     setStateAddNodeWithConnection: flowEditorSetStateAddNodeWithConnection,
     setSelection: flowEditorSetSelection,
     setRelativeClientJointPosition: flowEditorSetRelativeClientJointPosition,
+    setClipboard: flowEditorSetClipboard,
 } = flowEditorPanelsSlice.actions;
 
 const flowEditorPanelsReducer = panelStateEnhancer(

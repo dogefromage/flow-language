@@ -1,0 +1,51 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "FlowNode": {
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "position": {
+                    "$ref": "#/definitions/Vec2"
+                },
+                "rowStates": {
+                    "$ref": "#/definitions/Obj<RowState>"
+                },
+                "signature": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "position",
+                "rowStates",
+                "signature"
+            ],
+            "type": "object"
+        },
+        "Obj<RowState>": {
+            "type": "object"
+        },
+        "Vec2": {
+            "properties": {
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "x",
+                "y"
+            ],
+            "type": "object"
+        }
+    },
+    "items": {
+        "$ref": "#/definitions/FlowNode"
+    },
+    "type": "array"
+}
+

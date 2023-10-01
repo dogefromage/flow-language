@@ -1,7 +1,7 @@
-import { v4 as uuidv4 } from "uuid";
 import { flowsRemoveNodes } from "../../slices/flowsSlice";
-import { flowEditorSetStateAddNodeAtPosition } from "../../slices/panelFlowEditorSlice";
+import { flowEditorSetClipboard, flowEditorSetStateAddNodeAtPosition } from "../../slices/panelFlowEditorSlice";
 import { Command, ViewTypes } from "../../types";
+import clipboardSchema from '../../content/schemas/EditorClipboardNodeContent.json?raw';
 
 export const flowEditorCommands: Command[] = [
     {
@@ -32,60 +32,34 @@ export const flowEditorCommands: Command[] = [
                 undo: { desc: `Removed all selected nodes in active geometry.` },
             });
         },
-        keyCombinations: [{ key: 'Delete', displayName: 'Del' }, { key: 'x', ctrlKey: true }],
+        keyCombinations: [{ key: 'Delete', displayName: 'Del' }, /*  { key: 'x', ctrlKey: true } */],
     },
-    // {
-    //     scope: 'view',
-    //     viewType: ViewTypes.FlowEditor,
-    //     id: 'flowEditor.resetSelected',
-    //     name: 'Reset Selected',
-    //     actionCreator({ panelState: { geometryStack } }, params) {
-    //         const geometryId = geometryStack[0];
-    //         if (geometryId == null) return;
-    //         return geometriesResetUserSelectedNodes({
-    //             geometryId,
-    //             userId: TEST_USER_ID,
-    //             undo: { desc: `Reset values of all selected nodes in active geometry.` },
-    //         });
-    //     },
-    //     // keyCombinations: [ { key: 'Delete', displayName: 'Del' }, { key: 'x', ctrlKey: true } ],
-    // },
-    // {
-    //     scope: 'view',
-    //     viewType: ViewTypes.FlowEditor,
-    //     id: 'flowEditor.createGroup',
-    //     name: 'Create Group',
-    //     actionCreator({ offsetCursor, offsetCenter, panelState: { flowStack, camera } }, params) {
-    //         const parentFlowId = flowStack[0];
-    //         if (parentFlowId == null) return;
-
-    //         const groupId = saveUUID();
-    //         const signatureId: FlowSignatureId = `composed:${groupId}`;
-    //         const worldPos = pointScreenToWorld(camera, offsetCursor || offsetCenter);
-
-    //         const undoRecord: UndoRecord = {
-    //             actionToken: 'createsub:' + signatureId,
-    //             desc: `Created new flow group and placed node into current.`
-    //         };
-
-    //         return [
-    //             flowsCreate({
-    //                 flowId: groupId,
-    //                 name: 'New Group',
-    //                 signature: topFlowSignature,
-    //                 undo: undoRecord,
-    //             }),
-    //             flowsAddNode({
-    //                 flowId: parentFlowId,
-    //                 signatureId,
-    //                 position: worldPos,
-    //                 undo: undoRecord,
-    //             })
-    //         ];
-    //     },
-    // }
-]
-
-function saveUUID() {
-    return `group_${uuidv4().replaceAll('-', '').slice(10)}`;
-}
+    {
+        scope: 'view',
+        viewType: ViewTypes.FlowEditor,
+        id: 'flowEditor.copySelection',
+        name: 'Copy Selected',
+        actionCreator({ appState, activePanelId, panelState: { flowStack, selection } }, params) {
+            const flow = appState.document.flows[flowStack[0]];
+            if (!flow) return console.error(`Could not find flow.`);
+            const selectedNodes = selection
+                .map(nodeId => flow.nodes[nodeId]);
+            return flowEditorSetClipboard({
+                panelId: activePanelId,
+                clipboard: selectedNodes,
+            });
+        },
+        keyCombinations: [{ key: 'c', ctrlKey: true }],
+    },
+    {
+        scope: 'view',
+        viewType: ViewTypes.FlowEditor,
+        id: 'flowEditor.paste',
+        name: 'Paste',
+        actionCreator({ appState, panelState: { clipboard } }, params) {
+            console.log('pasting:');
+            console.log(clipboard);
+        },
+        keyCombinations: [{ key: 'v', ctrlKey: true }],
+    },
+];
