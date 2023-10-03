@@ -98,3 +98,21 @@ export function mapObj<X, Y>(
     const mapped = pairs.map<[ string, Y ]>(([ k, x ]) => [ k, map(x, k) ]);
     return Object.fromEntries(mapped);
 }
+
+/**
+ * Expects array to contain numberic keys
+ */
+export function objToArr<T>(obj: Record<string, T>) {
+    let maxNumKey = -1;
+    for (const key of Object.keys(obj)) {
+        if (key.match(/^-?\d+$/)) {
+            maxNumKey = Math.max(maxNumKey, parseInt(key));
+        }
+    }
+    // collect
+    const arr: (T | undefined)[] = [];
+    for (let i = 0; i <= maxNumKey; i++) {
+        arr[i] = obj[i];
+    }
+    return arr;
+}

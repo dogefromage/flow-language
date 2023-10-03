@@ -1,11 +1,10 @@
 import { ByteInstruction, CallableChunk } from "./byteCode";
-import { InitializerValue, TypeSpecifier } from "./typeSystem";
+import { GenericParameter, InitializerValue, TypeSpecifier } from "./typeSystem";
 
 interface BaseRow<R extends string> {
     id: string;
     specifier: TypeSpecifier;
     rowType: R;
-    hidden?: boolean;
 }
 
 // export interface SimpleInputRowSignature extends BaseRow<'input-simple'> {};
@@ -18,7 +17,6 @@ interface BaseRow<R extends string> {
 
 // export type SimpleOutputRowSignature = BaseRow<'output-simple'>;
 // export type DestructuredOutputRowSignature = BaseRow<'output-destructured'>;
-// export type HiddenOutputRowSignature = BaseRow<'output-hidden'>;
 
 // export type InputRowSignature =
 //     | SimpleInputRowSignature
@@ -38,6 +36,7 @@ export interface VariableInputRowSignature extends BaseRow<'input-variable'> {
 }
 export type SimpleOutputRowSignature = BaseRow<'output-simple'>;
 export type DestructuredOutputRowSignature = BaseRow<'output-destructured'>;
+export type HiddenOutputRowSignature = BaseRow<'output-hidden'>;
 
 export type InputRowSignature =
     | SimpleInputRowSignature
@@ -45,14 +44,10 @@ export type InputRowSignature =
 export type OutputRowSignature =
     | SimpleOutputRowSignature
     | DestructuredOutputRowSignature
-
-export interface GenericTag {
-    id: string;
-    constraint: TypeSpecifier | null;
-}
+    | HiddenOutputRowSignature
 
 export interface AnonymousFlowSignature {
-    generics: GenericTag[];
+    generics: GenericParameter[];
     inputs: InputRowSignature[];
     output: OutputRowSignature;
     byteCode?: 

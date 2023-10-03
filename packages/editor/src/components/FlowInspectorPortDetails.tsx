@@ -12,7 +12,7 @@ import { FlowEnvironment, TypeSpecifier, createAnyType } from '@fluss/language';
 
 type RowTypes = AllRowSignatures['rowType'];
 
-const inputRowTypes: RowTypes[] = ['input-list', 'input-tuple', 'input-simple', 'input-variable', 'input-function'];
+const inputRowTypes: RowTypes[] = ['input-simple', 'input-variable'];
 const outputRowTypes: RowTypes[] = ['output-simple', 'output-destructured'];
 
 interface FlowInspectorPortDetailsProps {

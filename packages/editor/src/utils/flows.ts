@@ -6,7 +6,7 @@ import _ from "lodash";
 
 export function getJointLocationKey(location: lang.JointLocation): JointLocationKey {
     if (location.direction === 'input') {
-        return `${location.nodeId}.${location.rowId}.${location.jointIndex}`;
+        return `${location.nodeId}.${location.rowId}.${location.accessor}`;
     } else {
         return `${location.nodeId}.${location.accessor || ''}`;
     }
@@ -42,10 +42,7 @@ const missingColor = '#b5b5b5';
 function getBaseStyling(argX: lang.TypeSpecifier, env: lang.FlowEnvironment): FlowJointStyling {
     const X = lang.tryResolveTypeAlias(argX, env);
 
-    if (X == null || 
-        X.type === 'any' || 
-        X.type === 'missing'
-    ) {
+    if (X == null || X.type === 'any') {
         return style(null, '#aaa');
     }
     
@@ -61,18 +58,9 @@ function getBaseStyling(argX: lang.TypeSpecifier, env: lang.FlowEnvironment): Fl
                 ...getBaseStyling(X.element, env),
                 shape: 'square',
             };
-        case 'function':
-        case 'map':
-        case 'tuple':
-        // case 'union':
-        //     return style(
-        //         missingColor,
-        //         null,
-        //         'square',
-        //     );
-        default:
-            throw new Error(`Unknown type`);
     }
+
+    return style(missingColor, null, 'square');
 }
 
 export function getJointStyling(argX: lang.TypeSpecifier, env: lang.FlowEnvironment, additional = false): FlowJointStyling {
@@ -92,15 +80,21 @@ export const flowRowTypeNames: Record<RowTypes, string> = {
     'output-destructured': 'Destructured Output',
     'output-hidden': 'Hidden Output',
     'input-simple': 'Simple Input',
-    'input-list': 'List Input',
+    // 'input-list': 'List Input',
     'input-variable': 'Variable Input',
-    'input-function': 'Function Input',
-    'input-tuple': 'Tuple Input',
+    // 'input-function': 'Function Input',
+    // 'input-tuple': 'Tuple Input',
 };
 
 export function formatFlowLabel(label: string) {
     return label
         .split('_')
-        .map(_.upperFirst)
-        .join(' ');
+        .filter(x => x.length)
+        .join('_')
+
+    // Nicer formatting but sucks:
+    // return label
+    //     .split('_')
+    //     .map(_.upperFirst)
+    //     .join(' ');
 }

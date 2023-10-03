@@ -1,4 +1,4 @@
-import lang from '@fluss/language';
+import lang, { GenericTag } from '@fluss/language';
 
 export function getSpecifierLabel(X: lang.TypeSpecifier) {
     if (typeof X === 'string') {
@@ -7,8 +7,8 @@ export function getSpecifierLabel(X: lang.TypeSpecifier) {
     switch (X.type) {
         case 'primitive':
             return X.name;
-        case 'missing':
-            return `Missing`;
+        // case 'missing':
+        //     return `Missing`;
         case 'any':
             return 'Any';
         case 'function':
@@ -31,7 +31,7 @@ export function formatSpecifier(X: lang.TypeSpecifier, env: lang.FlowEnvironment
     }
     switch (X.type) {
         case 'primitive':
-        case 'missing':
+        // case 'missing':
         case 'any':
             return getSpecifierLabel(X);
         case 'function':
@@ -42,11 +42,27 @@ export function formatSpecifier(X: lang.TypeSpecifier, env: lang.FlowEnvironment
             const entries = Object.entries(X.elements)
                 .map(([key, Y]) => `${key}: ${formatSpecifier(Y, env)}`)
                 .join(', ');
-            return `${getSpecifierLabel(X)}<${entries}>`;
+            return `{ ${entries} }`;
+            // return `${getSpecifierLabel(X)}<${entries}>`;
         case 'tuple':
-        // case 'union':
-            return `${getSpecifierLabel(X)}<${X.elements.map(Y => formatSpecifier(Y, env)).join(', ')}>`;
+            return `(${X.elements.map(Y => formatSpecifier(Y, env)).join(', ')})`;
+        // case 'tuple':
+        //     return `${getSpecifierLabel(X)}<${X.elements.map(Y => formatSpecifier(Y, env)).join(', ')}>`;
     }
     throw new Error(`Unknown type`);
 }
 
+export function formatSpecifierWithGenerics(X: lang.TypeSpecifier, env: lang.FlowEnvironment, generics: GenericTag[]) {
+    const gens = generics.map(g => {
+        if (g.constraint != null) {
+            return `${g.id} ⊆ ${formatSpecifier(g.constraint, env)}`;
+        }
+        return g.id;
+    });
+
+    const baseSpec = formatSpecifier(X, env);
+    if (gens.length) {
+        return `<${gens.join(', ')}>${baseSpec}`;
+    }
+    return baseSpec;
+}

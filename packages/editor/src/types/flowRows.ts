@@ -5,3 +5,5 @@ export interface FlowJointStyling {
     shape: 'square' | 'round';
     borderStyle: 'dashed' | 'solid';
 }
+
+export type FlowConnectingStrategy = 'list' | 'static';

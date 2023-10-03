@@ -1,13 +1,11 @@
 import * as lang from "@fluss/language";
-import React, { useMemo } from "react";
-import { useAppDispatch } from "../redux/stateHooks";
-import { flowsSetRowValue } from "../slices/flowsSlice";
+import React from "react";
 import { FlowNodeRowDiv, FlowNodeRowNameP } from "../styles/flowStyles";
-import FlowJoint from "./FlowJoint";
-import FlowNodeRowContextWrapper from "./FlowNodeRow";
-import FlowNodeRowInitializer from "./FlowNodeRowInitializer";
-import FormSelectOption from "./FormSelectOption";
 import { formatFlowLabel } from "../utils/flows";
+import FlowJoint from "./FlowJoint";
+import { FlowNodeRowErrorWrapper } from "./FlowNodeErrorWrapper";
+import { FlowNodeRowDestructurings } from "./FlowNodeRowDestructurings";
+import { FlowNodeRowInitializers } from "./FlowNodeRowInitializers";
 
 type RowSignature = lang.InputRowSignature | lang.OutputRowSignature;
 export type RowComponentProps<R extends RowSignature = RowSignature> = {
@@ -21,26 +19,23 @@ export type RowComponentProps<R extends RowSignature = RowSignature> = {
 }
 
 export const FlowOutputRowSwitch = (props: RowComponentProps<lang.OutputRowSignature>) => {
-    switch (props.row.rowType) {
-        case 'output-simple':
-            return <FlowOutputRowSimple {...props as RowComponentProps<lang.SimpleOutputRowSignature>} />
-        case 'output-destructured':
+    switch (props.context?.display) {
+        case 'hidden':
+            return null;
+        case 'destructured':
             return <FlowOutputRowDestructured {...props as RowComponentProps<lang.DestructuredOutputRowSignature>} />
-        case 'output-hidden':
-            return null;
-        default:
-            console.error(`unknown row type ${(props.row as any).rowType}`);
-            return null;
+        case 'simple':
+            return <FlowOutputRowSimple {...props as RowComponentProps<lang.SimpleOutputRowSignature>} />
     }
+    console.error(`Unknown display type '${props.context?.display}.`);
+    return null;
 }
 
 export const FlowOutputRowSimple = (props: RowComponentProps<lang.SimpleOutputRowSignature>) => {
     const { panelId, flowId, nodeId, row, context, type, env } = props;
 
     return (
-        <FlowNodeRowContextWrapper
-            {...props}
-        >
+        <FlowNodeRowErrorWrapper {...props}>
             <FlowNodeRowDiv>
                 <FlowJoint
                     panelId={panelId}
@@ -49,17 +44,14 @@ export const FlowOutputRowSimple = (props: RowComponentProps<lang.SimpleOutputRo
                     location={{
                         direction: 'output',
                         nodeId,
-                        // no accessor
                     }}
                     env={env}
                 />
-                <FlowNodeRowNameP
-                    $align='right'
-                >
-                    { formatFlowLabel(row.id) }
+                <FlowNodeRowNameP $align='right'>
+                    {formatFlowLabel(row.id)}
                 </FlowNodeRowNameP>
             </FlowNodeRowDiv>
-        </FlowNodeRowContextWrapper>
+        </FlowNodeRowErrorWrapper>
     );
 }
 
@@ -74,17 +66,13 @@ export const FlowOutputRowDestructured = (props: RowComponentProps<lang.Destruct
 
     if (!canDestructure) {
         return (
-            <FlowNodeRowContextWrapper
-                {...props}
-            >
+            <FlowNodeRowErrorWrapper {...props}>
                 <FlowNodeRowDiv>
-                    <FlowNodeRowNameP
-                        $align='right'
-                    >
-                        { formatFlowLabel(row.id) }
+                    <FlowNodeRowNameP $align='right'>
+                        {formatFlowLabel(row.id)}
                     </FlowNodeRowNameP>
                 </FlowNodeRowDiv>
-            </FlowNodeRowContextWrapper>
+            </FlowNodeRowErrorWrapper>
         );
     }
 
@@ -113,14 +101,12 @@ export const FlowOutputRowDestructured = (props: RowComponentProps<lang.Destruct
     }
 
     return (
-        <FlowNodeRowContextWrapper
+        <FlowNodeRowErrorWrapper
             {...props}
         >
             <FlowNodeRowDiv>
-                <FlowNodeRowNameP
-                    $align='right'
-                >
-                    { formatFlowLabel(row.id) }
+                <FlowNodeRowNameP $align='right'>
+                    {formatFlowLabel(row.id)}
                 </FlowNodeRowNameP>
             </FlowNodeRowDiv>
             {
@@ -137,42 +123,36 @@ export const FlowOutputRowDestructured = (props: RowComponentProps<lang.Destruct
                             }}
                             env={env}
                         />
-                        <FlowNodeRowNameP
-                            $align='right'
-                        >
-                            {entry.label}
-                            {/* { `${row.label} ['${entry.label}']` } */}
+                        <FlowNodeRowNameP $align='right'>
+                            {formatFlowLabel(entry.label)}
                         </FlowNodeRowNameP>
                     </FlowNodeRowDiv>
                 )
             }
-        </FlowNodeRowContextWrapper>
+        </FlowNodeRowErrorWrapper>
     );
 }
 
 export const FlowInputRowSwitch = (props: RowComponentProps<lang.InputRowSignature>) => {
-    switch (props.row.rowType) {
-        case 'input-simple':
-            return <FlowInputRowSimple {...props as RowComponentProps<lang.SimpleInputRowSignature>} />
-        case 'input-variable':
-            return <FlowInputRowVariable {...props as RowComponentProps<lang.VariableInputRowSignature>} />
-        case 'input-list':
-            return <FlowInputRowList {...props as RowComponentProps<lang.ListInputRowSignature>} />
-        case 'input-tuple':
-            return <FlowInputRowTuple {...props as RowComponentProps<lang.TupleInputRowSignature>} />
-        case 'input-function':
-            return <FlowInputRowFunction {...props as RowComponentProps<lang.ListInputRowSignature>} />
-        default:
-            console.error(`unknown row type ${(props.row as any).rowType}`);
+    switch (props.context?.display) {
+        case 'simple':
+            return <FlowInputRowSimple {...props} />
+        case 'initializer':
+            return <FlowNodeRowInitializers {...props} />
+        case 'destructured':
+            return <FlowNodeRowDestructurings {...props} />
+        case 'hidden':
             return null;
     }
+    console.error(`Unknown display type '${props.context?.display}.`);
+    return null;
 }
 
-export const FlowInputRowSimple = (props: RowComponentProps<lang.SimpleInputRowSignature>) => {
+export const FlowInputRowSimple = (props: RowComponentProps<lang.InputRowSignature>) => {
     const { panelId, flowId, nodeId, row, context, type, env } = props;
 
     return (
-        <FlowNodeRowContextWrapper {...props}>
+        <FlowNodeRowErrorWrapper {...props}>
             <FlowNodeRowDiv>
                 <FlowJoint
                     panelId={panelId}
@@ -181,216 +161,16 @@ export const FlowInputRowSimple = (props: RowComponentProps<lang.SimpleInputRowS
                     location={{
                         direction: 'input',
                         nodeId,
-                        jointIndex: 0,
                         rowId: row.id,
+                        accessor: '0',
+                        initializer: 'first',
                     }}
                     env={env}
                 />
-                <FlowNodeRowNameP
-                    $align='left'
-                >
-                    { formatFlowLabel(row.id) }
+                <FlowNodeRowNameP $align='left'>
+                    {formatFlowLabel(row.id)}
                 </FlowNodeRowNameP>
             </FlowNodeRowDiv>
-        </FlowNodeRowContextWrapper>
+        </FlowNodeRowErrorWrapper>
     );
 }
-
-export const FlowInputRowVariable = (props: RowComponentProps<lang.VariableInputRowSignature>) => {
-    const { panelId, flowId, nodeId, row, context, type, env } = props;
-
-    return (
-        <FlowNodeRowContextWrapper {...props}>
-            <FlowNodeRowDiv>
-                <FlowJoint
-                    panelId={panelId}
-                    flowId={flowId}
-                    type={type}
-                    location={{
-                        direction: 'input',
-                        nodeId,
-                        jointIndex: 0,
-                        rowId: row.id,
-                    }}
-                    env={env}
-                />
-                <FlowNodeRowInitializer
-                    flowId={flowId}
-                    nodeId={nodeId}
-                    row={row}
-                    context={context}
-                    type={type}
-                />
-            </FlowNodeRowDiv>
-        </FlowNodeRowContextWrapper >
-    );
-}
-
-export const FlowInputRowList = (props: RowComponentProps<lang.ListInputRowSignature>) => {
-    const { panelId, flowId, nodeId, row, context, type, env } = props;
-
-    const listType = lang.tryResolveTypeAlias(type, env) as lang.ListTypeSpecifier;
-    const connections = context?.ref?.connections || [];
-
-    return (
-        <FlowNodeRowContextWrapper {...props}>
-            {
-                connections.map((conn, index) =>
-                    <FlowNodeRowDiv
-                        key={[index, conn.nodeId, conn.accessor].join(':')}
-                    >
-                        <FlowJoint
-                            panelId={panelId}
-                            flowId={flowId}
-                            type={listType.element}
-                            location={{
-                                direction: 'input',
-                                nodeId,
-                                jointIndex: index,
-                                rowId: row.id,
-                            }}
-                            env={env}
-                        />
-                        <FlowNodeRowNameP
-                            $align='left'
-                        >
-                            {`${ formatFlowLabel(row.id) } [${index}]`}
-                        </FlowNodeRowNameP>
-                    </FlowNodeRowDiv>
-                )
-            }
-            <FlowNodeRowDiv>
-                <FlowJoint
-                    panelId={panelId}
-                    flowId={flowId}
-                    type={listType.element}
-                    additional={true}
-                    location={{
-                        direction: 'input',
-                        nodeId,
-                        jointIndex: connections.length,
-                        rowId: row.id,
-                    }}
-                    env={env}
-                />
-                {
-                    connections.length == 0 ? (
-                        <FlowNodeRowNameP
-                            $align='left'
-                        >
-                            { formatFlowLabel(row.id) }
-                        </FlowNodeRowNameP>
-                    ) : <div />
-                }
-            </FlowNodeRowDiv>
-        </FlowNodeRowContextWrapper>
-    );
-}
-
-export const FlowInputRowTuple = (props: RowComponentProps<lang.TupleInputRowSignature>) => {
-    const { panelId, flowId, nodeId, row, context, type, env } = props;
-
-    const tupleType = lang.tryResolveTypeAlias(type, env) as lang.TupleTypeSpecifier;
-    const connections = context?.ref?.connections || [];
-    
-    return (
-        <FlowNodeRowContextWrapper {...props}>
-            {
-                tupleType.elements.map((elementType, index) =>
-                    <FlowNodeRowDiv key={index}>
-                        <FlowJoint
-                            panelId={panelId}
-                            flowId={flowId}
-                            type={elementType}
-                            location={{
-                                direction: 'input',
-                                nodeId,
-                                jointIndex: index,
-                                rowId: row.id,
-                            }}
-                            env={env}
-                        />
-                        <FlowNodeRowNameP
-                            $align='left'
-                        >
-                            {`${ formatFlowLabel(row.id) } [${index}]`}
-                        </FlowNodeRowNameP>
-                    </FlowNodeRowDiv>
-                )
-            }
-            {/* <FlowNodeRowDiv>
-                <FlowJoint
-                    panelId={panelId}
-                    flowId={flowId}
-                    type={lang.createAnyType()}
-                    additional={true}
-                    location={{
-                        direction: 'input',
-                        nodeId,
-                        jointIndex: connections.length,
-                        rowId: row.id,
-                    }}
-                    env={env}
-                />
-                {
-                    connections.length == 0 ? (
-                        <FlowNodeRowNameP
-                            $align='left'
-                        >
-                            { formatFlowLabel(row.id) }
-                        </FlowNodeRowNameP>
-                    ) : <div />
-                }
-            </FlowNodeRowDiv> */}
-        </FlowNodeRowContextWrapper>
-    );
-}
-
-export const FlowInputRowFunction = (props: RowComponentProps<lang.ListInputRowSignature>) => {
-    const { panelId, flowId, nodeId, row, context, type, env } = props;
-    const dispatch = useAppDispatch();
-
-    const signatures = useMemo(() => {
-        const envContent = lang.collectTotalEnvironmentContent(env);
-        return Object
-            .entries(envContent.signatures || {})
-            .map(([_, signature]) => signature.id);
-    }, [env]);
-
-    const isConnected = !!context?.ref?.connections.length;
-
-    return (
-        <FlowNodeRowContextWrapper {...props}>
-            <FlowNodeRowDiv>
-                <FlowJoint
-                    panelId={panelId}
-                    flowId={flowId}
-                    type={type}
-                    location={{
-                        direction: 'input',
-                        nodeId,
-                        jointIndex: 0,
-                        rowId: row.id,
-                    }}
-                    env={env}
-                />
-                <FlowNodeRowNameP $align="left">{ formatFlowLabel(row.id) }</FlowNodeRowNameP>
-                {
-                    !isConnected &&
-                    <FormSelectOption
-                        value={context?.ref?.value || ''}
-                        options={signatures}
-                        onChange={newSignatureId => {
-                            dispatch(flowsSetRowValue({
-                                flowId, nodeId, rowId: row.id,
-                                rowValue: newSignatureId,
-                                undo: { desc: 'Updated function input value.' },
-                            }));
-                        }}
-                    />
-                }
-            </FlowNodeRowDiv>
-        </FlowNodeRowContextWrapper >
-    );
-}
-

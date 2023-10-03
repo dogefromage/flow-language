@@ -22,14 +22,14 @@ export function assertSubsetType(X: TypeSpecifier, Y: TypeSpecifier, env: FlowEn
 }
 function assertSubsetSwitch(path: TypeTreePath, argX: TypeSpecifier, argY: TypeSpecifier, env: FlowEnvironment) {
 
-    // TODO: move this outside of subset function since it is part of row logic
-    if (typeof argX !== 'string' && argX.type === 'missing') {
-        throw new TypeSystemException({
-            type: 'required-type',
-            message: `Type is missing.`,
-            path,
-        });
-    }
+    // // TODO: move this outside of subset function since it is part of row logic
+    // if (typeof argX !== 'string' && argX.type === 'missing') {
+    //     throw new TypeSystemException({
+    //         type: 'required-type',
+    //         message: `Type is missing.`,
+    //         path,
+    //     });
+    // }
 
     // base case for recursive definitions
     if (typeof argX === 'string' && argX === argY) {

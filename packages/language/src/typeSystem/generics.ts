@@ -56,11 +56,12 @@ const inferGenericsSwitch = (
 ): InstantiationConstraints => {
     if (typeof G === 'string' && generics[G] != null) {
         const constraintType = generics[G];
-        // missing is passed if no row connected. this ignores unconnected rows
-        const isUseless = typeof X !== 'string' && X.type === 'missing';
-        if (isUseless) {
-            return {};
-        }
+        // // missing is passed if no row connected. this ignores unconnected rows
+        // const isUseless = typeof X !== 'string' && X.type === 'missing';
+        // if (isUseless) {
+        //     return {};
+        // }
+
         // if constraint is not fullfilled, return constraint such that comparison fails
         const constraintsNotFullfilled = constraintType != null && !isSubsetType(X, constraintType, env);
         if (constraintsNotFullfilled) {
@@ -98,7 +99,7 @@ const inferGenericsSwitch = (
             return inferGenericsMap(pathWithType, X, G as MapTypeSpecifier, generics, env);
         case 'function':
             return inferGenericsFunction(pathWithType, X, G as FunctionTypeSpecifier, generics, env);
-        case 'missing':
+        // case 'missing':
         case 'primitive':
         case 'any':
             return {};
@@ -194,7 +195,7 @@ export function applyInstantiationConstraints(
                 applyInstantiationConstraints(path.add({ key: 'output', formatting: 'property' }), 
                     X.output, constraints, env),
             );
-        case 'missing':
+        // case 'missing':
         case 'primitive':
         case 'any':
             return X;

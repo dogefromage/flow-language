@@ -3,9 +3,6 @@ import { Obj } from "./utilTypes";
 export interface AnyTypeSpecifier {
     type: 'any';
 }
-export interface MissingTypeSpecifier {
-    type: 'missing';
-}
 export interface PrimitiveTypeSpecifier {
     type: 'primitive';
     name: string;
@@ -27,22 +24,29 @@ export interface FunctionTypeSpecifier {
     parameter: TypeSpecifier;
     output: TypeSpecifier;
 }
-// export interface UnionTypeSpecifier {
-//     type: 'union';
-//     elements: TypeSpecifier[];
-// }
 
 export type InstantiationConstraints = Record<string, TypeSpecifier>;
 
-export type TypeSpecifier =
-    | string
+export type NonAliasedTypeSpecifier = 
     | AnyTypeSpecifier
-    | MissingTypeSpecifier
     | PrimitiveTypeSpecifier
     | MapTypeSpecifier
     | ListTypeSpecifier
     | TupleTypeSpecifier
     | FunctionTypeSpecifier
-    // | UnionTypeSpecifier
+
+export type TypeSpecifier =
+    | string
+    | NonAliasedTypeSpecifier
+
+export interface GenericParameter {
+    name: string;
+    constraint: TypeSpecifier | null;
+}
+
+export interface GenericTypeSpecifier<T extends TypeSpecifier = TypeSpecifier> {
+    generics: GenericParameter[];
+    specifier: T;
+}
 
 export type InitializerValue = any;

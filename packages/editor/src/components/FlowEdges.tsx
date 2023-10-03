@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { Box2, Vector2 } from 'threejs-math';
 import { selectPanelState } from '../redux/panelStateEnhancer';
 import { selectFlowContext } from '../slices/contextSlice';
-import { flowsRemoveEdge, selectSingleFlow } from '../slices/flowsSlice';
+import { flowsRemoveConnection, selectSingleFlow } from '../slices/flowsSlice';
 import { FlowEditorPanelState, ViewTypes } from '../types';
 import { EdgeColor, FlowEdge, FlowGraph, JointLocation } from '@fluss/language';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
@@ -72,10 +72,11 @@ const FlowEdges = ({ panelId, flowId }: Props) => {
         if (!context) return;
         const edge = context.edges[edgeId];
         if (!edge) return;
-        dispatch(flowsRemoveEdge({
+        dispatch(flowsRemoveConnection({
             flowId,
             input: edge.target,
             undo: { desc: 'Removed an edge from current flow.' },
+            // strategy: 'static',
         }))
     }
 

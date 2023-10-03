@@ -2,7 +2,7 @@ import { helperChunks } from "../content/signatures";
 import { getScopePath } from "../core/environment";
 import { FlowDocumentContext, FlowNodeContext, MAIN_FLOW_ID, TupleTypeSpecifier } from "../types";
 import { ByteCompilerConfig, ByteInstruction, ByteOperation, ByteProgram, CallableChunk, byteCodeConstructors } from "../types/byteCode";
-import { assertDef, assertTruthy } from "../utils";
+import { assertDef, assertNever, assertTruthy } from "../utils";
 import { byteProgramToString } from "./byteCodeUtils";
 
 const { op, data } = byteCodeConstructors;
@@ -153,71 +153,74 @@ class Compiler {
                 const inputRowSignature = inputRows[rowIndex];
                 const rowContext = node.inputRows[inputRowSignature.id];
                 const connections = rowContext.ref?.connections || [];
-                for (let j = connections.length - 1; j >= 0; j--) {
-                    const conn = connections[j];
-                    const neededLocalIndex = assertDef(locals.get(conn.nodeId));
-                    flowChunk.instructions.push(
-                        data(neededLocalIndex),
-                        op(ByteOperation.getlocal),
-                    );
-                    if (conn.accessor != null) {
-                        flowChunk.instructions.push(
-                            data(conn.accessor),
-                            data(this.useHelper('obj_get')),
-                            op(ByteOperation.thunk),
-                        );
-                    }
-                }
 
-                if (inputRowSignature.rowType === 'input-list') {
-                    flowChunk.instructions.push(
-                        data(connections.length),
-                        op(ByteOperation.apack),
-                        data(this.useHelper('wrap_value')),
-                        op(ByteOperation.thunk),
-                    );
-                }
-                if (inputRowSignature.rowType === 'input-tuple') {
-                    // verify number args
-                    const nodeParamTuple = node.specifier!.parameter! as TupleTypeSpecifier;
-                    const argTupleSpec = nodeParamTuple.elements[rowIndex] as TupleTypeSpecifier;
-                    assertTruthy(connections.length === argTupleSpec.elements.length);
-                    flowChunk.instructions.push(
-                        data(connections.length),
-                        op(ByteOperation.apack),
-                        data(this.useHelper('wrap_value')),
-                        op(ByteOperation.thunk),
-                    );
-                }
-                if (inputRowSignature.rowType === 'input-simple') {
-                    assertTruthy(connections.length === 1);
-                }
-                if (inputRowSignature.rowType === 'input-variable') {
-                    if (connections.length == 0) {
-                        flowChunk.instructions.push(
-                            data(this.useConstant(rowContext.displayValue)),
-                            op(ByteOperation.thunk),
-                        );
-                    } else {
-                        assertTruthy(connections.length === 1);
-                    }
-                }
-                if (inputRowSignature.rowType === 'input-function') {
-                    if (connections.length == 0) {
-                        const referencedFlowId = rowContext.ref?.value;
-                        const hackedLabel = `global:${referencedFlowId}`;
+                assertNever('fix') as void;
 
-                        // const test = findEnvironmentSignature(flow.flowEnvironment, referencedFlowId)?.byteCode as any;
-                        // this.addChunk(hackedLabel, test.chunk);
+                // for (let j = connections.length - 1; j >= 0; j--) {
+                //     const conn = connections[j];
+                //     const neededLocalIndex = assertDef(locals.get(conn.nodeId));
+                //     flowChunk.instructions.push(
+                //         data(neededLocalIndex),
+                //         op(ByteOperation.getlocal),
+                //     );
+                //     if (conn.accessor != null) {
+                //         flowChunk.instructions.push(
+                //             data(conn.accessor),
+                //             data(this.useHelper('obj_get')),
+                //             op(ByteOperation.thunk),
+                //         );
+                //     }
+                // }
+
+                // if (inputRowSignature.rowType === 'input-list') {
+                //     flowChunk.instructions.push(
+                //         data(connections.length),
+                //         op(ByteOperation.apack),
+                //         data(this.useHelper('wrap_value')),
+                //         op(ByteOperation.thunk),
+                //     );
+                // }
+                // if (inputRowSignature.rowType === 'input-tuple') {
+                //     // verify number args
+                //     const nodeParamTuple = node.specifier!.parameter! as TupleTypeSpecifier;
+                //     const argTupleSpec = nodeParamTuple.elements[rowIndex] as TupleTypeSpecifier;
+                //     assertTruthy(connections.length === argTupleSpec.elements.length);
+                //     flowChunk.instructions.push(
+                //         data(connections.length),
+                //         op(ByteOperation.apack),
+                //         data(this.useHelper('wrap_value')),
+                //         op(ByteOperation.thunk),
+                //     );
+                // }
+                // if (inputRowSignature.rowType === 'input-simple') {
+                //     assertTruthy(connections.length === 1);
+                // }
+                // if (inputRowSignature.rowType === 'input-variable') {
+                //     if (connections.length == 0) {
+                //         flowChunk.instructions.push(
+                //             data(this.useConstant(rowContext.displayValue)),
+                //             op(ByteOperation.thunk),
+                //         );
+                //     } else {
+                //         assertTruthy(connections.length === 1);
+                //     }
+                // }
+                // if (inputRowSignature.rowType === 'input-function') {
+                //     if (connections.length == 0) {
+                //         const referencedFlowId = rowContext.ref?.value;
+                //         const hackedLabel = `global:${referencedFlowId}`;
+
+                //         // const test = findEnvironmentSignature(flow.flowEnvironment, referencedFlowId)?.byteCode as any;
+                //         // this.addChunk(hackedLabel, test.chunk);
                         
-                        flowChunk.instructions.push(
-                            data(this.useConstant(hackedLabel)),
-                            op(ByteOperation.thunk),
-                        );
-                    } else {
-                        assertTruthy(connections.length === 1);
-                    }
-                }
+                //         flowChunk.instructions.push(
+                //             data(this.useConstant(hackedLabel)),
+                //             op(ByteOperation.thunk),
+                //         );
+                //     } else {
+                //         assertTruthy(connections.length === 1);
+                //     }
+                // }
             }
 
             const nextLocalIndex = localsCounter++;

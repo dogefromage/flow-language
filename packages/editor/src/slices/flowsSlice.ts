@@ -2,7 +2,6 @@ import * as lang from "@fluss/language";
 import { createSlice } from "@reduxjs/toolkit";
 import { Draft, enableMapSet } from "immer";
 import { useCallback } from "react";
-import { v4 as uuidv4 } from "uuid";
 import { selectDocument } from "../redux/stateHooks";
 import { RootState } from "../redux/store";
 import { FlowsSliceState, UndoAction, Vec2, defaultFlows, flowsIdRegex, listItemRegex } from "../types";
@@ -25,10 +24,10 @@ function getNode(s: Draft<FlowsSliceState>, a: { payload: { flowId: string, node
 function removeConnectionsToNodes(g: lang.FlowGraph, nodes: Set<string>) {
     for (const node of Object.values(g.nodes)) {
         for (const [rowId, rowState] of Object.entries(node.rowStates)) {
-            for (let i = rowState.connections.length - 1; i >= 0; i--) {
-                const conn = rowState.connections[i];
+            for (const key of Object.keys(rowState.connections)) {
+                const conn = rowState.connections[key];
                 if (nodes.has(conn.nodeId)) {
-                    rowState.connections.splice(i, 1);
+                    delete rowState.connections[key];
                 }
             }
         }
@@ -45,14 +44,27 @@ function generateAlphabeticalId(index: number) {
 
 const initialState: FlowsSliceState = { ...defaultFlows };
 
-function findUniquePortId<T extends { id: string }>(ports: T[]) {
-    for (let i = 0; true; i++) {
-        let id = i.toString(36);
-        if (ports.find(p => p.id == id) == null) {
-            return id;
+// function findUniquePortId<T extends { id: string }>(ports: T[]) {
+//     for (let i = 0; true; i++) {
+//         let id = i.toString(36);
+//         if (ports.find(p => p.id == id) == null) {
+//             return id;
+//         }
+//     }
+// }
+
+function listConnectionsToArr(obj: Record<string, lang.FlowConnection>) {
+    const arr: lang.FlowConnection[] = [];
+    for (const key of Object.keys(obj)) {
+        if (key.match(/^\d+$/)) {
+            arr[parseInt(key)] = obj[key];
         }
     }
+    // filter holes
+    const unholy = arr.filter(x => x != null);
+    return unholy;
 }
+
 type ListedState = lang.InputRowSignature | lang.GenericTag;
 type RowSignature = lang.InputRowSignature | lang.OutputRowSignature;
 
@@ -157,11 +169,11 @@ export const flowsSlice = createSlice({
                 return console.error(`Could not find node ${a.payload.nodeId}`);
             }
             // init default
-            node.rowStates[a.payload.rowId] ||= { connections: [], value: null };
+            node.rowStates[a.payload.rowId] ||= { connections: {}, value: null, initializer: 'first' };
             // set value
             node.rowStates[a.payload.rowId].value = a.payload.rowValue;
         },
-        addLink: (s: Draft<FlowsSliceState>, a: UndoAction<{
+        addConnection: (s: Draft<FlowsSliceState>, a: UndoAction<{
             flowId: string,
             locations: [lang.JointLocation, lang.JointLocation],
         }>) => {
@@ -182,12 +194,9 @@ export const flowsSlice = createSlice({
                 .find(l => l.direction === 'input') as lang.InputJointLocation | undefined;
             const outputLocation = resolvedLocations
                 .find(l => l.direction === 'output') as lang.OutputJointLocation | undefined;
-            if (!inputLocation || !outputLocation) {
-                return console.error(`Must provide both input and output location.`);
-            }
-
-            if (inputLocation.nodeId === outputLocation.nodeId) {
-                return console.error(`Cannot create link with both sides on same node.`);
+            if (!inputLocation || !outputLocation ||
+                inputLocation.nodeId === outputLocation.nodeId) {
+                return;
             }
 
             const inputNode = getNode(s, {
@@ -199,20 +208,25 @@ export const flowsSlice = createSlice({
             if (!inputNode) {
                 return console.error(`Couldn't find input node.`);
             }
-
-            inputNode.rowStates[inputLocation.rowId] ||= { connections: [], value: null };
-            const connections = inputNode.rowStates[inputLocation.rowId]!.connections;
-            const setIndex = Math.max(0, Math.min(inputLocation.jointIndex, connections.length));
-            connections[setIndex] = {
+            const newConn: lang.FlowConnection = {
                 nodeId: outputLocation.nodeId,
                 accessor: outputLocation.accessor,
-            }
+            };
+
+            inputNode.rowStates[inputLocation.rowId] ||= { connections: {}, value: null, initializer: 'first' };
+            const rs = inputNode.rowStates[inputLocation.rowId];
+
+            rs.initializer = inputLocation.initializer ?? rs.initializer;
+            rs.connections[inputLocation.accessor] = newConn;
         },
-        removeEdge: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, input: lang.InputJointLocation }>) => {
+        removeConnection: (s: Draft<FlowsSliceState>,
+            a: UndoAction<{ flowId: string, input: lang.InputJointLocation }>) => {
             const g = getFlow(s, a);
             if (!g) return;
-            const { nodeId, rowId, jointIndex } = a.payload.input;
-            g.nodes[nodeId]?.rowStates[rowId]?.connections.splice(jointIndex, 1);
+            const { nodeId, rowId, accessor } = a.payload.input;
+            const nodeState = g.nodes[nodeId]?.rowStates[rowId];
+            if (!nodeState) return;
+            delete nodeState.connections[accessor];
         },
         addListItem: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, itemId: string, prop: 'inputs' | 'generics' }>) => {
             const g = getFlow(s, a);
@@ -304,8 +318,8 @@ export const {
     removeNodes: flowsRemoveNodes,
     positionNode: flowsPositionNode,
     moveSelection: flowsMoveSelection,
-    addLink: flowsAddLink,
-    removeEdge: flowsRemoveEdge,
+    addConnection: flowsAddConnection,
+    removeConnection: flowsRemoveConnection,
     setRowValue: flowsSetRowValue,
     // META LIST CRUD
     addListItem: flowsAddListItem,

@@ -3,6 +3,18 @@ import { Obj } from "../types/utilTypes";
 import { TypeTreePath, TypeSystemException } from "./exceptionHandling";
 import { resolveTypeAlias } from "./resolution";
 
+export function checkElementOfType(specifier: TypeSpecifier, value: InitializerValue, env: FlowEnvironment) {
+    try {
+        assertElementOfType(specifier, value, env);
+    } catch (e) {
+        if (e instanceof TypeSystemException) {
+            return e.data;
+        } else {
+            throw e;
+        }
+    }
+}
+
 export function assertElementOfType(specifier: TypeSpecifier, value: InitializerValue, env: FlowEnvironment) {
     return _assertElementOfType(new TypeTreePath(), specifier, value, env);
 }

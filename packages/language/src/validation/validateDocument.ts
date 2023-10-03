@@ -1,7 +1,7 @@
 import { baseEnvironmentContent } from "../content/baseEnvironment";
 import { createEnvironment, pushContent } from "../core/environment";
 import { createAnyType, createMapType } from "../typeSystem";
-import { ByteInstruction, ByteOperation, FlowDocument, FlowEnvironmentContent, FlowSignature, GenericTag, InputRowSignature, OutputRowSignature, byteCodeConstructors } from "../types";
+import { ByteInstruction, ByteOperation, FlowDocument, FlowEnvironmentContent, FlowSignature, GenericParameter, InputRowSignature, OutputRowSignature, byteCodeConstructors } from "../types";
 import { DocumentProblem, FlowDocumentContext, FlowGraphContext } from "../types/context";
 import { Obj } from "../types/utilTypes";
 import { mem } from "../utils/functional";
@@ -55,7 +55,7 @@ const makeFlowSignaturesContent = mem(
 
 const generateFlowSyntaxLayer = mem(generateFlowSyntaxLayerInitial);
 function generateFlowSyntaxLayerInitial(
-    generics: GenericTag[],
+    generics: GenericParameter[],
     flowInputs: InputRowSignature[],
     flowOutput: OutputRowSignature | null,
 ): FlowEnvironmentContent {
@@ -102,9 +102,8 @@ function generateFlowSyntaxLayerInitial(
         inputs: outputInputs,
         output: {
             id: 'output',
-            rowType: 'output-simple',
+            rowType: 'output-hidden',
             specifier: createAnyType(),
-            hidden: true,
         },
         byteCode: { type: 'inline', instructions: [] },
     }

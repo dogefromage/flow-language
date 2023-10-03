@@ -69,9 +69,12 @@ export interface GenericTypeInference {
     resolvedSpecifier: TypeSpecifier;
 }
 
+export type RowDisplay = 'hidden' | 'simple' | 'initializer' | 'destructured';
+
 export interface RowContext {
     ref?: RowState;
-    displayValue?: InitializerValue;
+    display: RowDisplay;
+    value?: InitializerValue;
     problems: RowProblem[];
 }
 
@@ -122,10 +125,10 @@ interface IncompatibleArgumentType {
 interface InvalidValue {
     type: 'invalid-value';
     message: string;
-    typeProblem: TypeSystemExceptionData;
+    typeProblem?: TypeSystemExceptionData;
 }
-interface InvalidAccessor {
-    type: 'invalid-accessor';
+interface InvalidConnection {
+    type: 'invalid-connection';
     message: string;
 }
 export type RowProblem =
@@ -133,4 +136,4 @@ export type RowProblem =
     | RequiredParameter
     | IncompatibleArgumentType
     | InvalidValue
-    | InvalidAccessor
+    | InvalidConnection

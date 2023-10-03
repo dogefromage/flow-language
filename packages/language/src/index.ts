@@ -11,13 +11,13 @@ export {
 } from './core/environment';
 
 export {
-    createMissingType,
     createAnyType,
     createPrimitiveType,
     createListType,
     createTupleType,
     createFunctionType,
     createMapType,
+    getSignatureFunctionType,
 } from './typeSystem';
 
 export {
@@ -34,3 +34,5 @@ export {
 export {
     StackMachine,
 } from './byteCode/stackMachine';
+
+export * as utils from './utils/functional';

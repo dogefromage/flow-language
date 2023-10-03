@@ -1,18 +1,14 @@
 import { FlowSignature } from "../types/signatures";
-import { AnyTypeSpecifier, FunctionTypeSpecifier, ListTypeSpecifier, MapTypeSpecifier, MissingTypeSpecifier, PrimitiveTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
+import { AnyTypeSpecifier, FunctionTypeSpecifier, GenericTypeSpecifier, ListTypeSpecifier, MapTypeSpecifier, PrimitiveTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
 import { assertTruthy } from "../utils";
 import { ListCache } from "../utils/ListCache";
 import { always, mem } from "../utils/functional";
 
 export const typeSystemCache = new ListCache(3037);
 
-const createConstantType = mem(
-    <T extends string>(name: T) => ({ type: name }),
-    typeSystemCache,
-);
-
-export const createMissingType = always<MissingTypeSpecifier>(createConstantType('missing'));
-export const createAnyType = always<AnyTypeSpecifier>(createConstantType('any'));
+const createConstantTypeSingle = <T>(name: T) => ({ type: name });
+// export const createMissingType = always<MissingTypeSpecifier>(createConstantTypeSingle('missing'));
+export const createAnyType = always<AnyTypeSpecifier>(createConstantTypeSingle('any'));
 
 export const createPrimitiveType = mem(
     (name: string): PrimitiveTypeSpecifier => ({ type: 'primitive', name }),
@@ -80,21 +76,22 @@ export const memoizeTypeStructure = mem(<T extends TypeSpecifier>(X: T): T => {
             ) as T;
         case 'primitive':
             return createPrimitiveType(X.name) as T;
-        case 'missing':
+        // case 'missing':
         case 'any':
-            return createConstantType(X.type) as T;
+            return createConstantTypeSingle(X.type) as T;
         default:
             throw new Error(`Unknown type "${(X as any).type}"`);
     }
 }, typeSystemCache);
 
-export function getSignatureFunctionType(signature: FlowSignature) {
-    return memoizeTypeStructure(
-        createFunctionType(
+export function getSignatureFunctionType(signature: FlowSignature): GenericTypeSpecifier<FunctionTypeSpecifier> {
+    return {
+        generics: signature.generics,
+        specifier: createFunctionType(
             createTupleType(
                 ...signature.inputs.map(s => s.specifier)
             ),
-            signature.output?.specifier || createMissingType(),
+            signature.output?.specifier || createAnyType(),
         )
-    );
+    };
 }

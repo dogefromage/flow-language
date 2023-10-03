@@ -3,7 +3,7 @@ import React, { Fragment, PropsWithChildren } from 'react';
 import styled from 'styled-components';
 import { Bold } from '../styles/common';
 import { flowRowTypeNames } from '../utils/flows';
-import { formatSpecifier } from '../utils/typeFormatting';
+import { formatSpecifier, formatSpecifierWithGenerics } from '../utils/typeFormatting';
 import { RowComponentProps } from './FlowNodeRowComponents';
 
 const ToolTipWrapperDiv = styled.div`
@@ -41,30 +41,28 @@ const ToolTipSection = styled.div`
 
 
 const colors = {
-    'type': '#5effe7',
-    'alias': '#00ff00',
-    'rowType': '#ffcc5e',
-    'specifier': '#5effe7',
-    'problem': '#ff3463',
-    'typeProblemMessage': '#ff3463',
+    title:              '#ffcc5e',
+    specifier:          '#5effe7',
+    type:               '#5effe7',
+    alias:              '#b7ff00',
+    problem:            '#ff3463',
+    typeProblemMessage: '#ff3463',
 }
 
-
-const FlowNodeRowContextToolTip = (props: RowComponentProps) => {
+export const FlowNodeRowContextToolTip = (props: RowComponentProps) => {
     const { context, type, row, env } = props;
-
     return (
         <ToolTipWrapperDiv>
             <ToolTipSection>
                 <p>
                     Row Type:&nbsp;
-                    <Bold $color={colors['rowType']}>
+                    <Bold $color={colors.title}>
                         {flowRowTypeNames[row.rowType]}
                     </Bold>
                 </p>
                 <p>
                     Data Type:&nbsp;
-                    <Bold $color={colors['specifier']}>
+                    <Bold $color={colors.specifier}>
                         {formatSpecifier(type, env)}
                     </Bold>
                 </p>
@@ -81,24 +79,20 @@ const FlowNodeRowContextToolTip = (props: RowComponentProps) => {
     );
 }
 
-export default FlowNodeRowContextToolTip;
-
-
 interface ProblemProps {
     problem: lang.RowProblem;
 }
 
 const FlowNodeRowProblemMessage = ({ problem }: PropsWithChildren<ProblemProps>) => {
-
     return (<>
         <ToolTipSection>
             <p>
-                <Bold $color={colors['problem']}>
+                <Bold $color={colors.problem}>
                     {problem.message}
                 </Bold>
             </p>
         </ToolTipSection>
-        <TypeSubProblem problem={problem} />
+        <TypeProblemLocation problem={problem} />
     </>);
 }
 
@@ -106,15 +100,16 @@ const PreP = styled.p`
     font-weight: bold;
     white-space: pre;
 `;
-
 const Col = styled.span<{ $color?: string }>`
     ${({ $color }) => $color && `color: ${$color};`}
 `;
 
-const TypeSubProblem = ({ problem }: PropsWithChildren<ProblemProps>) => {
+const TypeProblemLocation = ({ problem }: PropsWithChildren<ProblemProps>) => {
     if (problem.type !== 'incompatible-argument-type' &&
         problem.type !== 'invalid-value'
     ) return null;
+
+    if (problem.typeProblem == null) return null;
     
     const lines: React.ReactNode[] = [];
     let indent = '';
@@ -139,7 +134,7 @@ const TypeSubProblem = ({ problem }: PropsWithChildren<ProblemProps>) => {
         lines.push(<br/>)
     }
     lines.push(
-        <Col $color={colors['typeProblemMessage']}>{ indent + problem.typeProblem.message }</Col>
+        <Col $color={colors.typeProblemMessage}>{ indent + problem.typeProblem.message }</Col>
     );
 
     return (<>
@@ -152,4 +147,47 @@ const TypeSubProblem = ({ problem }: PropsWithChildren<ProblemProps>) => {
             </PreP>
         </ToolTipSection>
     </>);
+}
+
+interface FlowNodeHeaderToolTipProps {
+    signature: lang.FlowSignature;
+    context: lang.FlowNodeContext;
+    env: lang.FlowEnvironment;
+}
+export const FlowNodeHeaderToolTip = ({ signature, context, env }: FlowNodeHeaderToolTipProps) => {
+    return (
+        <ToolTipWrapperDiv>
+            <ToolTipSection>
+                <p>
+                    Node:&nbsp;
+                    <Bold $color={colors.title}>
+                        #{context.ref.id}
+                    </Bold>
+                </p>
+                <p>
+                    Type Signature:&nbsp;
+                    <Bold $color={colors.specifier}>
+                        {formatSpecifierWithGenerics(
+                            lang.getSignatureFunctionType(signature), 
+                            env, 
+                            signature.generics
+                        )}
+                    </Bold>
+                </p>
+                <p>
+                    Infered Type:&nbsp;
+                    <Bold $color={colors.alias}>
+                        {formatSpecifier(
+                            context.specifier || lang.createAnyType(),
+                            env,
+                        )}
+                    </Bold>
+                </p>
+            </ToolTipSection>
+            {
+                signature.description &&
+                <p>{ signature.description }</p>
+            }
+        </ToolTipWrapperDiv>
+    );
 }

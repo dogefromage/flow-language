@@ -2,11 +2,14 @@ import { GenericTag, InputRowSignature, OutputRowSignature } from "./signatures"
 import { InitializerValue } from "./typeSystem";
 import { Obj, Vec2 } from "./utilTypes";
 
+export type RowInitializerType = 'list-like' | 'map-like' | 'function' | 'first';
+
 export interface InputJointLocation {
     direction: 'input';
     nodeId: string;
     rowId: string;
     accessor: string;
+    initializer?: RowInitializerType;
 }
 export interface OutputJointLocation {
     direction: 'output';
@@ -22,6 +25,7 @@ export interface FlowConnection {
 }
 
 export interface RowState {
+    initializer: RowInitializerType;
     connections: Obj<FlowConnection>;
     value: InitializerValue | null;
 }

@@ -4,7 +4,7 @@ import { selectPanelState } from "../redux/panelStateEnhancer";
 import { useAppDispatch, useAppSelector } from "../redux/stateHooks";
 import { AppDispatch } from "../redux/store";
 import { selectFlowContext } from "../slices/contextSlice";
-import { flowsAddLink, flowsAddNode } from "../slices/flowsSlice";
+import { flowsAddConnection, flowsAddNode } from "../slices/flowsSlice";
 import { selectSingleMenu } from "../slices/menusSlice";
 import { flowEditorSetStateNeutral } from "../slices/panelFlowEditorSlice";
 import { FLOW_NODE_MIN_WIDTH } from "../styles/flowStyles";
@@ -190,12 +190,13 @@ function createAddFlowAction(flowId: string, signature: FlowSignature, addNodeSt
 
     let newLocation: JointLocation = drag.fromJoint.direction === 'input' ?
         ({ nodeId: '*', direction: 'output', }) :
-        ({ nodeId: '*', rowId: compatibleRowId, direction: 'input', jointIndex: 0 });
+        ({ nodeId: '*', rowId: compatibleRowId, direction: 'input', accessor: '0' });
 
-    dispatch(flowsAddLink({
+    dispatch(flowsAddConnection({
         flowId,
         locations: [drag.fromJoint, newLocation],
         undo: { desc: 'Added link to newly created node.' },
+        // strategy: 'static',
     }));
 }
 

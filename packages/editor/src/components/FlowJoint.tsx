@@ -2,7 +2,7 @@ import { useDraggable, useDroppable } from '@fluss/interactive';
 import * as lang from '@fluss/language';
 import React, { useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { flowsAddLink } from '../slices/flowsSlice';
+import { flowsAddConnection } from '../slices/flowsSlice';
 import { flowEditorSetStateDraggingLink, flowEditorSetStateNeutral, selectFlowEditorPanelActionState } from '../slices/panelFlowEditorSlice';
 import { FlowJointDiv } from '../styles/flowStyles';
 import { getJointLocationKey, getJointStyling } from '../utils/flows';
@@ -19,7 +19,7 @@ interface Props {
 export const DRAG_JOIN_DND_TAG = `drag-join`;
 export const FLOW_JOINT_TARGET_CLASS = `joint-target`;
 
-const FlowJoint = ({ panelId, flowId, location, env, type, additional }: Props) => {
+const FlowJoint = ({ panelId, flowId, location, env, type, additional, }: Props) => {
     const dispatch = useAppDispatch();
     const actionState = useAppSelector(selectFlowEditorPanelActionState(panelId));
 
@@ -57,10 +57,10 @@ const FlowJoint = ({ panelId, flowId, location, env, type, additional }: Props) 
         leave: droppableHandler,
         drop: e => {
             if (!isDroppableTarget) return;
-            dispatch(flowsAddLink({
+            dispatch(flowsAddConnection({
                 flowId,
                 locations: [location, actionState.draggingContext.fromJoint],
-                undo: { desc: `Linked two nodes in active flow.` }
+                undo: { desc: `Linked two nodes in active flow.` },
             }));
             dispatch(flowEditorSetStateNeutral({
                 panelId,

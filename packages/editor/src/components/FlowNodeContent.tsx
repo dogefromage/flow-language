@@ -3,6 +3,8 @@ import React from 'react';
 import { FlowNodeNameWrapper, FlowNodeRowNameP } from '../styles/flowStyles';
 import { FlowInputRowSwitch, FlowOutputRowSwitch } from './FlowNodeRowComponents';
 import { formatFlowLabel } from '../utils/flows';
+import { FlowNodeErrorWrapper, FlowNodeRowErrorWrapper } from './FlowNodeErrorWrapper';
+import { FlowNodeHeaderToolTip } from './FlowNodeToolTips';
 
 interface Props {
     panelId: string;
@@ -12,12 +14,9 @@ interface Props {
     env: lang.FlowEnvironment;
 }
 
-const FlowNodeContent = ({ panelId, flowId, context, signature, env }: Props) => {
-    const commonProps = {
-        panelId,
-        flowId,
-        nodeId: context.ref.id,
-    };
+const FlowNodeContent = (props: Props) => {
+    const { panelId, flowId, context, signature, env } = props;
+    const commonProps = { panelId, flowId, nodeId: context.ref.id };
 
     let inputType: lang.TupleTypeSpecifier | undefined;
     if (typeof context.specifier?.parameter !== 'string' && context.specifier?.parameter.type === 'tuple') {
@@ -26,15 +25,15 @@ const FlowNodeContent = ({ panelId, flowId, context, signature, env }: Props) =>
     const outputType = context.specifier?.output;
 
     return (<>
-        <FlowNodeNameWrapper
-            $backColor={signature.attributes.color}
-        >
-            <FlowNodeRowNameP
-                $align='left'
-                $bold={true}
+        <FlowNodeNameWrapper $backColor={signature.attributes.color}>
+            <FlowNodeErrorWrapper
+                hasErrors={!!context.problems.length}
+                tooltip={<FlowNodeHeaderToolTip env={env} context={context} signature={signature} />}
             >
-                {formatFlowLabel(signature.id)}
-            </FlowNodeRowNameP>
+                <FlowNodeRowNameP $align='left' $bold={true}>
+                    {formatFlowLabel(signature.id)}
+                </FlowNodeRowNameP>
+            </FlowNodeErrorWrapper>
         </FlowNodeNameWrapper>
         <FlowOutputRowSwitch
             {...commonProps}

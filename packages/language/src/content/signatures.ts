@@ -1,5 +1,5 @@
 import { createAnyType, createFunctionType, createListType, createMapType } from "../typeSystem";
-import { AnonymousFlowSignature, DestructuredOutputRowSignature, FunctionInputRowSignature, FunctionTypeSpecifier, GenericTag, ListInputRowSignature, OutputRowSignature, SimpleInputRowSignature, TypeSpecifier, VariableInputRowSignature } from "../types";
+import { AnonymousFlowSignature, DestructuredOutputRowSignature, FunctionTypeSpecifier, GenericParameter, ListTypeSpecifier, OutputRowSignature, SimpleInputRowSignature, TupleTypeSpecifier, TypeSpecifier, VariableInputRowSignature } from "../types";
 import { ByteInstruction, ByteOperation, CallableChunk, OperationByteInstruction, byteCodeConstructors } from "../types/byteCode";
 import { SignatureDefinition } from "../types/local";
 
@@ -7,66 +7,62 @@ const variable = {
     string: (id: string, defaultValue: string): VariableInputRowSignature => ({
         id,
         rowType: 'input-variable',
-        // label: autoName(id),
         specifier: 'string',
         defaultValue,
     }),
     number: (id: string, defaultValue: number): VariableInputRowSignature => ({
         id,
         rowType: 'input-variable',
-        // label: autoName(id),
         specifier: 'number',
         defaultValue,
     }),
     boolean: (id: string, defaultValue: boolean): VariableInputRowSignature => ({
         id,
         rowType: 'input-variable',
-        // label: autoName(id),
         specifier: 'boolean',
         defaultValue,
+    }),
+    list: (id: string, specifier: ListTypeSpecifier | string): VariableInputRowSignature => ({
+        id,
+        rowType: 'input-variable',
+        specifier,
+        defaultValue: null,
+    }),
+    tuple: (id: string, specifier: TupleTypeSpecifier | string): VariableInputRowSignature => ({
+        id,
+        rowType: 'input-variable',
+        specifier,
+        defaultValue: null,
+    }),
+    func: (id: string, specifier: FunctionTypeSpecifier): VariableInputRowSignature => ({
+        id,
+        rowType: 'input-variable',
+        specifier,
+        defaultValue: null,
     }),
 };
 const simple = {
     string: (id: string): SimpleInputRowSignature => ({
         id,
         rowType: 'input-simple',
-        // label: autoName(id),
         specifier: 'string',
     }),
     number: (id: string): SimpleInputRowSignature => ({
         id,
         rowType: 'input-simple',
-        // label: autoName(id),
         specifier: 'number',
     }),
     boolean: (id: string): SimpleInputRowSignature => ({
         id,
         rowType: 'input-simple',
-        // label: autoName(id),
         specifier: 'boolean',
     }),
     generic: (id: string, specifier: TypeSpecifier): SimpleInputRowSignature => ({
         id,
         rowType: 'input-simple',
-        // label: autoName(id),
         specifier,
     }),
 };
-const list = {
-    generic: (id: string, listSpecifier: TypeSpecifier): ListInputRowSignature => ({
-        id,
-        rowType: 'input-list',
-        // label: autoName(id),
-        specifier: listSpecifier,
-    }),
-}
-const func = (id: string, specifier: FunctionTypeSpecifier | string): FunctionInputRowSignature => ({
-    id,
-    rowType: 'input-function',
-    // label: autoName(id),
-    specifier,
-});
-
 
 const output = {
     string: (id: string): OutputRowSignature => ({
@@ -99,7 +95,7 @@ const output = {
         specifier,
     }),
 };
-const generic = (name: string, constraint: TypeSpecifier | null = null): GenericTag => ({ id: name, constraint });
+const generic = (name: string, constraint: TypeSpecifier | null = null): GenericParameter => ({ name: name, constraint });
 
 const { op, data, chunk } = byteCodeConstructors;
 
@@ -306,9 +302,9 @@ localDefinitions.push({
         id: 'function',
         attributes: { category: 'Functions' },
         description: null,
-        generics: [ generic('T', createFunctionType(createAnyType(), createAnyType())) ],
-        inputs: [func('_function', 'T')],
-        output: output.generic('output', 'T'),
+        generics: [ generic('P'), generic('R') ],
+        inputs: [variable.func('_function', createFunctionType('P', 'R'))],
+        output: output.generic('output', createFunctionType('P', 'R')),
         byteCode: inline([]),
     },
 });
@@ -375,7 +371,7 @@ localDefinitions.push({
         description: null,
         generics: [generic('T')],
         inputs: [
-            list.generic('elements', createListType('T'))
+            variable.list('elements', createListType('T'))
         ],
         output: output.generic('list', createListType('T')),
         byteCode: inline([]),
@@ -507,8 +503,8 @@ localDefinitions.push({
         description: null,
         generics: [generic('P'), generic('R')],
         inputs: [
-            func('_function', createFunctionType('P', 'R')),
-            { id: 'argument', rowType: 'input-tuple', specifier: 'P' },
+            variable.func('_function', createFunctionType('P', 'R')),
+            variable.tuple('_arguments', 'P'),
         ],
         output: output.generic('return_value', 'R'),
         byteCode: callable(2, [
