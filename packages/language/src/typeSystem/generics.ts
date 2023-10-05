@@ -1,205 +1,261 @@
-import {
-    createFunctionType,
-    createListType,
-    createMapType,
-    createTupleType
-} from '.';
-import { isSubsetType } from '..';
-import { FlowEnvironment } from '../types/context';
-import {
-    FunctionTypeSpecifier,
-    InstantiationConstraints,
-    ListTypeSpecifier,
-    MapTypeSpecifier,
-    TupleTypeSpecifier,
-    TypeSpecifier
-} from '../types/typeSystem';
-import { Obj } from '../types/utilTypes';
-import { zipInner } from '../utils/functional';
-import { TypeTreePath } from './exceptionHandling';
-import { resolveTypeAlias } from './resolution';
+import { createListType, createTupleType, createMapType, createFunctionType, createAnyType, createTemplatedType } from ".";
+import { FlowEnvironment } from "../types/context";
+import { TypeSpecifier, InstantiationConstraints, ListTypeSpecifier, TupleTypeSpecifier, MapTypeSpecifier, FunctionTypeSpecifier, TemplatedTypeSpecifier, GenericParameter } from "../types/typeSystem";
+import { Obj } from "../types/utilTypes";
+import { mapObj, zipInner } from "../utils/functional";
+import { isSubsetType } from "./comparison";
+import { TypeSystemException, TypeTreePath } from "./exceptionHandling";
+import { resolveTypeAlias } from "./resolution";
 
-type GenericsMap = Obj<TypeSpecifier>;
+type FreeGenericsMap = Obj<TypeSpecifier | null>;
+type InstantiationMap = Obj<TypeSpecifier>;
 
-/**
- * DFS of type tree, taking first instance of generic type which hasn't appeared yet:
- * 
- * obj {
- *  a: T[]    // <-- T inferred
- *  b: T[]    // <-- T known, ignored
- * }
- */
-export const inferGenerics = (
-    X: TypeSpecifier,
-    G: TypeSpecifier,
-    genericConstraints: GenericsMap,
-    env: FlowEnvironment,
-) => {
-    const instantiated = inferGenericsSwitch(
-        new TypeTreePath(),
-        X, G, genericConstraints, env,
-    );
-    return combineInstantiation(
-        instantiated,
-        genericConstraints,
-    )
-}
-
-
-
-const inferGenericsSwitch = (
+export function mapTypeInference(
     path: TypeTreePath,
-    X: TypeSpecifier,
-    G: TypeSpecifier,
-    generics: GenericsMap,
-    env: FlowEnvironment,
-): InstantiationConstraints => {
-    if (typeof G === 'string' && generics[G] != null) {
-        const constraintType = generics[G];
-        // // missing is passed if no row connected. this ignores unconnected rows
-        // const isUseless = typeof X !== 'string' && X.type === 'missing';
-        // if (isUseless) {
-        //     return {};
-        // }
+    initialType: TypeSpecifier,
+    restrictingType: TypeSpecifier,
+    freeGenerics: FreeGenericsMap,
+    env: FlowEnvironment
+): InstantiationMap {
+    // debugger
 
+    if (typeof initialType === 'string' && typeof freeGenerics[initialType] !== 'undefined') {
+        const constrainingType = freeGenerics[initialType];
         // if constraint is not fullfilled, return constraint such that comparison fails
-        const constraintsNotFullfilled = constraintType != null && !isSubsetType(X, constraintType, env);
+        const constraintsNotFullfilled = constrainingType != null && !isSubsetType(restrictingType, constrainingType, env);
         if (constraintsNotFullfilled) {
-            return { [G]: constraintType };
+            return { [initialType]: constrainingType };
         }
-        // valid inference
-        return { [G]: X };
+        // possible mapping
+        return { [initialType]: restrictingType };
     }
 
-    X = resolveTypeAlias(path, X, env);
-    G = resolveTypeAlias(path, G, env);
+    initialType = resolveTypeAlias(path, initialType, env);
+    restrictingType = resolveTypeAlias(path, restrictingType, env);
 
-    // if (G.type === 'union') {
-    //     return G.elements
-    //         .map(Gi => inferGenericsSwitch(path, X, Gi, generics, env))
-    //         .reduce(combineInstantiation, {});
-    // }
+    const pathWithType = path.add({ key: initialType.type, formatting: 'type' });
 
-    const pathWithType = path.add({ key: X.type, formatting: 'type' });
-
-    if (X.type === 'tuple' && G.type === 'list') {
-        return inferGenericsTupleList(pathWithType, X, G, generics, env);
+    if (initialType.type === 'list' && restrictingType.type === 'tuple') {
+        return mapTypeInferenceListTuple(pathWithType,
+            initialType, restrictingType, freeGenerics, env);
     }
 
-    if (X.type !== G.type) {
+    if (initialType.type !== restrictingType.type) {
         return {}; // cannot infer type if objects dont match, ignore
     }
 
-    switch (X.type) {
+    switch (initialType.type) {
         case 'list':
-            return inferGenericsSwitch(path, X.element, (G as ListTypeSpecifier).element, generics, env);
+            return mapTypeInference(pathWithType,
+                initialType.element, (restrictingType as ListTypeSpecifier).element, freeGenerics, env);
         case 'tuple':
-            return inferGenericsTuple(pathWithType, X, G as TupleTypeSpecifier, generics, env);
+            return mapTypeInferenceTuple(pathWithType,
+                initialType, restrictingType as TupleTypeSpecifier, freeGenerics, env);
         case 'map':
-            return inferGenericsMap(pathWithType, X, G as MapTypeSpecifier, generics, env);
+            return mapTypeInferenceMap(pathWithType,
+                initialType, restrictingType as MapTypeSpecifier, freeGenerics, env);
         case 'function':
-            return inferGenericsFunction(pathWithType, X, G as FunctionTypeSpecifier, generics, env);
-        // case 'missing':
+            return mapTypeInferenceFunction(pathWithType,
+                initialType, restrictingType as FunctionTypeSpecifier, freeGenerics, env);
         case 'primitive':
         case 'any':
             return {};
         default:
-            throw new Error(`Unknown type "${(X as any).type}"`);
+            throw new Error(`Unknown type "${(initialType as any).type}"`);
     }
 }
 
-function inferGenericsFunction(path: TypeTreePath, X: FunctionTypeSpecifier, G: FunctionTypeSpecifier, 
-    generics: GenericsMap, env: FlowEnvironment): InstantiationConstraints {
-    return [
-        inferGenericsSwitch(path.add({ key: 'parameter', formatting: 'property' }), X.parameter, G.parameter, generics, env),
-        inferGenericsSwitch(path.add({ key: 'output', formatting: 'property' }), X.output, G.output, generics, env),
-    ].reduce(combineInstantiation, {});
+function mapTypeInferenceListTuple(
+    path: TypeTreePath, initialType: ListTypeSpecifier, restrictingType: TupleTypeSpecifier,
+    freeGenerics: FreeGenericsMap, env: FlowEnvironment
+): InstantiationConstraints {
+    return restrictingType.elements.map((Ri, i) => {
+        const propPath = path.add({ key: i.toString(), formatting: 'property' });
+        return mapTypeInference(propPath, initialType.element, Ri, freeGenerics, env);
+    }).reduce(combineInstantiation, {});
 }
-function inferGenericsTuple(path: TypeTreePath, X: TupleTypeSpecifier, G: TupleTypeSpecifier, 
-    generics: GenericsMap, env: FlowEnvironment): InstantiationConstraints {
-
-    return zipInner(X.elements, G.elements)
-        .map(([Xi, Gi], i) => {
+function mapTypeInferenceTuple(
+    path: TypeTreePath, initialType: TupleTypeSpecifier, restrictingType: TupleTypeSpecifier,
+    freeGenerics: FreeGenericsMap, env: FlowEnvironment
+): InstantiationConstraints {
+    return zipInner(initialType.elements, restrictingType.elements)
+        .map(([initI, restrI], i) => {
             const propPath = path.add({ key: i.toString(), formatting: 'property' });
-            return inferGenericsSwitch(propPath, Xi, Gi, generics, env);
+            return mapTypeInference(propPath, initI, restrI, freeGenerics, env);
         })
         .reduce(combineInstantiation, {});
 }
-function inferGenericsTupleList(path: TypeTreePath, X: TupleTypeSpecifier, G: ListTypeSpecifier, 
-    generics: GenericsMap, env: FlowEnvironment): InstantiationConstraints {
-    return X.elements.map((Xi, i) => {
-            const propPath = path.add({ key: i.toString(), formatting: 'property' });
-            return inferGenericsSwitch(propPath, Xi, G.element, generics, env);
-        })
-        .reduce(combineInstantiation, {});
-}
-function inferGenericsMap(path: TypeTreePath, X: MapTypeSpecifier, G: MapTypeSpecifier, 
-    generics: GenericsMap, env: FlowEnvironment): InstantiationConstraints {
-    const gottenKeys = new Set(Object.keys(X.elements));
+function mapTypeInferenceMap(
+    path: TypeTreePath, initialType: MapTypeSpecifier, restrictingType: MapTypeSpecifier,
+    freeGenerics: FreeGenericsMap, env: FlowEnvironment
+): InstantiationConstraints {
+    const gottenKeys = new Set(Object.keys(restrictingType.elements));
     const instantiations: InstantiationConstraints[] = [];
-    for (const [key, type] of Object.entries(G.elements)) {
+    for (const [key, initProp] of Object.entries(initialType.elements)) {
         const propPath = path.add({ key, formatting: 'property' });
-        const gottenType = X.elements[key];
-        if (gottenType == null) {
+        const restProp = restrictingType.elements[key];
+        if (restProp == null) {
             continue; // dunno
         }
-        instantiations.push(inferGenericsSwitch(propPath, gottenType, type, generics, env));
+        instantiations.push(mapTypeInference(propPath, initProp, restProp, freeGenerics, env));
         gottenKeys.delete(key);
     }
     return instantiations
         .reduce(combineInstantiation, {});
 }
-
-function combineInstantiation(older: InstantiationConstraints, newer: InstantiationConstraints) {
-    return {
-        ...newer,
-        ...older,
-    };
+function mapTypeInferenceFunction(
+    path: TypeTreePath, initialType: FunctionTypeSpecifier, restrictingType: FunctionTypeSpecifier,
+    freeGenerics: FreeGenericsMap, env: FlowEnvironment
+): InstantiationConstraints {
+    return [
+        mapTypeInference(path.add({ key: 'parameter', formatting: 'property' }),
+            initialType.parameter, restrictingType.parameter, freeGenerics, env),
+        mapTypeInference(path.add({ key: 'output', formatting: 'property' }),
+            initialType.output, restrictingType.output, freeGenerics, env),
+    ].reduce(combineInstantiation, {});
 }
 
+function combineInstantiation(older: InstantiationConstraints, newer: InstantiationConstraints) {
+    return { ...newer, ...older };
+}
 
-export function applyInstantiationConstraints(
-    path: TypeTreePath, X: TypeSpecifier, constraints: InstantiationConstraints, env: FlowEnvironment
-): TypeSpecifier {
-    if (typeof X === 'string' && constraints[X] != null) {
-        return constraints[X];
+export function findUsedGenerics(X: TypeSpecifier, possible: Set<string>, found: Set<string>) {
+    if (typeof X === 'string') {
+        if (possible.has(X)) {
+            found.add(X);
+        }
+        return;
     }
-
-    X = resolveTypeAlias(path, X, env);
-
-    const typePath = path.add({ key: X.type, formatting: 'type' });
     switch (X.type) {
+        case 'function':
+            findUsedGenerics(X.parameter, possible, found);
+            findUsedGenerics(X.output, possible, found);
+            return;
+        case 'list':
+            findUsedGenerics(X.element, possible, found);
+            return;
+        case 'map':
+            for (const el of Object.values(X.elements)) {
+                findUsedGenerics(el, possible, found);
+            }
+            return;
+        case 'tuple':
+            for (const el of X.elements) {
+                findUsedGenerics(el, possible, found);
+            }
+            return;
+    }
+}
+
+export function substituteGeneric(X: TypeSpecifier, oldName: string, newType: TypeSpecifier): TypeSpecifier {
+    if (typeof X === 'string') {
+        return X === oldName ? newType : X;
+    }
+    switch (X.type) {
+        case 'function':
+            return createFunctionType(
+                substituteGeneric(X.parameter, oldName, newType),
+                substituteGeneric(X.output, oldName, newType),
+            );
         case 'list':
             return createListType(
-                applyInstantiationConstraints(typePath, X.element, constraints, env)
-            );
-        case 'tuple':
-            return createTupleType(
-                ...X.elements.map((el, i) =>
-                    applyInstantiationConstraints(typePath.add({ key: i.toString(), formatting: 'property' }), el, constraints, env)
-                )
+                substituteGeneric(X.element, oldName, newType),
             );
         case 'map':
             return createMapType(
-                Object.fromEntries(
-                    Object.entries(X.elements).map(([key, prop]) => [
-                        key,
-                        applyInstantiationConstraints(typePath.add({ key, formatting: 'property' }), prop, constraints, env)
-                    ])
-                )
+                mapObj(X.elements, T => substituteGeneric(T, oldName, newType)),
             );
-        case 'function':
-            return createFunctionType(
-                applyInstantiationConstraints(path.add({ key: 'parameter', formatting: 'property' }), 
-                    X.parameter, constraints, env),
-                applyInstantiationConstraints(path.add({ key: 'output', formatting: 'property' }), 
-                    X.output, constraints, env),
+        case 'tuple':
+            return createTupleType(
+                ...X.elements.map(T => substituteGeneric(T, oldName, newType)),
             );
-        // case 'missing':
-        case 'primitive':
-        case 'any':
-            return X;
-        default:
-            throw new Error(`Unknown type "${(X as any).type}"`);
     }
+    return X;
 }
+
+export function closeTemplatedSpecifier<X extends TypeSpecifier>(T: TemplatedTypeSpecifier<X>) {
+    let spec: TypeSpecifier = T.specifier;
+    for (const generic of T.generics) {
+        spec = substituteGeneric(spec, generic.id, generic.constraint || createAnyType());
+    }
+    return spec as X;
+}
+
+export function instantiateTemplatedType<T extends TypeSpecifier>(
+    path: TypeTreePath, templatedType: TemplatedTypeSpecifier<T>,
+    constraintMap: InstantiationMap, env: FlowEnvironment
+) {
+    let generics = templatedType.generics.slice();
+    let finalSpecifier: TypeSpecifier = templatedType.specifier;
+
+    for (const [name, replacer] of Object.entries(constraintMap)) {
+        const pos = generics.findIndex(g => g.id === name);
+        if (pos < 0) {
+            throw new TypeSystemException({ message: `Templated type does not contain generic named '${name}'.`, path });
+        }
+        const generic = generics[pos];
+        generics.splice(pos, 1);
+
+        if (generic.constraint && !isSubsetType(replacer, generic.constraint, env)) {
+            // TODO: if this will be shown to user often, catch path from isSubsetType error and pass on
+            throw new TypeSystemException({ message: `Cannot instantiate generic '${name}'. Constraint not fulfilled.`, path });
+        }
+
+        finalSpecifier = substituteGeneric(finalSpecifier, name, replacer);
+    }
+    return createTemplatedType(
+        generics,
+        finalSpecifier as T,
+    );
+}
+
+
+
+
+
+
+// export function applyInstantiationConstraints(
+//     path: TypeTreePath, X: TypeSpecifier, constraints: InstantiationConstraints, env: FlowEnvironment
+// ): TypeSpecifier {
+//     if (typeof X === 'string' && constraints[X] != null) {
+//         return constraints[X];
+//     }
+
+//     X = resolveTypeAlias(path, X, env);
+
+//     const typePath = path.add({ key: X.type, formatting: 'type' });
+//     switch (X.type) {
+//         case 'list':
+//             return createListType(
+//                 applyInstantiationConstraints(typePath, X.element, constraints, env)
+//             );
+//         case 'tuple':
+//             return createTupleType(
+//                 ...X.elements.map((el, i) =>
+//                     applyInstantiationConstraints(typePath.add({ key: i.toString(), formatting: 'property' }), el, constraints, env)
+//                 )
+//             );
+//         case 'map':
+//             return createMapType(
+//                 Object.fromEntries(
+//                     Object.entries(X.elements).map(([key, prop]) => [
+//                         key,
+//                         applyInstantiationConstraints(typePath.add({ key, formatting: 'property' }), prop, constraints, env)
+//                     ])
+//                 )
+//             );
+//         case 'function':
+//             return createFunctionType(
+//                 applyInstantiationConstraints(path.add({ key: 'parameter', formatting: 'property' }),
+//                     X.parameter, constraints, env),
+//                 applyInstantiationConstraints(path.add({ key: 'output', formatting: 'property' }),
+//                     X.output, constraints, env),
+//             );
+//         // case 'missing':
+//         case 'primitive':
+//         case 'any':
+//             return X;
+//         default:
+//             throw new Error(`Unknown type "${(X as any).type}"`);
+//     }
+// }

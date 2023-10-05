@@ -47,7 +47,7 @@ const ListDestructuring = (props: RowComponentProps<lang.InputRowSignature>) => 
                             nodeId,
                             accessor: index.toString(),
                             rowId: row.id,
-                            initializer: 'list-like',
+                            // initializer: 'list-like',
                         }}
                         env={env}
                     />
@@ -89,7 +89,7 @@ const TupleDestructuring = (props: RowComponentProps<lang.InputRowSignature>) =>
                             nodeId,
                             accessor: index.toString(),
                             rowId: row.id,
-                            initializer: 'list-like',
+                            // initializer: 'list-like',
                         }}
                         env={env}
                     />

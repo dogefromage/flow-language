@@ -40,11 +40,10 @@ export type TypeSpecifier =
     | NonAliasedTypeSpecifier
 
 export interface GenericParameter {
-    name: string;
+    id: string;
     constraint: TypeSpecifier | null;
 }
-
-export interface GenericTypeSpecifier<T extends TypeSpecifier = TypeSpecifier> {
+export interface TemplatedTypeSpecifier<T extends TypeSpecifier = TypeSpecifier> {
     generics: GenericParameter[];
     specifier: T;
 }

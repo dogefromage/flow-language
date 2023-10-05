@@ -1,4 +1,4 @@
-import lang, { GenericTag } from '@fluss/language';
+import lang from '@fluss/language';
 
 export function getSpecifierLabel(X: lang.TypeSpecifier) {
     if (typeof X === 'string') {
@@ -52,15 +52,15 @@ export function formatSpecifier(X: lang.TypeSpecifier, env: lang.FlowEnvironment
     throw new Error(`Unknown type`);
 }
 
-export function formatSpecifierWithGenerics(X: lang.TypeSpecifier, env: lang.FlowEnvironment, generics: GenericTag[]) {
-    const gens = generics.map(g => {
+export function formatSpecifierWithGenerics(T: lang.TemplatedTypeSpecifier, env: lang.FlowEnvironment) {
+    const gens = T.generics.map(g => {
         if (g.constraint != null) {
             return `${g.id} ⊆ ${formatSpecifier(g.constraint, env)}`;
         }
         return g.id;
     });
 
-    const baseSpec = formatSpecifier(X, env);
+    const baseSpec = formatSpecifier(T.specifier, env);
     if (gens.length) {
         return `<${gens.join(', ')}>${baseSpec}`;
     }

@@ -1,4 +1,4 @@
-import { FlowEnvironment, FlowGraph, FlowNode, FlowSignature, TypeSpecifier } from "../types";
+import { FlowEnvironment, FlowGraph, FlowNode, FlowSignature, FunctionTypeSpecifier, TemplatedTypeSpecifier, TypeSpecifier } from "../types";
 import { EdgeColor, FlowEdge, FlowGraphContext } from "../types/context";
 import { deepFreeze } from "../utils";
 import { findDependencies, sortTopologically } from "../utils/algorithms";
@@ -142,21 +142,21 @@ export const validateFlowGraph = mem((
     result.edges = memoizedEdgeObj;
 
     // filling type table bottom-up using topsort
-    let nodeOutputTypesFlat: TypeSpecifier[] = [];
+    let inferredOutputTypesFlat: (TypeSpecifier | string)[] = [];
 
     for (const nodeId of namedTopSort) {
         const node = flow.nodes[nodeId];
         const isUsed = usedNodeIds.has(nodeId);
         
-        const nodeOutputTypes = memoObjectByFlatEntries(...nodeOutputTypesFlat);
-        const nodeResult = validateNode(node, flowEnvironment, nodeOutputTypes, isUsed);
+        const inferredOutputTypes = memoObjectByFlatEntries(...inferredOutputTypesFlat);
+        const nodeResult = validateNode(node, flowEnvironment, inferredOutputTypes, isUsed);
 
         result.nodeContexts[nodeId] = nodeResult;
         if (isUsed) {
             result.criticalSubProblems += nodeResult.criticalSubProblems + nodeResult.problems.length;
         }
-        if (nodeResult.specifier?.output) {
-            nodeOutputTypesFlat.push(nodeId, nodeResult.specifier.output);
+        if (nodeResult.inferredType?.output) {
+            inferredOutputTypesFlat.push(nodeId, nodeResult.inferredType.output);
         }
     }
 

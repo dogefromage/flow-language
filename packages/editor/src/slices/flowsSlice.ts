@@ -65,7 +65,7 @@ function listConnectionsToArr(obj: Record<string, lang.FlowConnection>) {
     return unholy;
 }
 
-type ListedState = lang.InputRowSignature | lang.GenericTag;
+type ListedState = lang.InputRowSignature | lang.GenericParameter;
 type RowSignature = lang.InputRowSignature | lang.OutputRowSignature;
 
 function createRowSignature(id: string, label: string, blueprint: RowSignatureBlueprint) {
@@ -169,7 +169,7 @@ export const flowsSlice = createSlice({
                 return console.error(`Could not find node ${a.payload.nodeId}`);
             }
             // init default
-            node.rowStates[a.payload.rowId] ||= { connections: {}, value: null, initializer: 'first' };
+            node.rowStates[a.payload.rowId] ||= { connections: {}, value: null, /* initializer: 'first' */ };
             // set value
             node.rowStates[a.payload.rowId].value = a.payload.rowValue;
         },
@@ -213,10 +213,10 @@ export const flowsSlice = createSlice({
                 accessor: outputLocation.accessor,
             };
 
-            inputNode.rowStates[inputLocation.rowId] ||= { connections: {}, value: null, initializer: 'first' };
+            inputNode.rowStates[inputLocation.rowId] ||= { connections: {}, value: null, /* initializer: 'first' */ };
             const rs = inputNode.rowStates[inputLocation.rowId];
 
-            rs.initializer = inputLocation.initializer ?? rs.initializer;
+            // rs.initializer = inputLocation.initializer ?? rs.initializer;
             rs.connections[inputLocation.accessor] = newConn;
         },
         removeConnection: (s: Draft<FlowsSliceState>,

@@ -168,9 +168,8 @@ export const FlowNodeHeaderToolTip = ({ signature, context, env }: FlowNodeHeade
                     Type Signature:&nbsp;
                     <Bold $color={colors.specifier}>
                         {formatSpecifierWithGenerics(
-                            lang.getSignatureFunctionType(signature), 
+                            lang.getTemplatedSignatureType(signature), 
                             env, 
-                            signature.generics
                         )}
                     </Bold>
                 </p>
@@ -178,7 +177,7 @@ export const FlowNodeHeaderToolTip = ({ signature, context, env }: FlowNodeHeade
                     Infered Type:&nbsp;
                     <Bold $color={colors.alias}>
                         {formatSpecifier(
-                            context.specifier || lang.createAnyType(),
+                            context.inferredType || lang.createAnyType(),
                             env,
                         )}
                     </Bold>

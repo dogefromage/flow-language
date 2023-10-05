@@ -48,7 +48,7 @@ const FunctionInitializer = (props: RowComponentProps<lang.InputRowSignature>) =
                         nodeId,
                         accessor: '0',
                         rowId: row.id,
-                        initializer: 'function',
+                        // initializer: 'function',
                     }}
                     env={env}
                 />
@@ -83,7 +83,7 @@ const PrimitiveInitializer = (props: RowComponentProps<lang.InputRowSignature>) 
                         nodeId,
                         accessor: '0',
                         rowId: row.id,
-                        initializer: 'first',
+                        // initializer: 'first',
                     }}
                     env={env}
                 />

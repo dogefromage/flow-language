@@ -34,7 +34,7 @@ const variable = {
         specifier,
         defaultValue: null,
     }),
-    func: (id: string, specifier: FunctionTypeSpecifier): VariableInputRowSignature => ({
+    func: (id: string, specifier: FunctionTypeSpecifier | string): VariableInputRowSignature => ({
         id,
         rowType: 'input-variable',
         specifier,
@@ -95,7 +95,7 @@ const output = {
         specifier,
     }),
 };
-const generic = (name: string, constraint: TypeSpecifier | null = null): GenericParameter => ({ name: name, constraint });
+const generic = (name: string, constraint: TypeSpecifier | null = null): GenericParameter => ({ id: name, constraint });
 
 const { op, data, chunk } = byteCodeConstructors;
 
@@ -302,9 +302,9 @@ localDefinitions.push({
         id: 'function',
         attributes: { category: 'Functions' },
         description: null,
-        generics: [ generic('P'), generic('R') ],
-        inputs: [variable.func('_function', createFunctionType('P', 'R'))],
-        output: output.generic('output', createFunctionType('P', 'R')),
+        generics: [generic('F', createFunctionType(createAnyType(), createAnyType()))],
+        inputs: [variable.func('_function', 'F')],
+        output: output.generic('output', 'F'),
         byteCode: inline([]),
     },
 });

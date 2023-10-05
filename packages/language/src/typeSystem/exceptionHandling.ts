@@ -1,7 +1,7 @@
 
 export interface TypeSystemExceptionData {
     message: string;
-    type: 'incompatible-type' | 'invalid-value' | 'required-type' | 'cyclic-definition' | 'unknown-reference';
+    type?: 'incompatible-type' | 'invalid-value' | 'required-type' | 'cyclic-definition' | 'unknown-reference';
     path: TypeTreePath;
 }
 

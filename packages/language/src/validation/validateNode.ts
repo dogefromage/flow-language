@@ -8,7 +8,7 @@ import { validateNodeSyntax } from "./validateNodeSyntax";
 export const validateNode = mem((
     node: FlowNode,
     env: FlowEnvironment,
-    previousOutputTypes: Record<string, TypeSpecifier>,
+    inferredNodeOutputs: Record<string, TypeSpecifier>,
     isUsed: boolean,
 ): FlowNodeContext => {
     const searchRes = getScopedSignature(env, node.signature);
@@ -18,15 +18,15 @@ export const validateNode = mem((
     const [templateSignature, baseScopeLabel] = searchRes;
     const scopedNodeLabel = `${baseScopeLabel}:${templateSignature.id}`;
 
-    const { instantiatedNodeType, rowContexts } =
-        validateNodeSyntax(node.rowStates, templateSignature, previousOutputTypes, env);
+    const { inferredType, rowContexts } =
+        validateNodeSyntax(node.rowStates, templateSignature, inferredNodeOutputs, env);
 
     return bundleNodeContext(
         node,
         scopedNodeLabel,
         isUsed,
         templateSignature,
-        instantiatedNodeType,
+        inferredType,
         memoList(
             ...templateSignature.inputs.map((input, index) =>
                 rowContexts[input.id]
@@ -45,7 +45,7 @@ const noSignatureContext = mem(
             message: `Cannot find nodes signature '${node.signature}'.`,
         }],
         criticalSubProblems: 0,
-        specifier: null,
+        inferredType: null,
         templateSignature: null,
         inputRows: {},
         outputRow: { 
@@ -67,7 +67,7 @@ const bundleNodeContext = mem((
     scopedLabel: string,
     isUsed: boolean,
     templateSignature: FlowSignature,
-    specifier: FunctionTypeSpecifier,
+    inferredType: FunctionTypeSpecifier,
     inputContexts: RowContext[],
 ): FlowNodeContext => {
     const result: FlowNodeContext = {
@@ -76,7 +76,7 @@ const bundleNodeContext = mem((
         problems: [],
         criticalSubProblems: 0,
         templateSignature,
-        specifier,
+        inferredType,
         inputRows: {},
         outputRow: {
             display: outputDisplayTypes[templateSignature.output.rowType],

@@ -1,62 +1,68 @@
 import { findEnvironmentSignature } from "../core/environment";
-import { createAnyType, createMapType, createTupleType, getSignatureFunctionType, memoizeTypeStructure } from "../typeSystem";
+import { createAnyType, createMapType, createTupleType, getTemplatedSignatureType, memoizeTypeStructure } from "../typeSystem";
 import { assertSubsetType } from "../typeSystem/comparison";
 import { TypeSystemException, TypeSystemExceptionData, TypeTreePath } from "../typeSystem/exceptionHandling";
 import { generateDefaultValue } from "../typeSystem/generateDefaultValue";
-import { applyInstantiationConstraints, inferGenerics } from "../typeSystem/generics";
-import { tryResolveTypeAlias } from "../typeSystem/resolution";
+import { closeTemplatedSpecifier, instantiateTemplatedType, mapTypeInference } from "../typeSystem/generics";
+import { resolveTypeAlias, tryResolveTypeAlias } from "../typeSystem/resolution";
 import { checkElementOfType } from "../typeSystem/validateElement";
 import { FlowConnection, FlowEnvironment, FlowSignature, FunctionTypeSpecifier, InputRowSignature, RowContext, RowProblem, RowState, TupleTypeSpecifier, TypeSpecifier } from "../types";
 import { Obj } from "../types/utilTypes";
-import { assertDef } from "../utils";
+import { assertDef, assertTruthy } from "../utils";
 import { mapObj, mem, objToArr } from "../utils/functional";
 
 export const validateNodeSyntax = mem((
     rowStates: Obj<RowState>,
-    templateSignature: FlowSignature,
-    nodeOutputTypes: Obj<TypeSpecifier>,
+    signature: FlowSignature,
+    inferredNodeOutputs: Record<string, TypeSpecifier>,
     env: FlowEnvironment,
-) => {
+): { inferredType: FunctionTypeSpecifier, rowContexts: Obj<RowContext> } => {
     const rowProblemsMap: Record<string, RowProblem[]> = {};
 
-    // find all types of connected arguments and list problems
-    const argumentTypeList: TypeSpecifier[] = [];
-    for (const input of templateSignature.inputs) {
+    // accumulator for type inference in loop
+    let templatedAccumulatedType = getTemplatedSignatureType(signature);
+    let closedAccumulatedType = closeTemplatedSpecifier(templatedAccumulatedType);
+
+    const incomingTypes: TypeSpecifier[] = [];
+
+    for (let inputIndex = 0; inputIndex < signature.inputs.length; inputIndex++) {
+        const input = signature.inputs[inputIndex];
         const rowState = rowStates[input.id] as RowState | undefined;
-        const { incomingType, rowProblems } =
-            findIncomingType(input, rowState, env, nodeOutputTypes);
-        argumentTypeList.push(incomingType);
-        objPushConditional(rowProblemsMap, input.id, ...rowProblems);
+
+        // debugger
+
+        const closedInputType = getFunctionParamType(closedAccumulatedType, inputIndex);
+        const { incomingType, rowProblems: incomingProblems } =
+            findIncomingType(input, rowState, env, inferredNodeOutputs, closedInputType);
+        incomingTypes.push(incomingType);
+        objPushConditional(rowProblemsMap, input.id, ...incomingProblems);
+
+        if (templatedAccumulatedType.generics.length) {
+            const freeGenerics = templatedAccumulatedType.generics.reduce(
+                (acc, next) => ({ ...acc, [next.id]: next.constraint }),
+                {} as Obj<TypeSpecifier | null>,
+            );
+            
+            const templatedInputType = getFunctionParamType(templatedAccumulatedType.specifier, inputIndex);
+            const inputsConstrains = mapTypeInference(new TypeTreePath(), 
+                templatedInputType, incomingType, freeGenerics, env);
+    
+            templatedAccumulatedType = instantiateTemplatedType(new TypeTreePath(),
+                templatedAccumulatedType, inputsConstrains, env);
+            closedAccumulatedType = closeTemplatedSpecifier(templatedAccumulatedType);
+        }
     }
 
-    // get required type from template
-    const argumentsTuple = createTupleType(...argumentTypeList);
-    const signatureFunctionType = getSignatureFunctionType(templateSignature);
-
-    // infer free generics using inputs and apply to final type
-    const genericMap = Object.fromEntries(
-        templateSignature.generics.map(generic => [
-            generic.id,
-            generic.constraint || createAnyType(),
-        ]),
-    );
-    const constraints = inferGenerics(
-        argumentsTuple,
-        signatureFunctionType.parameter,
-        genericMap,
-        env
-    );
-    const unmemoizedInstantiatetType = applyInstantiationConstraints(new TypeTreePath(),
-        signatureFunctionType, constraints, env) as FunctionTypeSpecifier;
-    const instantiatedNodeType = memoizeTypeStructure(unmemoizedInstantiatetType);
+    const finalInferredType = memoizeTypeStructure(closedAccumulatedType);
+    const incomingTuple = createTupleType(...incomingTypes);
 
     // check for type errors
     try {
-        assertSubsetType(argumentsTuple, instantiatedNodeType.parameter, env);
+        assertSubsetType(incomingTuple, finalInferredType.parameter, env);
     } catch (e) {
         if (e instanceof TypeSystemException) {
-            for (let i = 0; i < templateSignature.inputs.length; i++) {
-                const input = templateSignature.inputs[i];
+            for (let i = 0; i < signature.inputs.length; i++) {
+                const input = signature.inputs[i];
                 const rowTypeProblem = getRowsTypeProblem(e.data, i.toString());
                 objPushConditional(rowProblemsMap, input.id, rowTypeProblem);
             }
@@ -67,9 +73,9 @@ export const validateNodeSyntax = mem((
 
     // generate display for rows and pack with problems
     const rowContexts: Record<string, RowContext> = {};
-    const instantiatedParamTypes = (instantiatedNodeType.parameter as TupleTypeSpecifier).elements;
-    for (let i = 0; i < templateSignature.inputs.length; i++) {
-        const input = templateSignature.inputs[i];
+    const instantiatedParamTypes = (finalInferredType.parameter as TupleTypeSpecifier).elements;
+    for (let i = 0; i < signature.inputs.length; i++) {
+        const input = signature.inputs[i];
         rowContexts[input.id] = bundleRowContext(
             input,
             instantiatedParamTypes[i],
@@ -78,7 +84,7 @@ export const validateNodeSyntax = mem((
             assertDef(rowProblemsMap[input.id]),
         );
     }
-    return { instantiatedNodeType, rowContexts };
+    return { inferredType: finalInferredType, rowContexts };
 });
 
 function resolveRowConnection(
@@ -148,6 +154,7 @@ function findIncomingType(
     rowState: RowState | undefined,
     env: FlowEnvironment,
     previousOutputTypes: Obj<TypeSpecifier>,
+    resolvedInputType: TypeSpecifier,
 ): { incomingType: TypeSpecifier, rowProblems: RowProblem[] } {
     const rowProblems: RowProblem[] = [];
 
@@ -158,8 +165,10 @@ function findIncomingType(
     });
     const firstConnectedType = incomingTypeMap[0];
 
+    resolvedInputType = resolveTypeAlias(new TypeTreePath(), resolvedInputType, env);
+
     if (input.rowType === 'input-variable' &&
-        rowState?.initializer === 'list-like') {
+        (resolvedInputType.type === 'list' || resolvedInputType.type === 'tuple')) {
         // treat inputs as list
         const incomingList = objToArr(incomingTypeMap);
         // remove holes
@@ -178,11 +187,11 @@ function findIncomingType(
         return { incomingType, rowProblems };
     }
     if (input.rowType === 'input-variable' &&
-        rowState?.initializer === 'function') {
+        resolvedInputType.type === 'function') {
         if (firstConnectedType != null) {
-            return { 
-                incomingType: firstConnectedType, 
-                rowProblems 
+            return {
+                incomingType: firstConnectedType,
+                rowProblems
             };
         }
 
@@ -195,18 +204,19 @@ function findIncomingType(
         }
         const nameValue = rowState!.value;
         const funcSignature = findEnvironmentSignature(env, nameValue);
-        const functionSpec = funcSignature && getSignatureFunctionType(funcSignature);
-        if (functionSpec == null) {
+        const templatedFunctionSpec = funcSignature && getTemplatedSignatureType(funcSignature);
+        const closedFuncSpec = templatedFunctionSpec && closeTemplatedSpecifier(templatedFunctionSpec);
+        if (closedFuncSpec == null) {
             rowProblems.push({
                 type: 'invalid-value',
                 message: `Could not find function named '${nameValue}'.`,
             });
             return { incomingType: createAnyType(), rowProblems };
         }
-        return { incomingType: functionSpec, rowProblems };
+        return { incomingType: closedFuncSpec, rowProblems };
     }
     if (input.rowType === 'input-variable' &&
-        rowState?.initializer === 'map-like') {
+        resolvedInputType.type === 'map') {
         return {
             incomingType: createMapType(incomingTypeMap),
             rowProblems,
@@ -277,7 +287,7 @@ function bundleRowContext(
         }
     }
 
-    if (input.rowType === 'input-variable' && 
+    if (input.rowType === 'input-variable' &&
         ['list', 'tuple', 'map'].includes(resolvedSpec?.type!)) {
         return {
             ref: rowState,
@@ -285,7 +295,7 @@ function bundleRowContext(
             display: 'destructured',
         };
     }
-    
+
     return { ref: rowState, problems, display: 'simple' };
 }
 
@@ -321,4 +331,10 @@ function objPushConditional<T>(obj: Record<string, T[]>, key: string, ...element
             obj[key].push(el);
         }
     })
+}
+
+function getFunctionParamType(F: FunctionTypeSpecifier, index: number) {
+    const paramTuple = F.parameter as TupleTypeSpecifier;
+    assertTruthy(typeof paramTuple !== 'string' && paramTuple.type === 'tuple');
+    return paramTuple.elements[index];
 }

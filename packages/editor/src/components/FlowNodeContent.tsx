@@ -19,10 +19,10 @@ const FlowNodeContent = (props: Props) => {
     const commonProps = { panelId, flowId, nodeId: context.ref.id };
 
     let inputType: lang.TupleTypeSpecifier | undefined;
-    if (typeof context.specifier?.parameter !== 'string' && context.specifier?.parameter.type === 'tuple') {
-        inputType = context.specifier.parameter;
+    if (typeof context.inferredType?.parameter !== 'string' && context.inferredType?.parameter.type === 'tuple') {
+        inputType = context.inferredType.parameter;
     }
-    const outputType = context.specifier?.output;
+    const outputType = context.inferredType?.output;
 
     return (<>
         <FlowNodeNameWrapper $backColor={signature.attributes.color}>

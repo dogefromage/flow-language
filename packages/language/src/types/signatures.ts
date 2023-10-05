@@ -7,29 +7,6 @@ interface BaseRow<R extends string> {
     rowType: R;
 }
 
-// export interface SimpleInputRowSignature extends BaseRow<'input-simple'> {};
-// export interface ListInputRowSignature extends BaseRow<'input-list'> {};
-// export interface TupleInputRowSignature extends BaseRow<'input-tuple'> {};
-// export interface FunctionInputRowSignature extends BaseRow<'input-function'> {};
-// export interface VariableInputRowSignature extends BaseRow<'input-variable'> {
-//     defaultValue: InitializerValue | null;
-// };
-
-// export type SimpleOutputRowSignature = BaseRow<'output-simple'>;
-// export type DestructuredOutputRowSignature = BaseRow<'output-destructured'>;
-
-// export type InputRowSignature =
-//     | SimpleInputRowSignature
-//     | ListInputRowSignature
-//     | TupleInputRowSignature
-//     | VariableInputRowSignature
-//     | FunctionInputRowSignature
-
-// export type OutputRowSignature =
-//     | SimpleOutputRowSignature
-//     | DestructuredOutputRowSignature
-//     | HiddenOutputRowSignature
-
 export interface SimpleInputRowSignature extends BaseRow<'input-simple'> {};
 export interface VariableInputRowSignature extends BaseRow<'input-variable'> {
     defaultValue: InitializerValue | null;

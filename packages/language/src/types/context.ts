@@ -8,7 +8,7 @@ import {
     OutputJointLocation,
     RowState
 } from './state';
-import { FunctionTypeSpecifier, InitializerValue, TypeSpecifier } from './typeSystem';
+import { FunctionTypeSpecifier, TemplatedTypeSpecifier, InitializerValue, TypeSpecifier } from './typeSystem';
 import { Obj } from './utilTypes';
 
 export type FlowEnvironment = {
@@ -60,7 +60,7 @@ export interface FlowNodeContext {
     inputRows: Obj<RowContext>;
     outputRow: RowContext;
     templateSignature: FlowSignature | null;
-    specifier: FunctionTypeSpecifier | null;
+    inferredType: FunctionTypeSpecifier | null;
     isUsed: boolean;
 }
 

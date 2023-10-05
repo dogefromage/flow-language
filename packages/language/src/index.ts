@@ -17,7 +17,7 @@ export {
     createTupleType,
     createFunctionType,
     createMapType,
-    getSignatureFunctionType,
+    getTemplatedSignatureType,
 } from './typeSystem';
 
 export {

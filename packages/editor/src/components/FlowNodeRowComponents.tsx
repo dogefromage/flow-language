@@ -163,7 +163,7 @@ export const FlowInputRowSimple = (props: RowComponentProps<lang.InputRowSignatu
                         nodeId,
                         rowId: row.id,
                         accessor: '0',
-                        initializer: 'first',
+                        // initializer: 'first',
                     }}
                     env={env}
                 />

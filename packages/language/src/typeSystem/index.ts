@@ -1,5 +1,5 @@
 import { FlowSignature } from "../types/signatures";
-import { AnyTypeSpecifier, FunctionTypeSpecifier, GenericTypeSpecifier, ListTypeSpecifier, MapTypeSpecifier, PrimitiveTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
+import { AnyTypeSpecifier, FunctionTypeSpecifier, TemplatedTypeSpecifier, ListTypeSpecifier, MapTypeSpecifier, PrimitiveTypeSpecifier, TupleTypeSpecifier, TypeSpecifier, GenericParameter } from "../types/typeSystem";
 import { assertTruthy } from "../utils";
 import { ListCache } from "../utils/ListCache";
 import { always, mem } from "../utils/functional";
@@ -52,6 +52,13 @@ export const createMapType = (elements: Record<string, TypeSpecifier>) => {
     return createMapFromFlat(...flatEntries);
 }
 
+
+export const createTemplatedType = /* mem( */ // don't think this must be memoized
+    <T extends TypeSpecifier>(generics: GenericParameter[], specifier: T
+        ): TemplatedTypeSpecifier<T> => ({ generics, specifier })
+//     typeSystemCache,
+// )
+
 // memoization does not guarantee uniqueness but helps if the exact same type is passed multiple times
 export const memoizeTypeStructure = mem(<T extends TypeSpecifier>(X: T): T => {
     if (typeof X !== 'object' || X == null) {
@@ -84,14 +91,20 @@ export const memoizeTypeStructure = mem(<T extends TypeSpecifier>(X: T): T => {
     }
 }, typeSystemCache);
 
-export function getSignatureFunctionType(signature: FlowSignature): GenericTypeSpecifier<FunctionTypeSpecifier> {
+export function getTemplatedSignatureType(signature: FlowSignature): TemplatedTypeSpecifier<FunctionTypeSpecifier> {
     return {
         generics: signature.generics,
-        specifier: createFunctionType(
+        specifier: getSignatureType(signature),
+    };
+}
+
+function getSignatureType(signature: FlowSignature): FunctionTypeSpecifier {
+    return (
+        createFunctionType(
             createTupleType(
                 ...signature.inputs.map(s => s.specifier)
             ),
             signature.output?.specifier || createAnyType(),
         )
-    };
+    );
 }
