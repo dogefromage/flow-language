@@ -1,8 +1,8 @@
 import { FlowSignature } from "../types/signatures";
-import { AnyTypeSpecifier, FunctionTypeSpecifier, TemplatedTypeSpecifier, ListTypeSpecifier, MapTypeSpecifier, PrimitiveTypeSpecifier, TupleTypeSpecifier, TypeSpecifier, GenericParameter } from "../types/typeSystem";
-import { assertTruthy } from "../utils";
+import { AnyTypeSpecifier, FunctionTypeSpecifier, GenericParameter, ListTypeSpecifier, MapTypeSpecifier, PrimitiveTypeSpecifier, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
+import { assertNever, assertTruthy } from "../utils";
 import { ListCache } from "../utils/ListCache";
-import { always, mem } from "../utils/functional";
+import { always, mem, memoList } from "../utils/functional";
 
 export const typeSystemCache = new ListCache(3037);
 
@@ -52,12 +52,16 @@ export const createMapType = (elements: Record<string, TypeSpecifier>) => {
     return createMapFromFlat(...flatEntries);
 }
 
+export const createGenericParameter = mem(
+    (id: string, constraint: TypeSpecifier | null): GenericParameter => ({ id, constraint }),
+    typeSystemCache,
+)
 
-export const createTemplatedType = /* mem( */ // don't think this must be memoized
+export const createTemplatedType = mem(
     <T extends TypeSpecifier>(generics: GenericParameter[], specifier: T
-        ): TemplatedTypeSpecifier<T> => ({ generics, specifier })
-//     typeSystemCache,
-// )
+        ): TemplatedTypeSpecifier<T> => ({ generics, specifier }),
+    typeSystemCache,
+)
 
 // memoization does not guarantee uniqueness but helps if the exact same type is passed multiple times
 export const memoizeTypeStructure = mem(<T extends TypeSpecifier>(X: T): T => {
@@ -91,6 +95,19 @@ export const memoizeTypeStructure = mem(<T extends TypeSpecifier>(X: T): T => {
     }
 }, typeSystemCache);
 
+export const memoizeTemplatedType = <T extends TypeSpecifier>(X: TemplatedTypeSpecifier<T>): TemplatedTypeSpecifier<T> => {
+    const memGenerics = memoList(...X.generics
+        .map(g => createGenericParameter(
+            g.id,
+            g.constraint && memoizeTypeStructure(g.constraint), 
+        ))
+    );
+    return createTemplatedType(
+        memGenerics,
+        memoizeTypeStructure(X.specifier),
+    );
+}
+
 export function getTemplatedSignatureType(signature: FlowSignature): TemplatedTypeSpecifier<FunctionTypeSpecifier> {
     return {
         generics: signature.generics,
@@ -108,3 +125,48 @@ function getSignatureType(signature: FlowSignature): FunctionTypeSpecifier {
         )
     );
 }
+
+export function findAllTypeLiterals(X: TypeSpecifier, literals: Set<string>) {
+    if (typeof X === 'string') {
+        literals.add(X);
+        return;
+    }
+
+    switch (X.type) {
+        case 'function':
+            findAllTypeLiterals(X.output, literals);
+            findAllTypeLiterals(X.parameter, literals);
+            return;
+        case 'list':
+            findAllTypeLiterals(X.element, literals);
+            return;
+        case 'tuple':
+            for (const el of X.elements) {
+                findAllTypeLiterals(el, literals);
+            }
+            return;
+        case 'map':
+            for (const el of Object.values(X.elements)) {
+                findAllTypeLiterals(el, literals);
+            }
+            return;
+        case 'any':
+        case 'primitive':
+            return;
+    }
+    assertNever();
+}
+
+export function createReducedTemplateType<T extends TypeSpecifier>(generics: GenericParameter[], X: T) {
+    const literals = new Set<string>()
+    findAllTypeLiterals(X, literals);
+    generics = generics.filter(X => literals.has(X.id));
+    return createTemplatedType<T>(generics, X);
+}
+
+// export function mapTemplate<T extends TypeSpecifier>(
+//     X: TemplatedTypeSpecifier<T>, 
+//     op: (T: TypeSpecifier) => TypeSpecifier,
+// ) {
+//     return createReducedTemplateType(X.generics, op(X.specifier));
+// }

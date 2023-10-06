@@ -4,7 +4,7 @@ import { FlowNodeRowDiv, FlowNodeRowNameP } from "../styles/flowStyles";
 import { formatFlowLabel } from "../utils/flows";
 import FlowJoint from "./FlowJoint";
 import { FlowNodeRowErrorWrapper } from "./FlowNodeErrorWrapper";
-import { FlowNodeRowDestructurings } from "./FlowNodeRowDestructurings";
+import { FlowInputRowDestructurings, FlowOutputRowDestructurings } from "./FlowNodeRowDestructurings";
 import { FlowNodeRowInitializers } from "./FlowNodeRowInitializers";
 
 type RowSignature = lang.InputRowSignature | lang.OutputRowSignature;
@@ -23,7 +23,7 @@ export const FlowOutputRowSwitch = (props: RowComponentProps<lang.OutputRowSigna
         case 'hidden':
             return null;
         case 'destructured':
-            return <FlowOutputRowDestructured {...props as RowComponentProps<lang.DestructuredOutputRowSignature>} />
+            return <FlowOutputRowDestructurings {...props as RowComponentProps<lang.DestructuredOutputRowSignature>} />
         case 'simple':
             return <FlowOutputRowSimple {...props as RowComponentProps<lang.SimpleOutputRowSignature>} />
     }
@@ -55,84 +55,6 @@ export const FlowOutputRowSimple = (props: RowComponentProps<lang.SimpleOutputRo
     );
 }
 
-export const FlowOutputRowDestructured = (props: RowComponentProps<lang.DestructuredOutputRowSignature>) => {
-    const { panelId, flowId, nodeId, row, context, type, env } = props;
-
-    const resolvedType = lang.tryResolveTypeAlias(type, env);
-
-    const canDestructure =
-        resolvedType != null &&
-        (resolvedType.type === 'map' || resolvedType.type === 'tuple');
-
-    if (!canDestructure) {
-        return (
-            <FlowNodeRowErrorWrapper {...props}>
-                <FlowNodeRowDiv>
-                    <FlowNodeRowNameP $align='right'>
-                        {formatFlowLabel(row.id)}
-                    </FlowNodeRowNameP>
-                </FlowNodeRowDiv>
-            </FlowNodeRowErrorWrapper>
-        );
-    }
-
-    const typeEntries: Array<{
-        elementType: lang.TypeSpecifier,
-        accessor: string,
-        label: string,
-    }> = [];
-
-    if (resolvedType.type === 'tuple') {
-        for (let i = 0; i < resolvedType.elements.length; i++) {
-            typeEntries.push({
-                elementType: resolvedType.elements[i],
-                accessor: i.toString(),
-                label: `[${i}]`,
-            })
-        }
-    } else {
-        for (const [key, elementType] of Object.entries(resolvedType.elements)) {
-            typeEntries.push({
-                elementType,
-                accessor: key,
-                label: key
-            });
-        }
-    }
-
-    return (
-        <FlowNodeRowErrorWrapper
-            {...props}
-        >
-            <FlowNodeRowDiv>
-                <FlowNodeRowNameP $align='right'>
-                    {formatFlowLabel(row.id)}
-                </FlowNodeRowNameP>
-            </FlowNodeRowDiv>
-            {
-                typeEntries.map(entry =>
-                    <FlowNodeRowDiv key={entry.label}>
-                        <FlowJoint
-                            panelId={panelId}
-                            flowId={flowId}
-                            type={entry.elementType}
-                            location={{
-                                direction: 'output',
-                                nodeId,
-                                accessor: entry.accessor,
-                            }}
-                            env={env}
-                        />
-                        <FlowNodeRowNameP $align='right'>
-                            {formatFlowLabel(entry.label)}
-                        </FlowNodeRowNameP>
-                    </FlowNodeRowDiv>
-                )
-            }
-        </FlowNodeRowErrorWrapper>
-    );
-}
-
 export const FlowInputRowSwitch = (props: RowComponentProps<lang.InputRowSignature>) => {
     switch (props.context?.display) {
         case 'simple':
@@ -140,7 +62,7 @@ export const FlowInputRowSwitch = (props: RowComponentProps<lang.InputRowSignatu
         case 'initializer':
             return <FlowNodeRowInitializers {...props} />
         case 'destructured':
-            return <FlowNodeRowDestructurings {...props} />
+            return <FlowInputRowDestructurings {...props} />
         case 'hidden':
             return null;
     }
@@ -163,7 +85,6 @@ export const FlowInputRowSimple = (props: RowComponentProps<lang.InputRowSignatu
                         nodeId,
                         rowId: row.id,
                         accessor: '0',
-                        // initializer: 'first',
                     }}
                     env={env}
                 />

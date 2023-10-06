@@ -304,6 +304,13 @@ export const flowsSlice = createSlice({
             if (!g) return;
             Object.assign(g.output, a.payload.newState);
         },
+        replaceGeneric: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, genericId: string, constraint: lang.GenericParameter['constraint'] }>) => {
+            const g = getFlow(s, a);
+            if (!g) return;
+            const generic = g.generics.find(gen => gen.id === a.payload.genericId);
+            if (!generic) return console.error(`Could not find generic`);
+            generic.constraint = a.payload.constraint;
+        },
     }
 });
 
@@ -330,6 +337,7 @@ export const {
     updateInput: flowsUpdateInput,
     replaceOutput: flowsReplaceOutput,
     updateOutput: flowsUpdateOutput,
+    replaceGeneric: flowsReplaceGeneric,
 } = flowsSlice.actions;
 
 export const selectFlows = (state: RootState) => selectDocument(state).flows;

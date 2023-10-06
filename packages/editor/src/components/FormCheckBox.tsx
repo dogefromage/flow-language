@@ -3,12 +3,13 @@ import styled from 'styled-components';
 import MaterialSymbol from '../styles/MaterialSymbol';
 
 const CheckBoxDiv = styled.div<{ $checked: boolean, $disabled: boolean }>`
-    width: 18px;
+    /* width: 18px; */
+    width: 80px;
     height: 18px;
     aspect-ratio: 1;
 
-    background-color: ${({ $checked, theme }) => 
-        $checked ? theme.colors.general.active : 'var(--color-1)' };
+    background-color: ${({ $checked, theme }) =>
+        $checked ? theme.colors.general.active : 'var(--color-1)'};
 
     display: flex;
     align-items: center;
@@ -30,19 +31,19 @@ interface Props {
 }
 
 const FormCheckBox = ({ checked, setChecked, disabled }: Props) => {
-    const toggle = () => {
-        if (disabled) return;
-        setChecked(!checked);
-    }
-
     return (
         <CheckBoxDiv
-            onClick={toggle}
+            onClick={e => {
+                if (disabled) return;
+                e.stopPropagation();
+                setChecked(!checked);
+            }}
+            onDoubleClick={e => e.stopPropagation()}
             $checked={checked}
             $disabled={disabled || false}
         > {
-                checked &&
-                <MaterialSymbol $size={20} $weight={800}>done</MaterialSymbol>
+                checked ? 'true' : 'false'
+                // <MaterialSymbol $size={20} $weight={800}>done</MaterialSymbol>
             }
         </CheckBoxDiv>
     );

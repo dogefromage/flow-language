@@ -15,17 +15,21 @@ const WrapperDiv = styled.div`
 interface TypeBuilderProps {
     X: lang.TypeSpecifier;
     env?: lang.FlowEnvironment;
+    generics: lang.GenericParameter[];
     onChange?: (X: lang.TypeSpecifier) => void;
 }
 
-const TypeBuilder = ({ X, env, onChange }: PropsWithChildren<TypeBuilderProps>) => {
+const TypeBuilder = ({ X, env, generics, onChange }: PropsWithChildren<TypeBuilderProps>) => {
     return (
-        <WrapperDiv>
+        <WrapperDiv> {
+            env && 
             <TypeTag
                 X={X}
                 env={env}
+                generics={generics}
                 onChange={onChange}
             />
+        }
         </WrapperDiv>
     );
 }
@@ -58,16 +62,17 @@ const TypeDiv = styled.div`
     }
 `;
 
-const MIDDLE_ANGLE = '├';
-const BOTTOM_ANGLE = '└'
+// const MIDDLE_ANGLE = '├';
+// const BOTTOM_ANGLE = '└';
 
 interface TypeTagProps {
     X: lang.TypeSpecifier;
-    env?: lang.FlowEnvironment;
+    env: lang.FlowEnvironment;
+    generics: lang.GenericParameter[];
     onChange?: (X: lang.TypeSpecifier) => void;
 }
 
-const TypeTag = ({ X, env, onChange }: PropsWithChildren<TypeTagProps>) => {
+const TypeTag = ({ X, env, generics, onChange }: PropsWithChildren<TypeTagProps>) => {
 
     const { nameMap, typeMap } = useMemo(() => {
         const typeMap: Record<string, lang.TypeSpecifier> = {
@@ -85,15 +90,22 @@ const TypeTag = ({ X, env, onChange }: PropsWithChildren<TypeTagProps>) => {
         if (env) {
             const envContent = lang.collectTotalEnvironmentContent(env);
             for (const [alias, _] of Object.entries(envContent.types || {})) {
-                const key = `alias.${alias}`;
+                const key = `alias_or_generic.${alias}`;
                 typeMap[key] = alias;
                 nameMap[key] = alias;
             }
         }
+        if (generics) {
+            for (const g of generics) {
+                const key = `alias_or_generic.${g.id}`;
+                typeMap[key] = g.id;
+                nameMap[key] = g.id;
+            }
+        }
         return { typeMap, nameMap };
-    }, [X, env]);
+    }, [X, env, generics]);
 
-    const currentOption = typeof X === 'string' ? `alias.${X}` : X.type;
+    const currentOption = typeof X === 'string' ? `alias_or_generic.${X}` : X.type;
 
     return (
         <TypeDiv>
@@ -121,6 +133,7 @@ const TypeTag = ({ X, env, onChange }: PropsWithChildren<TypeTagProps>) => {
                     <TypeTag
                         X={X.element}
                         env={env}
+                        generics={generics}
                         onChange={newElementType => {
                             onChange?.(lang.createListType(newElementType))
                         }}
@@ -137,6 +150,7 @@ const TypeTag = ({ X, env, onChange }: PropsWithChildren<TypeTagProps>) => {
                                 <TypeTag
                                     X={Xi}
                                     env={env}
+                                    generics={generics}
                                     onChange={newXi => {
                                         onChange?.(lang.createTupleType(
                                             ...X.elements.slice(0, index),
@@ -172,6 +186,7 @@ const TypeTag = ({ X, env, onChange }: PropsWithChildren<TypeTagProps>) => {
                         <TypeTag
                             X={X.parameter}
                             env={env}
+                            generics={generics}
                             onChange={newParam =>
                                 onChange?.(lang.createFunctionType(newParam, X.output))
                             }
@@ -184,6 +199,7 @@ const TypeTag = ({ X, env, onChange }: PropsWithChildren<TypeTagProps>) => {
                         <TypeTag
                             X={X.output}
                             env={env}
+                            generics={generics}
                             onChange={newOutput =>
                                 onChange?.(lang.createFunctionType(X.parameter, newOutput))
                             }

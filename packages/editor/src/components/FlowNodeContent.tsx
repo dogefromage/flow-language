@@ -1,9 +1,9 @@
 import * as lang from '@fluss/language';
 import React from 'react';
 import { FlowNodeNameWrapper, FlowNodeRowNameP } from '../styles/flowStyles';
-import { FlowInputRowSwitch, FlowOutputRowSwitch } from './FlowNodeRowComponents';
 import { formatFlowLabel } from '../utils/flows';
-import { FlowNodeErrorWrapper, FlowNodeRowErrorWrapper } from './FlowNodeErrorWrapper';
+import { FlowNodeErrorWrapper } from './FlowNodeErrorWrapper';
+import { FlowInputRowSwitch, FlowOutputRowSwitch } from './FlowNodeRowComponents';
 import { FlowNodeHeaderToolTip } from './FlowNodeToolTips';
 
 interface Props {
@@ -19,10 +19,10 @@ const FlowNodeContent = (props: Props) => {
     const commonProps = { panelId, flowId, nodeId: context.ref.id };
 
     let inputType: lang.TupleTypeSpecifier | undefined;
-    if (typeof context.inferredType?.parameter !== 'string' && context.inferredType?.parameter.type === 'tuple') {
-        inputType = context.inferredType.parameter;
+    if (typeof context.inferredType?.specifier.parameter !== 'string' && context.inferredType?.specifier.parameter.type === 'tuple') {
+        inputType = context.inferredType.specifier.parameter;
     }
-    const outputType = context.inferredType?.output;
+    const outputType = context.inferredType?.specifier.output;
 
     return (<>
         <FlowNodeNameWrapper $backColor={signature.attributes.color}>

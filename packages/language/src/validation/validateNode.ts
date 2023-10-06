@@ -1,6 +1,7 @@
 import { getScopedSignature } from "../core/environment";
-import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, OutputRowSignature, TypeSpecifier } from "../types";
+import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, OutputRowSignature, TemplatedTypeSpecifier, TypeSpecifier } from "../types";
 import { FlowNodeContext, RowContext, RowDisplay } from "../types/context";
+import { Obj } from "../types/utilTypes";
 import { assertTruthy } from "../utils";
 import { mem, memoList } from "../utils/functional";
 import { validateNodeSyntax } from "./validateNodeSyntax";
@@ -8,7 +9,7 @@ import { validateNodeSyntax } from "./validateNodeSyntax";
 export const validateNode = mem((
     node: FlowNode,
     env: FlowEnvironment,
-    inferredNodeOutputs: Record<string, TypeSpecifier>,
+    inferredNodeOutputs: Obj<TemplatedTypeSpecifier>,
     isUsed: boolean,
 ): FlowNodeContext => {
     const searchRes = getScopedSignature(env, node.signature);
@@ -48,7 +49,7 @@ const noSignatureContext = mem(
         inferredType: null,
         templateSignature: null,
         inputRows: {},
-        outputRow: { 
+        outputRow: {
             display: 'hidden',
             problems: [],
         },
@@ -57,9 +58,9 @@ const noSignatureContext = mem(
 );
 
 const outputDisplayTypes: Record<OutputRowSignature['rowType'], RowDisplay> = {
-    'output-destructured': 'destructured' ,
-    'output-hidden':       'hidden' ,
-    'output-simple':       'simple' ,
+    'output-destructured': 'destructured',
+    'output-hidden': 'hidden',
+    'output-simple': 'simple',
 }
 
 const bundleNodeContext = mem((
@@ -67,7 +68,7 @@ const bundleNodeContext = mem((
     scopedLabel: string,
     isUsed: boolean,
     templateSignature: FlowSignature,
-    inferredType: FunctionTypeSpecifier,
+    inferredType: TemplatedTypeSpecifier<FunctionTypeSpecifier>,
     inputContexts: RowContext[],
 ): FlowNodeContext => {
     const result: FlowNodeContext = {
@@ -80,7 +81,7 @@ const bundleNodeContext = mem((
         inputRows: {},
         outputRow: {
             display: outputDisplayTypes[templateSignature.output.rowType],
-            problems: [] 
+            problems: []
         },
         isUsed,
     };

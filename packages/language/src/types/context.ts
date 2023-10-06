@@ -60,7 +60,7 @@ export interface FlowNodeContext {
     inputRows: Obj<RowContext>;
     outputRow: RowContext;
     templateSignature: FlowSignature | null;
-    inferredType: FunctionTypeSpecifier | null;
+    inferredType: TemplatedTypeSpecifier<FunctionTypeSpecifier> | null;
     isUsed: boolean;
 }
 

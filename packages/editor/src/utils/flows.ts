@@ -98,3 +98,24 @@ export function formatFlowLabel(label: string) {
     //     .map(_.upperFirst)
     //     .join(' ');
 }
+
+export function bracketSymbol(
+    index: number, size: number, 
+    direction: 'input' | 'output',
+    style: 'round' | 'sharp', 
+): string {
+    if (size <= 1)        return '';
+
+    const bracketPieces = '┌├└┐┤┘╭├╰╮┤╯';
+    let bracket = 0;
+    // symbol
+    if      (index == 0)       bracket += 0;
+    else if (index < size - 1) bracket += 1;
+    else                       bracket += 2;    
+    // direction
+    if (direction === 'output') bracket += 3;
+    // style
+    if (style === 'round') bracket += 6;
+
+    return bracketPieces[bracket];
+}

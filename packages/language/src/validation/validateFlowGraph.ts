@@ -1,3 +1,4 @@
+import { createReducedTemplateType, createTemplatedType } from "../typeSystem";
 import { FlowEnvironment, FlowGraph, FlowNode, FlowSignature, FunctionTypeSpecifier, TemplatedTypeSpecifier, TypeSpecifier } from "../types";
 import { EdgeColor, FlowEdge, FlowGraphContext } from "../types/context";
 import { deepFreeze } from "../utils";
@@ -142,7 +143,7 @@ export const validateFlowGraph = mem((
     result.edges = memoizedEdgeObj;
 
     // filling type table bottom-up using topsort
-    let inferredOutputTypesFlat: (TypeSpecifier | string)[] = [];
+    let inferredOutputTypesFlat: (TemplatedTypeSpecifier | string)[] = [];
 
     for (const nodeId of namedTopSort) {
         const node = flow.nodes[nodeId];
@@ -155,8 +156,12 @@ export const validateFlowGraph = mem((
         if (isUsed) {
             result.criticalSubProblems += nodeResult.criticalSubProblems + nodeResult.problems.length;
         }
-        if (nodeResult.inferredType?.output) {
-            inferredOutputTypesFlat.push(nodeId, nodeResult.inferredType.output);
+        if (nodeResult.inferredType != null) {
+            const templatedOutput = createReducedTemplateType(
+                nodeResult.inferredType.generics,
+                nodeResult.inferredType.specifier.output,
+            );
+            inferredOutputTypesFlat.push(nodeId, templatedOutput);
         }
     }
 

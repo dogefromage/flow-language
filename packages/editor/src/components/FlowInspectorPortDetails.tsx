@@ -1,14 +1,19 @@
+import FormSelectOption from './FormSelectOption';
 import React, { PropsWithChildren } from 'react';
+import TypeBuilder from './TypeBuilder';
+import { AllRowSignatures } from '../types/flowInspectorView';
+import * as lang from '@fluss/language';
+import { flowRowTypeNames } from '../utils/flows';
+import {
+    flowsReplaceGeneric,
+    flowsReplaceInput,
+    flowsReplaceOutput,
+    selectSingleFlow
+    } from '../slices/flowsSlice';
+import { selectFlowContext } from '../slices/contextSlice';
 import { selectPanelState } from '../redux/panelStateEnhancer';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { selectFlowContext } from '../slices/contextSlice';
-import { flowsReplaceInput, flowsReplaceOutput, selectSingleFlow } from '../slices/flowsSlice';
 import { ViewTypes } from '../types';
-import { AllRowSignatures } from '../types/flowInspectorView';
-import { flowRowTypeNames } from '../utils/flows';
-import FormSelectOption from './FormSelectOption';
-import TypeBuilder from './TypeBuilder';
-import { FlowEnvironment, TypeSpecifier, createAnyType } from '@fluss/language';
 
 type RowTypes = AllRowSignatures['rowType'];
 
@@ -42,6 +47,7 @@ const FlowInspectorPortDetails = ({ panelId, flowId }: PropsWithChildren<FlowIns
                 rowTypes={inputRowTypes}
                 row={inputRow}
                 env={flowContext?.flowEnvironment}
+                generics={flowContext?.flowSignature.generics || []}
                 onReplace={newRowType => dispatch(flowsReplaceInput({
                     flowId,
                     rowId: inputRow.id,
@@ -72,6 +78,7 @@ const FlowInspectorPortDetails = ({ panelId, flowId }: PropsWithChildren<FlowIns
                 rowTypes={outputRowTypes}
                 row={flow.output}
                 env={flowContext?.flowEnvironment}
+                generics={flowContext?.flowSignature.generics || []}
                 onReplace={newRowType => dispatch(flowsReplaceOutput({
                     flowId,
                     blueprint: {
@@ -103,9 +110,18 @@ const FlowInspectorPortDetails = ({ panelId, flowId }: PropsWithChildren<FlowIns
         return (<>
             <p>Constraint</p>
             <TypeBuilder
-                X={selectedTag.constraint || createAnyType()}
+                X={selectedTag.constraint || lang.createAnyType()}
                 env={flowContext?.flowEnvironment}
-                onChange={() => {}}
+                // atm cannot use generics for other generic constraints / maybe implement
+                generics={[]} 
+                onChange={newType => {
+                    dispatch(flowsReplaceGeneric({
+                        flowId,
+                        genericId: genId,
+                        constraint: newType,
+                        undo: { desc: `Replaced constraint on generic parameter '${genId}'.` },
+                    }));
+                }}
             />
         </>)
     }
@@ -118,12 +134,13 @@ export default FlowInspectorPortDetails;
 
 interface RowDetailsProps {
     row: AllRowSignatures;
-    env: FlowEnvironment | undefined;
+    env: lang.FlowEnvironment | undefined;
+    generics: lang.GenericParameter[];
     rowTypes: RowTypes[];
     onReplace: (newRowType: RowTypes) => void;
-    onChangeSpecifier: (X: TypeSpecifier) => void;
+    onChangeSpecifier: (X: lang.TypeSpecifier) => void;
 }
-export const RowDetails = ({ row, env, rowTypes, onReplace, onChangeSpecifier }: PropsWithChildren<RowDetailsProps>) => {
+export const RowDetails = ({ row, env, generics, rowTypes, onReplace, onChangeSpecifier }: PropsWithChildren<RowDetailsProps>) => {
 
     return (<>
         <p>Row Type</p>
@@ -138,6 +155,7 @@ export const RowDetails = ({ row, env, rowTypes, onReplace, onChangeSpecifier }:
             X={row.specifier}
             env={env}
             onChange={onChangeSpecifier}
+            generics={generics}
         />
     </>);
 }

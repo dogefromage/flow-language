@@ -1,40 +1,38 @@
 import { findEnvironmentSignature } from "../core/environment";
-import { createAnyType, createMapType, createTupleType, getTemplatedSignatureType, memoizeTypeStructure } from "../typeSystem";
+import { createAnyType, createFunctionType, createMapType, createReducedTemplateType, createTemplatedType, createTupleType, findAllTypeLiterals, getTemplatedSignatureType, memoizeTemplatedType } from "../typeSystem";
 import { assertSubsetType } from "../typeSystem/comparison";
 import { TypeSystemException, TypeSystemExceptionData, TypeTreePath } from "../typeSystem/exceptionHandling";
 import { generateDefaultValue } from "../typeSystem/generateDefaultValue";
-import { closeTemplatedSpecifier, instantiateTemplatedType, mapTypeInference } from "../typeSystem/generics";
+import { closeTemplatedSpecifier, disjoinTemplateLiterals, instantiateTemplatedType, mapTypeInference } from "../typeSystem/generics";
 import { resolveTypeAlias, tryResolveTypeAlias } from "../typeSystem/resolution";
 import { checkElementOfType } from "../typeSystem/validateElement";
-import { FlowConnection, FlowEnvironment, FlowSignature, FunctionTypeSpecifier, InputRowSignature, RowContext, RowProblem, RowState, TupleTypeSpecifier, TypeSpecifier } from "../types";
+import { FlowConnection, FlowEnvironment, FlowSignature, FunctionTypeSpecifier, InputRowSignature, RowContext, RowProblem, RowState, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types";
 import { Obj } from "../types/utilTypes";
 import { assertDef, assertTruthy } from "../utils";
-import { mapObj, mem, objToArr } from "../utils/functional";
+import { mapObj, mem, objToArr, zipInner } from "../utils/functional";
 
 export const validateNodeSyntax = mem((
     rowStates: Obj<RowState>,
     signature: FlowSignature,
-    inferredNodeOutputs: Record<string, TypeSpecifier>,
+    inferredNodeOutputs: Obj<TemplatedTypeSpecifier>,
     env: FlowEnvironment,
-): { inferredType: FunctionTypeSpecifier, rowContexts: Obj<RowContext> } => {
+): { inferredType: TemplatedTypeSpecifier<FunctionTypeSpecifier>, rowContexts: Obj<RowContext> } => {
     const rowProblemsMap: Record<string, RowProblem[]> = {};
 
     // accumulator for type inference in loop
     let templatedAccumulatedType = getTemplatedSignatureType(signature);
     let closedAccumulatedType = closeTemplatedSpecifier(templatedAccumulatedType);
 
-    const incomingTypes: TypeSpecifier[] = [];
+    const closedIncomingTypes: TypeSpecifier[] = [];
 
     for (let inputIndex = 0; inputIndex < signature.inputs.length; inputIndex++) {
         const input = signature.inputs[inputIndex];
         const rowState = rowStates[input.id] as RowState | undefined;
 
-        // debugger
-
         const closedInputType = getFunctionParamType(closedAccumulatedType, inputIndex);
-        const { incomingType, rowProblems: incomingProblems } =
+        const { incomingTemplate, rowProblems: incomingProblems } =
             findIncomingType(input, rowState, env, inferredNodeOutputs, closedInputType);
-        incomingTypes.push(incomingType);
+        closedIncomingTypes.push(closeTemplatedSpecifier(incomingTemplate));
         objPushConditional(rowProblemsMap, input.id, ...incomingProblems);
 
         if (templatedAccumulatedType.generics.length) {
@@ -42,23 +40,27 @@ export const validateNodeSyntax = mem((
                 (acc, next) => ({ ...acc, [next.id]: next.constraint }),
                 {} as Obj<TypeSpecifier | null>,
             );
-            
-            const templatedInputType = getFunctionParamType(templatedAccumulatedType.specifier, inputIndex);
-            const inputsConstrains = mapTypeInference(new TypeTreePath(), 
-                templatedInputType, incomingType, freeGenerics, env);
-    
+            const restrictingGenerics = new Set(incomingTemplate.generics
+                .map(x => x.id));
+
+            const rawAccumulatedType = getFunctionParamType(templatedAccumulatedType.specifier, inputIndex);
+            const rawInstantiationMap = mapTypeInference(new TypeTreePath(),
+                rawAccumulatedType, incomingTemplate.specifier, freeGenerics, restrictingGenerics, env);
+            // find all generics from restricting type which are referenced in instantiation map
+            const literals = new Set<string>()
+            Object.values(rawInstantiationMap).forEach(X => findAllTypeLiterals(X, literals));
+            const instantiationGenerics = incomingTemplate.generics.filter(X => literals.has(X.id));
+
             templatedAccumulatedType = instantiateTemplatedType(new TypeTreePath(),
-                templatedAccumulatedType, inputsConstrains, env);
+                templatedAccumulatedType, rawInstantiationMap, instantiationGenerics, env);
             closedAccumulatedType = closeTemplatedSpecifier(templatedAccumulatedType);
         }
     }
 
-    const finalInferredType = memoizeTypeStructure(closedAccumulatedType);
-    const incomingTuple = createTupleType(...incomingTypes);
-
     // check for type errors
+    const closedIncomingTuple = createTupleType(...closedIncomingTypes);
     try {
-        assertSubsetType(incomingTuple, finalInferredType.parameter, env);
+        assertSubsetType(closedIncomingTuple, closedAccumulatedType.parameter, env);
     } catch (e) {
         if (e instanceof TypeSystemException) {
             for (let i = 0; i < signature.inputs.length; i++) {
@@ -73,27 +75,143 @@ export const validateNodeSyntax = mem((
 
     // generate display for rows and pack with problems
     const rowContexts: Record<string, RowContext> = {};
-    const instantiatedParamTypes = (finalInferredType.parameter as TupleTypeSpecifier).elements;
     for (let i = 0; i < signature.inputs.length; i++) {
         const input = signature.inputs[i];
         rowContexts[input.id] = bundleRowContext(
             input,
-            instantiatedParamTypes[i],
+            getFunctionParamType(closedAccumulatedType, i),
             env,
             rowStates[input.id],
             assertDef(rowProblemsMap[input.id]),
         );
     }
+
+    const finalInferredType = memoizeTemplatedType(templatedAccumulatedType);
+    
     return { inferredType: finalInferredType, rowContexts };
 });
 
+function findIncomingType(
+    input: InputRowSignature,
+    rowState: RowState | undefined,
+    env: FlowEnvironment,
+    previousOutputTypes: Obj<TemplatedTypeSpecifier>,
+    resolvedInputType: TypeSpecifier,
+): { incomingTemplate: TemplatedTypeSpecifier, rowProblems: RowProblem[] } {
+    const rowProblems: RowProblem[] = [];
+    const fallbackType = createTemplatedType([], createAnyType());
+
+    const incomingTypeMap = mapObj(rowState?.connections || {}, connection => {
+        const { connectedType, accessorProblem } = resolveRowConnection(connection, previousOutputTypes, env);
+        accessorProblem && rowProblems.push(accessorProblem);
+        return connectedType || fallbackType;
+    });
+    const firstConnectedType = incomingTypeMap[0];
+
+    resolvedInputType = resolveTypeAlias(new TypeTreePath(), resolvedInputType, env);
+
+    if (input.rowType === 'input-variable' &&
+        (resolvedInputType.type === 'list' || resolvedInputType.type === 'tuple')) {
+        // treat inputs as list
+        const incomingList = objToArr(incomingTypeMap);
+        // remove holes
+        for (let i = 0; i < incomingList.length; i++) {
+            if (typeof incomingList[i] == 'undefined') {
+                incomingList[i] = fallbackType;
+                rowProblems.push({
+                    type: 'required-parameter',
+                    message: `Input element at index ${i} is required.`,
+                });
+            }
+        }
+        // creating tuple type: we must check if all elements in list
+        // can pass as expected type without removing information
+        // we must make templates independent using substritution
+        const incomingIndependent = disjoinTemplateLiterals(incomingList as TemplatedTypeSpecifier[]);
+        const allGenerics = incomingIndependent.map(t => t.generics).flat();
+        const allSpecifiers = incomingIndependent.map(t => t.specifier);
+        return {
+            incomingTemplate: createTemplatedType(
+                allGenerics,
+                createTupleType(...allSpecifiers),
+            ),
+            rowProblems,
+        };
+    }
+    if (input.rowType === 'input-variable' &&
+        resolvedInputType.type === 'function') {
+        if (firstConnectedType != null) {
+            return {
+                incomingTemplate: firstConnectedType,
+                rowProblems
+            };
+        }
+        const fallbackFunction = createTemplatedType([], createFunctionType(createAnyType(), createAnyType()));
+        if (typeof rowState?.value !== 'string' || !rowState?.value.length) {
+            rowProblems.push({
+                type: 'invalid-value',
+                message: `A function is required.`,
+            });
+            return { incomingTemplate: fallbackFunction, rowProblems };
+        }
+        const nameValue = rowState!.value;
+        const funcSignature = findEnvironmentSignature(env, nameValue);
+        const templatedFunctionSpec = funcSignature && getTemplatedSignatureType(funcSignature);
+        if (templatedFunctionSpec == null) {
+            rowProblems.push({
+                type: 'invalid-value',
+                message: `Could not find function named '${nameValue}'.`,
+            });
+            return { incomingTemplate: fallbackFunction, rowProblems };
+        }
+        return { incomingTemplate: templatedFunctionSpec, rowProblems };
+    }
+    if (input.rowType === 'input-variable' &&
+        resolvedInputType.type === 'map') {
+        // make independent
+        const entries = Object.entries(incomingTypeMap);
+        const keys = entries.map(x => x[0]);
+        const valueTemplates = entries.map(x => x[1]);
+        const independentValues = disjoinTemplateLiterals(valueTemplates);
+        const allGenerics = independentValues.map(t => t.generics).flat();
+        const allSpecifiers = independentValues.map(t => t.specifier);
+        const independentMap = Object.fromEntries(zipInner(keys, allSpecifiers));
+        return {
+            incomingTemplate: createTemplatedType(
+                allGenerics,
+                createMapType(independentMap),
+            ),
+            rowProblems,
+        };
+    }
+    if (input.rowType === 'input-variable') {
+        return {
+            incomingTemplate: firstConnectedType || createTemplatedType([], input.specifier),
+            rowProblems,
+        };
+    }
+    if (input.rowType === 'input-simple') {
+        if (firstConnectedType == null) {
+            rowProblems.push({
+                type: 'required-parameter',
+                message: `This parameter is required and must be connected.`,
+            });
+        }
+        return {
+            incomingTemplate: firstConnectedType || fallbackType,
+            rowProblems,
+        };
+    }
+    throw new Error(`Unknown input type ${(input as any).rowType}`);
+}
+
 function resolveRowConnection(
     connection: FlowConnection,
-    previousOutputTypes: Obj<TypeSpecifier>,
+    previousOutputTypes: Obj<TemplatedTypeSpecifier>,
     env: FlowEnvironment,
-): { connectedType?: TypeSpecifier, accessorProblem?: RowProblem } {
-    const outputType = previousOutputTypes[connection.nodeId];
-    if (!outputType) {
+): { connectedType?: TemplatedTypeSpecifier, accessorProblem?: RowProblem } {
+    const templatedOutputType = previousOutputTypes[connection.nodeId];
+    if (!templatedOutputType) {
         return {
             accessorProblem: {
                 type: 'invalid-connection',
@@ -101,10 +219,11 @@ function resolveRowConnection(
             },
         };
     }
+    const { specifier, generics } = templatedOutputType;
 
-    const resolvedType = tryResolveTypeAlias(outputType, env);
+    const resolvedType = tryResolveTypeAlias(specifier, env);
     if (connection.accessor == null || resolvedType == null) {
-        return { connectedType: outputType };
+        return { connectedType: templatedOutputType };
     }
 
     if (resolvedType.type === 'tuple') {
@@ -126,7 +245,12 @@ function resolveRowConnection(
                 },
             };
         }
-        return { connectedType: resolvedType.elements[accessorIndex] };
+        return {
+            connectedType: createReducedTemplateType(
+                generics,
+                resolvedType.elements[accessorIndex],
+            ),
+        };
     }
     if (resolvedType.type === 'map') {
         const hasKey = resolvedType.elements.hasOwnProperty(connection.accessor);
@@ -138,7 +262,12 @@ function resolveRowConnection(
                 },
             };
         }
-        return { connectedType: resolvedType.elements[connection.accessor] };
+        return {
+            connectedType: createReducedTemplateType(
+                generics,
+                resolvedType.elements[connection.accessor],
+            ),
+        };
     }
 
     return {
@@ -149,108 +278,14 @@ function resolveRowConnection(
     };
 }
 
-function findIncomingType(
-    input: InputRowSignature,
-    rowState: RowState | undefined,
-    env: FlowEnvironment,
-    previousOutputTypes: Obj<TypeSpecifier>,
-    resolvedInputType: TypeSpecifier,
-): { incomingType: TypeSpecifier, rowProblems: RowProblem[] } {
-    const rowProblems: RowProblem[] = [];
-
-    const incomingTypeMap = mapObj(rowState?.connections || {}, connection => {
-        const { connectedType, accessorProblem } = resolveRowConnection(connection, previousOutputTypes, env);
-        accessorProblem && rowProblems.push(accessorProblem);
-        return connectedType || createAnyType();
-    });
-    const firstConnectedType = incomingTypeMap[0];
-
-    resolvedInputType = resolveTypeAlias(new TypeTreePath(), resolvedInputType, env);
-
-    if (input.rowType === 'input-variable' &&
-        (resolvedInputType.type === 'list' || resolvedInputType.type === 'tuple')) {
-        // treat inputs as list
-        const incomingList = objToArr(incomingTypeMap);
-        // remove holes
-        for (let i = 0; i < incomingList.length; i++) {
-            if (typeof incomingList[i] == 'undefined') {
-                incomingList[i] = createAnyType();
-                rowProblems.push({
-                    type: 'required-parameter',
-                    message: `Input element at index ${i} is required.`,
-                });
-            }
-        }
-        // creating tuple type: we must check if all elements in list
-        // can pass as expected type without removing information
-        const incomingType = createTupleType(...incomingList as TypeSpecifier[]);
-        return { incomingType, rowProblems };
-    }
-    if (input.rowType === 'input-variable' &&
-        resolvedInputType.type === 'function') {
-        if (firstConnectedType != null) {
-            return {
-                incomingType: firstConnectedType,
-                rowProblems
-            };
-        }
-
-        if (typeof rowState?.value !== 'string' || !rowState?.value.length) {
-            rowProblems.push({
-                type: 'invalid-value',
-                message: `A function is required.`,
-            });
-            return { incomingType: createAnyType(), rowProblems };
-        }
-        const nameValue = rowState!.value;
-        const funcSignature = findEnvironmentSignature(env, nameValue);
-        const templatedFunctionSpec = funcSignature && getTemplatedSignatureType(funcSignature);
-        const closedFuncSpec = templatedFunctionSpec && closeTemplatedSpecifier(templatedFunctionSpec);
-        if (closedFuncSpec == null) {
-            rowProblems.push({
-                type: 'invalid-value',
-                message: `Could not find function named '${nameValue}'.`,
-            });
-            return { incomingType: createAnyType(), rowProblems };
-        }
-        return { incomingType: closedFuncSpec, rowProblems };
-    }
-    if (input.rowType === 'input-variable' &&
-        resolvedInputType.type === 'map') {
-        return {
-            incomingType: createMapType(incomingTypeMap),
-            rowProblems,
-        };
-    }
-    if (input.rowType === 'input-variable') {
-        return {
-            incomingType: firstConnectedType || input.specifier,
-            rowProblems,
-        };
-    }
-    if (input.rowType === 'input-simple') {
-        if (firstConnectedType == null) {
-            rowProblems.push({
-                type: 'required-parameter',
-                message: `This parameter is required and must be connected.`,
-            });
-        }
-        return {
-            incomingType: firstConnectedType || createAnyType(),
-            rowProblems,
-        };
-    }
-    throw new Error(`Unknown input type ${(input as any).rowType}`);
-}
-
 function bundleRowContext(
     input: InputRowSignature,
-    specifier: TypeSpecifier,
+    closedSpecifier: TypeSpecifier,
     env: FlowEnvironment,
     rowState: RowState | undefined,
     problems: RowProblem[],
 ): RowContext {
-    const resolvedSpec = tryResolveTypeAlias(specifier, env);
+    const resolvedSpec = tryResolveTypeAlias(closedSpecifier, env);
     const isUnconnected = rowState?.connections[0] == null;
 
     if (input.rowType === 'input-variable' && isUnconnected) {
