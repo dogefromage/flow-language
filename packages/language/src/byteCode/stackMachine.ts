@@ -1,8 +1,8 @@
-import { ByteInstruction, ByteOperation, ByteProgram, CallFrame, CallableChunk, StackValue, ThunkValue, byteCodeConstructors, operationNameTags } from "../types/byteCode";
+import { ByteInstruction, ByteOperation, ByteProgram, CallFrame, CallableChunk, StackValue, ThunkValue, byteCodeShorthands, operationNameTags } from "../types/byteCode";
 import { assertDef, assertNever, assertTruthy } from "../utils";
 import { instructionToString } from "./byteCodeUtils";
 
-const { op, thunk } = byteCodeConstructors;
+const { op, thunk } = byteCodeShorthands;
 
 interface StackMachineArgs {
     trace?: boolean;
@@ -44,7 +44,7 @@ export class StackMachine {
 
     interpret() {
         try {
-            const entryLabel = this.program.entryChunk;
+            const entryLabel = 'start';
             this.execCall(entryLabel, this.getChunk(entryLabel));
 
             while (this.callStack.length) {

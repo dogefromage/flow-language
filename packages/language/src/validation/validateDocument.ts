@@ -1,19 +1,16 @@
 import { baseEnvironmentContent } from "../content/baseEnvironment";
 import { createEnvironment, pushContent } from "../core/environment";
 import { createAnyType, createMapType } from "../typeSystem";
-import { ByteInstruction, ByteOperation, FlowDocument, FlowEnvironmentContent, FlowSignature, GenericParameter, InputRowSignature, OutputRowSignature, byteCodeConstructors } from "../types";
+import { ByteOperation, FlowDocument, FlowEnvironmentContent, FlowSignature, GenericParameter, InputRowSignature, OutputRowSignature, byteCodeShorthands } from "../types";
 import { DocumentProblem, FlowDocumentContext, FlowGraphContext } from "../types/context";
 import { Obj } from "../types/utilTypes";
 import { mem } from "../utils/functional";
 import { getFlowSignature, validateFlowGraph } from "./validateFlowGraph";
 
-const { op, data } = byteCodeConstructors;
+const { op, data } = byteCodeShorthands;
 
 export const validateDocument = mem((document: FlowDocument) => {
-    const {
-        flows: rawFlowMap,
-        config: {}
-    } = document;
+    const { flows: rawFlowMap } = document;
 
     const flowContexts: Obj<FlowGraphContext> = {};
     const problems: DocumentProblem[] = [];

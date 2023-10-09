@@ -1,5 +1,5 @@
 import { InputRowSignature, OutputRowSignature } from "./signatures";
-import { InitializerValue, GenericParameter } from "./typeSystem";
+import { GenericParameter, InitializerValue } from "./typeSystem";
 import { Obj, Vec2 } from "./utilTypes";
 
 // export type RowInitializerType = 'list-like' | 'map-like' | 'function' | 'first';
@@ -47,11 +47,8 @@ export interface FlowGraph {
     idCounter: number;
 }
 
-export interface FlowDocumentConfig {}
-
 export interface FlowDocument {
     flows: Obj<FlowGraph>;
-    config: FlowDocumentConfig;
 }
 
 export const MAIN_FLOW_ID = 'main';

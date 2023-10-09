@@ -103,16 +103,22 @@ export function mapObj<X, Y>(
  * Expects array to contain numberic keys
  */
 export function objToArr<T>(obj: Record<string, T>) {
+    // collect
+    const maxNumKey = findMaxIntegerKey(obj);
+    const arr: (T | undefined)[] = [];
+    for (let i = 0; i <= maxNumKey; i++) {
+        arr[i] = obj[i];
+    }
+    return arr;
+}
+
+// -1 if none, otherwise positive integer
+export function findMaxIntegerKey(obj: Record<string, any>) {
     let maxNumKey = -1;
     for (const key of Object.keys(obj)) {
         if (key.match(/^-?\d+$/)) {
             maxNumKey = Math.max(maxNumKey, parseInt(key));
         }
     }
-    // collect
-    const arr: (T | undefined)[] = [];
-    for (let i = 0; i <= maxNumKey; i++) {
-        arr[i] = obj[i];
-    }
-    return arr;
+    return maxNumKey;
 }

@@ -1,10 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
-import MaterialSymbol from '../styles/MaterialSymbol';
 
 const CheckBoxDiv = styled.div<{ $checked: boolean, $disabled: boolean }>`
     /* width: 18px; */
-    width: 80px;
+    width: 90px;
     height: 18px;
     aspect-ratio: 1;
 

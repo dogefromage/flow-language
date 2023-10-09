@@ -18,11 +18,17 @@ interface EditorProps {
 }
 
 const Editor = ({}: PropsWithChildren<EditorProps>) => {
-    const [ store ] = useState<Store>(initStore);
+    const [store] = useState<Store>(initStore);
 
-    return (
+    return (<>
+        {/* icons */}
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+        {/* fonts */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" />
+        <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet" />
+
         <Provider store={store}>
-            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
             <Validator />
             <GlobalStyle />
             <ThemeProvider theme={defaultTheme}>
@@ -36,7 +42,7 @@ const Editor = ({}: PropsWithChildren<EditorProps>) => {
                 {/* DATA */}
             </ThemeProvider>
         </Provider>
-    );
+    </>);
 }
 
 export default Editor;

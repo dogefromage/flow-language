@@ -83,7 +83,6 @@ export interface CallFrame {
 }
 
 export interface ByteProgram {
-    entryChunk: string;
     chunks: Map<string, CallableChunk>;
 }
 
@@ -91,7 +90,7 @@ export interface ByteCompilerConfig {
     skipValidation?: boolean;
 }
 
-export const byteCodeConstructors = {
+export const byteCodeShorthands = {
     op: (operation: ByteOperation): OperationByteInstruction => ({ type: 'operation', operation }),
     data: (data: StackValue): DataByteInstruction => ({ type: 'data', data }),
     thunk: (args: ThunkValue['args'], chunk: ThunkValue['chunk'], label: string, result: ThunkValue['result'] = null,

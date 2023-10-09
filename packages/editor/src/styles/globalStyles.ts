@@ -1,9 +1,10 @@
 import { createGlobalStyle } from 'styled-components';
 import 'react-reflex/styles.css';
 
+/* @import url('https://fonts.googleapis.com/css2?family=Fira+Code&display=swap'); */
+/* @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300'); */
+
 const GlobalStyle = createGlobalStyle`
-    @import url('https://fonts.googleapis.com/css2?family=Fira+Code&display=swap');
-    /* @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300'); */
 
     :root {
         --color-1: #616161;
