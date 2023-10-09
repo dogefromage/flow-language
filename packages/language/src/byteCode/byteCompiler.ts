@@ -47,7 +47,7 @@ class Compiler {
 
         this.compileFlowChunk(entryFlowId);
 
-        console.log(byteProgramToString(this.program));
+        // console.log(byteProgramToString(this.program));
         return this.program;
     }
 

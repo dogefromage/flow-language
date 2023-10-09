@@ -13,7 +13,7 @@ function validateCompileInterpret(document: lang.FlowDocument, config: lang.Byte
         });
         sm.interpret();
         const res = sm.dpop();
-        console.log(res);
+        // console.log(res);
         return {
             data: res.toString() + '\n',
         };
