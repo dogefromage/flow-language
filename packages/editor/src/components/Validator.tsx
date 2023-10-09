@@ -1,4 +1,4 @@
-import * as lang from '@fluss/language';
+import * as lang from '@noodles/language';
 import { PropsWithChildren, useEffect } from 'react';
 import { selectDocument, useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { validationSetResult } from '../slices/contextSlice';

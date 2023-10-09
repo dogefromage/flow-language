@@ -1,5 +1,5 @@
 // https://styled-components.com/docs/api#typescript
-import { ConsumerOutput } from '@fluss/shared';
+import { ConsumerOutput } from '@noodles/shared';
 import { EdgeColor } from '@marble/language';
 import 'styled-components';
 import { SelectionStatus } from '.';

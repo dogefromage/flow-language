@@ -1,7 +1,7 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../redux/store";
 import { EditorSliceState } from "../types";
-import * as lang from "@fluss/language";
+import * as lang from "@noodles/language";
 
 const initialState: EditorSliceState = {
     activeFlow: lang.MAIN_FLOW_ID

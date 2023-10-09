@@ -1,5 +1,5 @@
 import { PanelState } from "./panelManager";
-import * as lang from '@fluss/language';
+import * as lang from '@noodles/language';
 
 export type AllRowSignatures = lang.InputRowSignature | lang.OutputRowSignature;
 export type RowSignatureBlueprint = {

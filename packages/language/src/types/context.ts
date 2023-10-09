@@ -49,7 +49,6 @@ export interface FlowGraphContext {
     flowSignature: FlowSignature;
     flowEnvironment: FlowEnvironment;
     sortedUsedNodes: string[];
-    // dependencies: string[];
 }
 
 export interface FlowNodeContext {

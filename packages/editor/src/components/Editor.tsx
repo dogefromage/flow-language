@@ -1,5 +1,5 @@
-import { DragzonePortalMount } from '@fluss/interactive';
-// import { DragzonePortalMount } from '@fluss/interactive';
+import { DragzonePortalMount } from '@noodles/interactive';
+// import { DragzonePortalMount } from '@noodles/interactive';
 import { Store } from '@reduxjs/toolkit';
 import React, { PropsWithChildren, useState } from 'react';
 import { Provider } from 'react-redux';

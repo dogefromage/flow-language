@@ -22,15 +22,6 @@ export function assertSubsetType(X: TypeSpecifier, Y: TypeSpecifier, env: FlowEn
 }
 function assertSubsetSwitch(path: TypeTreePath, argX: TypeSpecifier, argY: TypeSpecifier, env: FlowEnvironment) {
 
-    // // TODO: move this outside of subset function since it is part of row logic
-    // if (typeof argX !== 'string' && argX.type === 'missing') {
-    //     throw new TypeSystemException({
-    //         type: 'required-type',
-    //         message: `Type is missing.`,
-    //         path,
-    //     });
-    // }
-
     // base case for recursive definitions
     if (typeof argX === 'string' && argX === argY) {
         return;
@@ -43,30 +34,6 @@ function assertSubsetSwitch(path: TypeTreePath, argX: TypeSpecifier, argY: TypeS
     if (X.type === 'any' || Y.type === 'any') {
         return;
     }
-
-    // if (X.type === 'union') {
-    //     for (const Xi of X.elements) {
-    //         assertSubsetSwitch(pathWithTypeX, Xi, Y, env);
-    //     }
-    //     return;
-    // }
-    // if (Y.type === 'union') {
-    //     let fitsOne = false;
-    //     for (const Yi of Y.elements) {
-    //         try {
-    //             assertSubsetSwitch(path, X, Yi, env);
-    //             fitsOne = true;
-    //             break;
-    //         } catch {}
-    //     }
-    //     if (!fitsOne) {
-    //         throw new TypeSystemException({
-    //             type: 'incompatible-type',
-    //             message: `Found no compatible subtype in union.`,
-    //             path,
-    //         });
-    //     }
-    // }
 
     // special case
     if (X.type === 'tuple' && Y.type === 'list') {

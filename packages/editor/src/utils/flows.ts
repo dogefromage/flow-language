@@ -1,4 +1,4 @@
-import * as lang from "@fluss/language";
+import * as lang from "@noodles/language";
 import { JointLocationKey } from "../types";
 import { FlowJointStyling } from "../types/flowRows";
 import { AllRowSignatures } from "../types/flowInspectorView";

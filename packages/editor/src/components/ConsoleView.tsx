@@ -5,7 +5,7 @@ import { ViewProps } from '../types';
 import { OfflineConsumer } from '../utils/OfflineConsumer';
 import ConsoleControls from './ConsoleControls';
 import PanelBody from './PanelBody';
-import { ConsumerOutput, ConsumerState, DocumentConsumer } from '@fluss/shared';
+import { ConsumerOutput, ConsumerState, DocumentConsumer } from '@noodles/shared';
 import ConsoleLines from './ConsoleLines';
 
 const ConsoleView = (viewProps: ViewProps) => {

@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../redux/store";
-import { FlowDocumentConfig } from "@fluss/language";
+import { FlowDocumentConfig } from "@noodles/language";
 import { defaultDocumentConfig } from "../types";
 import { selectDocument } from "../redux/stateHooks";
 

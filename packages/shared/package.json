@@ -1,5 +1,5 @@
 {
-  "name": "@fluss/shared",
+  "name": "@noodles/shared",
   "version": "1.0.0",
   "description": "",
   "main": "lib/index.js",
@@ -10,7 +10,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@fluss/language": "workspace:^"
+    "@noodles/language": "workspace:^"
   },
   "devDependencies": {
     "emittery": "^1.0.1",

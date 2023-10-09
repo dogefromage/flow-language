@@ -1,5 +1,5 @@
-import * as lang from '@fluss/language';
-import { ConsumerOutput } from '@fluss/shared';
+import * as lang from '@noodles/language';
+import { ConsumerOutput } from '@noodles/shared';
 import { expose } from 'comlink';
 
 function validateCompileInterpret(document: lang.FlowDocument, config: lang.ByteCompilerConfig): ConsumerOutput {

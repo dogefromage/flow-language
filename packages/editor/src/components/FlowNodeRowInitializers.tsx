@@ -1,4 +1,4 @@
-import * as lang from '@fluss/language';
+import * as lang from '@noodles/language';
 import React, { useMemo } from 'react';
 import styled from 'styled-components';
 import { useAppDispatch } from '../redux/stateHooks';

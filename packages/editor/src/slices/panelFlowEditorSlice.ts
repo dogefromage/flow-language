@@ -1,4 +1,4 @@
-import { TypeSpecifier } from "@fluss/language";
+import { TypeSpecifier } from "@noodles/language";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { useCallback } from "react";
 import panelStateEnhancer, { selectPanelState } from "../redux/panelStateEnhancer";

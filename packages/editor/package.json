@@ -1,5 +1,5 @@
 {
-    "name": "@fluss/editor",
+    "name": "@noodles/editor",
     "version": "1.0.0",
     "description": "",
     "main": "lib/index.js",
@@ -11,9 +11,9 @@
     "author": "",
     "license": "MIT",
     "dependencies": {
-        "@fluss/interactive": "workspace:^",
-        "@fluss/language": "workspace:^",
-        "@fluss/shared": "workspace:^",
+        "@noodles/interactive": "workspace:^",
+        "@noodles/language": "workspace:^",
+        "@noodles/shared": "workspace:^",
         "@hocuspocus/provider": "^2.2.3",
         "@react-hook/resize-observer": "^1.2.6",
         "@reduxjs/toolkit": "^1.9.5",

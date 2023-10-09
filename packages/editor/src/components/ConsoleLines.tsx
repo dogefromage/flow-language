@@ -1,4 +1,4 @@
-import { ConsumerOutput } from '@fluss/shared';
+import { ConsumerOutput } from '@noodles/shared';
 import React, { PropsWithChildren, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 

@@ -5,7 +5,7 @@ import { selectPanelState } from '../redux/panelStateEnhancer';
 import { selectFlowContext } from '../slices/contextSlice';
 import { flowsRemoveConnection, selectSingleFlow } from '../slices/flowsSlice';
 import { FlowEditorPanelState, ViewTypes } from '../types';
-import { EdgeColor, FlowEdge, FlowGraph, JointLocation } from '@fluss/language';
+import { EdgeColor, FlowEdge, FlowGraph, JointLocation } from '@noodles/language';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { getJointLocationKey } from '../utils/flows';
 

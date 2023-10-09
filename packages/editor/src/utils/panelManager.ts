@@ -1,4 +1,4 @@
-import { Obj } from "@fluss/language/lib/types/types/utilTypes";
+import { Obj } from "@noodles/language/lib/types/types/utilTypes";
 import { PayloadAction } from "@reduxjs/toolkit";
 import { useEffect } from "react";
 import { panelStateBind, panelStateRemove } from "../redux/panelStateEnhancer";

@@ -1,4 +1,4 @@
-import * as lang from "@fluss/language";
+import * as lang from "@noodles/language";
 import { Vec2 } from "./utils";
 import { PanelState } from "./panelManager";
 

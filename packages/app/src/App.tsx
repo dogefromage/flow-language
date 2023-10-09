@@ -1,4 +1,4 @@
-import { Editor } from '@fluss/editor';
+import { Editor } from '@noodles/editor';
 
 interface Props {
 

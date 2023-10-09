@@ -3,7 +3,6 @@ import { FlowEnvironment } from "../types/context";
 import { TypeSpecifier } from "../types/typeSystem";
 import { TypeSystemException, TypeTreePath } from "./exceptionHandling";
 
-
 export function tryResolveTypeAlias(X: TypeSpecifier, env: FlowEnvironment) {
     try {
         return resolveTypeAlias(new TypeTreePath(), X, env);

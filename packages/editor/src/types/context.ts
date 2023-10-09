@@ -1,4 +1,4 @@
-import * as lang from '@fluss/language';
+import * as lang from '@noodles/language';
 
 export interface ContextSliceState {
     documentContext: lang.FlowDocumentContext | null;

@@ -1,4 +1,4 @@
-import * as lang from '@fluss/language';
+import * as lang from '@noodles/language';
 
 export const flowsIdRegex = /^[A-Za-z_][A-Za-z_0-9]*$/;
 export const listItemRegex = /^[A-Za-z_][A-Za-z_0-9]*$/;

@@ -1,4 +1,4 @@
-import * as lang from "@fluss/language";
+import * as lang from "@noodles/language";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { castDraft } from "immer";
 import { useCallback } from "react";

@@ -1,4 +1,4 @@
-import lang from '@fluss/language';
+import lang from '@noodles/language';
 
 export function getSpecifierLabel(X: lang.TypeSpecifier) {
     if (typeof X === 'string') {

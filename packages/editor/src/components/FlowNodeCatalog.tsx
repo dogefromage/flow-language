@@ -1,4 +1,4 @@
-import { FlowSignature, JointLocation, isSubsetType, collectTotalEnvironmentContent } from "@fluss/language";
+import { FlowSignature, JointLocation, isSubsetType, collectTotalEnvironmentContent } from "@noodles/language";
 import React, { useCallback, useMemo } from "react";
 import { selectPanelState } from "../redux/panelStateEnhancer";
 import { useAppDispatch, useAppSelector } from "../redux/stateHooks";

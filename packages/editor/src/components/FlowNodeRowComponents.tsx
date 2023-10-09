@@ -1,4 +1,4 @@
-import * as lang from "@fluss/language";
+import * as lang from "@noodles/language";
 import React from "react";
 import { FlowNodeRowDiv, FlowNodeRowNameP } from "../styles/flowStyles";
 import { formatFlowLabel } from "../utils/flows";

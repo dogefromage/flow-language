@@ -1,4 +1,4 @@
-import * as lang from "@fluss/language";
+import * as lang from "@noodles/language";
 import { createSlice } from "@reduxjs/toolkit";
 import { Draft, enableMapSet } from "immer";
 import { useCallback } from "react";

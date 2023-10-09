@@ -1,5 +1,5 @@
-import * as lang from '@fluss/language';
-import { ConsumerInputSignal, ConsumerState, DocumentConsumer } from '@fluss/shared';
+import * as lang from '@noodles/language';
+import { ConsumerInputSignal, ConsumerState, DocumentConsumer } from '@noodles/shared';
 import { wrap } from 'comlink';
 
 type State = ConsumerState

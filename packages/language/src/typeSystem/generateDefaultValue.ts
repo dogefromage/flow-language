@@ -25,28 +25,7 @@ const _generateDefaultValue = mem((
         if (X.name === primitiveTypes.string.name) {
             return '';
         }
-        // if (X.name === primitiveTypes.null.name) {
-        //     return null;
-        // }
         throw new Error(`Unknown primitive ${X.name}`);
     }
-    // if (X.type === 'list') {
-    //     return [];
-    // }
-    // if (X.type === 'tuple') {
-    //     return X.elements.map((Y, i) => 
-    //         _generateDefaultValue(typedPath.add({ key: i.toString(), formatting: 'property' }), Y, env)
-    //     );
-    // }
-    // if (X.type === 'map') {
-    //     return Object.entries(X.elements)
-    //         .map(([key, Y]) => 
-    //             [key, _generateDefaultValue(typedPath.add({ key, formatting: 'property' }), Y, env)]
-    //         );
-    // }
-    // if (X.type === 'function') {
-    //     return 'id';
-    // }
-
     throw new Error(`Cannot generate default value for  '${(X as any).type}'`);
 }, typeSystemCache);

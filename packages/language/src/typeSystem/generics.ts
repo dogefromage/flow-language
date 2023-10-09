@@ -124,38 +124,6 @@ function combineInstantiation(older: InstantiationConstraints, newer: Instantiat
     return { ...newer, ...older };
 }
 
-// export function findUsedGenerics(X: TypeSpecifier, possible: Set<string>, found: Set<string>) {
-//     if (typeof X === 'string') {
-//         if (possible.has(X)) {
-//             found.add(X);
-//         }
-//         return;
-//     }
-//     switch (X.type) {
-//         case 'function':
-//             findUsedGenerics(X.parameter, possible, found);
-//             findUsedGenerics(X.output, possible, found);
-//             return;
-//         case 'list':
-//             findUsedGenerics(X.element, possible, found);
-//             return;
-//         case 'map':
-//             for (const el of Object.values(X.elements)) {
-//                 findUsedGenerics(el, possible, found);
-//             }
-//             return;
-//         case 'tuple':
-//             for (const el of X.elements) {
-//                 findUsedGenerics(el, possible, found);
-//             }
-//             return;
-//         case 'any':
-//         case 'primitive':
-//             return;
-//     }
-//     assertNever();
-// }
-
 export function substituteGeneric(X: TypeSpecifier, oldName: string, newType: TypeSpecifier): TypeSpecifier {
     if (typeof X === 'string') {
         return X === oldName ? newType : X;
@@ -230,20 +198,6 @@ export function instantiateTemplatedType<T extends TypeSpecifier>(
         finalSpecifier = substituteGeneric(finalSpecifier, name, replacer);
     }
 
-    // for (const [name, replacer] of Object.entries(instantiationMap)) {
-    //     const pos = newGenerics.findIndex(g => g.id === name);
-    //     if (pos < 0) {
-    //         throw new TypeSystemException({ message: `Templated type does not contain generic named '${name}'.`, path });
-    //     }
-    //     const generic = newGenerics[pos];
-    //     newGenerics.splice(pos, 1);
-    //     if (generic.constraint && !isSubsetType(replacer, generic.constraint, env)) {
-    //         // TODO: if this will be shown to user often, catch path from isSubsetType error and pass on
-    //         throw new TypeSystemException({ message: `Cannot instantiate generic '${name}'. Constraint not fulfilled.`, path });
-    //     }
-    //     finalSpecifier = substituteGeneric(finalSpecifier, name, replacer);
-    // }
-    
     // filter away unused generics using reduced constructor
     return createReducedTemplateType(
         newGenerics,

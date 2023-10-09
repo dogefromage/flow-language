@@ -22,10 +22,6 @@ export const createTupleType = mem(
     (...elements: TypeSpecifier[]): TupleTypeSpecifier => ({ type: 'tuple', elements }),
     typeSystemCache,
 );
-// export const createUnionType = mem(
-//     (...elements: TypeSpecifier[]): UnionTypeSpecifier => ({ type: 'union', elements }),
-//     typeSystemCache,
-// );
 export const createFunctionType = mem(
     (parameter: TypeSpecifier, output: TypeSpecifier): FunctionTypeSpecifier => ({ type: 'function', parameter, output }),
     typeSystemCache,
@@ -163,10 +159,3 @@ export function createReducedTemplateType<T extends TypeSpecifier>(generics: Gen
     generics = generics.filter(X => literals.has(X.id));
     return createTemplatedType<T>(generics, X);
 }
-
-// export function mapTemplate<T extends TypeSpecifier>(
-//     X: TemplatedTypeSpecifier<T>, 
-//     op: (T: TypeSpecifier) => TypeSpecifier,
-// ) {
-//     return createReducedTemplateType(X.generics, op(X.specifier));
-// }
