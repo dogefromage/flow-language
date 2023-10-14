@@ -24,27 +24,33 @@ export interface FunctionTypeSpecifier {
     parameter: TypeSpecifier;
     output: TypeSpecifier;
 }
+export interface AliasTypeSpecifier {
+    type: 'alias';
+    alias: string;
+}
+export interface GenericTypeSpecifier {
+    type: 'generic';
+    alias: string;
+}
 
 export type InstantiationConstraints = Record<string, TypeSpecifier>;
 
-export type NonAliasedTypeSpecifier = 
+export type TypeSpecifier = 
     | AnyTypeSpecifier
     | PrimitiveTypeSpecifier
     | MapTypeSpecifier
     | ListTypeSpecifier
     | TupleTypeSpecifier
     | FunctionTypeSpecifier
+    | AliasTypeSpecifier
+    | GenericTypeSpecifier
 
-export type TypeSpecifier =
-    | string
-    | NonAliasedTypeSpecifier
-
-export interface GenericParameter {
+export interface TemplateParameter {
     id: string;
     constraint: TypeSpecifier | null;
 }
 export interface TemplatedTypeSpecifier<T extends TypeSpecifier = TypeSpecifier> {
-    generics: GenericParameter[];
+    generics: TemplateParameter[];
     specifier: T;
 }
 

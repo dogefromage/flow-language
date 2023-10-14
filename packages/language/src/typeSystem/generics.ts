@@ -1,6 +1,6 @@
 import { createAnyType, createFunctionType, createListType, createMapType, createReducedTemplateType, createTemplatedType, createTupleType } from ".";
 import { FlowEnvironment } from "../types/context";
-import { FunctionTypeSpecifier, GenericParameter, InstantiationConstraints, ListTypeSpecifier, MapTypeSpecifier, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
+import { FunctionTypeSpecifier, TemplateParameter, InstantiationConstraints, ListTypeSpecifier, MapTypeSpecifier, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
 import { Obj } from "../types/utilTypes";
 import { assertNever } from "../utils";
 import { mapObj, zipInner } from "../utils/functional";
@@ -164,7 +164,7 @@ export function closeTemplatedSpecifier<X extends TypeSpecifier>(T: TemplatedTyp
 
 export function instantiateTemplatedType<T extends TypeSpecifier>(
     path: TypeTreePath, templatedType: TemplatedTypeSpecifier<T>,
-    instantiationMap: InstantiationMap, instantiationGenerics: GenericParameter[], 
+    instantiationMap: InstantiationMap, instantiationGenerics: TemplateParameter[], 
     env: FlowEnvironment
 ): TemplatedTypeSpecifier<T> {
     // create map type for ease of use

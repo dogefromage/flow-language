@@ -1,8 +1,7 @@
-import { baseEnvironmentContent } from "../content/baseEnvironment";
 import { createEnvironment, pushContent } from "../core/environment";
 import { createAnyType, createMapType } from "../typeSystem";
-import { ByteOperation, FlowDocument, FlowEnvironmentContent, FlowSignature, GenericParameter, InputRowSignature, OutputRowSignature, byteCodeShorthands } from "../types";
-import { DocumentProblem, FlowDocumentContext, FlowGraphContext } from "../types/context";
+import { ByteOperation, FlowDocument, FlowEnvironmentContent, FlowSignature, InputRowSignature, OutputRowSignature, TemplateParameter, byteCodeShorthands } from "../types";
+import { DocumentProblem, FlowDocumentContext, FlowEnvironmentNamespace, FlowGraphContext } from "../types/context";
 import { Obj } from "../types/utilTypes";
 import { mem } from "../utils/functional";
 import { getFlowSignature, validateFlowGraph } from "./validateFlowGraph";
@@ -14,21 +13,17 @@ export const validateDocument = mem((document: FlowDocument) => {
 
     const flowContexts: Obj<FlowGraphContext> = {};
     const problems: DocumentProblem[] = [];
-    let environment = createEnvironment(baseEnvironmentContent, 'global');
     let criticalSubProblems = 0;
 
     const flowsSorted = Object.values(rawFlowMap)
         .sort((a, b) => a.id.localeCompare(b.id));
-
-    const signatureContent = makeFlowSignaturesContent(
+    const documentNamespace = makeDocumentNamespace(
         ...flowsSorted.map(getFlowSignature)
     );
-    environment = pushContent(environment, signatureContent, 'document');
+    let baseEnvironment = createEnvironment(documentNamespace);
 
     for (const flow of flowsSorted) {
-        const flowSyntaxContent = generateFlowSyntaxLayer(flow.generics, flow.inputs, flow.output);
-        const flowSyntaxEnv = pushContent(environment, flowSyntaxContent, flow.id);
-        const flowContext = validateFlowGraph(flow, flowSyntaxEnv);
+        const flowContext = validateFlowGraph(flow, baseEnvironment);
         flowContexts[flow.id] = flowContext;
         criticalSubProblems += flowContext.problems.length + flowContext.criticalSubProblems;
     }
@@ -38,21 +33,24 @@ export const validateDocument = mem((document: FlowDocument) => {
         flowContexts,
         problems,
         criticalSubProblems,
-        environment,
+        environment: baseEnvironment,
     };
     return result;
 });
 
-const makeFlowSignaturesContent = mem(
-    (...signatureList: FlowSignature[]): FlowEnvironmentContent => ({
-        signatures: Object.fromEntries(signatureList.map(s => [s.id, s])),
-        types: {}, // maybe generate return types or something
+const makeDocumentNamespace = mem(
+    (...signatureList: FlowSignature[]): FlowEnvironmentNamespace => ({
+        name: 'document', 
+        content: {
+            signatures: signatureList,
+            types: [], // maybe generate return types or something
+        },
     })
 );
 
 const generateFlowSyntaxLayer = mem(generateFlowSyntaxLayerInitial);
 function generateFlowSyntaxLayerInitial(
-    generics: GenericParameter[],
+    generics: TemplateParameter[],
     flowInputs: InputRowSignature[],
     flowOutput: OutputRowSignature | null,
 ): FlowEnvironmentContent {

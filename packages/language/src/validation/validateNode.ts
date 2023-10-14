@@ -1,4 +1,4 @@
-import { getScopedSignature } from "../core/environment";
+import { getSignature } from "../core/environment";
 import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, OutputRowSignature, TemplatedTypeSpecifier, TypeSpecifier } from "../types";
 import { FlowNodeContext, RowContext, RowDisplay } from "../types/context";
 import { Obj } from "../types/utilTypes";
@@ -12,7 +12,7 @@ export const validateNode = mem((
     inferredNodeOutputs: Obj<TemplatedTypeSpecifier>,
     isUsed: boolean,
 ): FlowNodeContext => {
-    const searchRes = getScopedSignature(env, node.signature);
+    const searchRes = getSignature(env, node.signature);
     if (searchRes == null) {
         return noSignatureContext(node, isUsed);
     }

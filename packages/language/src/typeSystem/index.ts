@@ -1,5 +1,5 @@
 import { FlowSignature } from "../types/signatures";
-import { AnyTypeSpecifier, FunctionTypeSpecifier, GenericParameter, ListTypeSpecifier, MapTypeSpecifier, PrimitiveTypeSpecifier, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
+import { AnyTypeSpecifier, FunctionTypeSpecifier, TemplateParameter, ListTypeSpecifier, MapTypeSpecifier, PrimitiveTypeSpecifier, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
 import { assertNever, assertTruthy } from "../utils";
 import { ListCache } from "../utils/ListCache";
 import { always, mem, memoList } from "../utils/functional";
@@ -49,12 +49,12 @@ export const createMapType = (elements: Record<string, TypeSpecifier>) => {
 }
 
 export const createGenericParameter = mem(
-    (id: string, constraint: TypeSpecifier | null): GenericParameter => ({ id, constraint }),
+    (id: string, constraint: TypeSpecifier | null): TemplateParameter => ({ id, constraint }),
     typeSystemCache,
 )
 
 export const createTemplatedType = mem(
-    <T extends TypeSpecifier>(generics: GenericParameter[], specifier: T
+    <T extends TypeSpecifier>(generics: TemplateParameter[], specifier: T
         ): TemplatedTypeSpecifier<T> => ({ generics, specifier }),
     typeSystemCache,
 )
@@ -153,7 +153,7 @@ export function findAllTypeLiterals(X: TypeSpecifier, literals: Set<string>) {
     assertNever();
 }
 
-export function createReducedTemplateType<T extends TypeSpecifier>(generics: GenericParameter[], X: T) {
+export function createReducedTemplateType<T extends TypeSpecifier>(generics: TemplateParameter[], X: T) {
     const literals = new Set<string>()
     findAllTypeLiterals(X, literals);
     generics = generics.filter(X => literals.has(X.id));

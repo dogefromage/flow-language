@@ -98,6 +98,13 @@ export function mapObj<X, Y>(
     const mapped = pairs.map<[ string, Y ]>(([ k, x ]) => [ k, map(x, k) ]);
     return Object.fromEntries(mapped);
 }
+export function mapObjKeys<X>(
+    obj: Record<string, X>, map: (oldKey: string) => string
+): Record<string, X> {
+    const pairs = Object.entries(obj);
+    const mapped = pairs.map<[ string, X ]>(([ oldKey, x ]) => [ map(oldKey), x ]);
+    return Object.fromEntries(mapped);
+}
 
 /**
  * Expects array to contain numberic keys

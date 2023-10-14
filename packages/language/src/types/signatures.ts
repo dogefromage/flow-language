@@ -1,5 +1,6 @@
+import { assertDef } from "../utils";
 import { ByteInstruction, CallableChunk } from "./byteCode";
-import { GenericParameter, InitializerValue, TypeSpecifier } from "./typeSystem";
+import { TemplateParameter, InitializerValue, TypeSpecifier } from "./typeSystem";
 
 interface BaseRow<R extends string> {
     id: string;
@@ -24,7 +25,7 @@ export type OutputRowSignature =
     | HiddenOutputRowSignature
 
 export interface AnonymousFlowSignature {
-    generics: GenericParameter[];
+    generics: TemplateParameter[];
     inputs: InputRowSignature[];
     output: OutputRowSignature;
     byteCode?: 
@@ -40,3 +41,11 @@ export interface FlowSignature extends AnonymousFlowSignature {
     description: string | null;
     attributes: Record<string, string>;
 }
+
+export interface NamespacePath {
+    // should look like:
+    // [document/module_name]::[slug_1]:: … ::[slug_n]::[flowId]
+    path: string;
+}
+export const pathTail = (path: NamespacePath) =>
+    assertDef(path.path.split('::').at(-1), 'Path empty');

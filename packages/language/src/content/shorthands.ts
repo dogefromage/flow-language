@@ -1,4 +1,4 @@
-import { VariableInputRowSignature, ListTypeSpecifier, TupleTypeSpecifier, FunctionTypeSpecifier, SimpleInputRowSignature, TypeSpecifier, OutputRowSignature, DestructuredOutputRowSignature, GenericParameter, ByteInstruction, AnonymousFlowSignature } from "../types";
+import { VariableInputRowSignature, ListTypeSpecifier, TupleTypeSpecifier, FunctionTypeSpecifier, SimpleInputRowSignature, TypeSpecifier, OutputRowSignature, DestructuredOutputRowSignature, TemplateParameter, ByteInstruction, AnonymousFlowSignature } from "../types";
 
 const varRow = {
     string: (id: string, defaultValue: string): VariableInputRowSignature => ({
@@ -92,7 +92,7 @@ const outputRow = {
         specifier,
     }),
 };
-const genParam = (name: string, constraint: TypeSpecifier | null = null): GenericParameter => ({ id: name, constraint });
+const genParam = (name: string, constraint: TypeSpecifier | null = null): TemplateParameter => ({ id: name, constraint });
 
 const callableCode = (arity: number, instructions: ByteInstruction[]): AnonymousFlowSignature['byteCode'] =>
     ({ type: 'callable', chunk: { arity, instructions } });

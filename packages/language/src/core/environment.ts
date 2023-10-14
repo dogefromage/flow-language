@@ -1,155 +1,175 @@
-import { FlowEnvironment, FlowEnvironmentContent, GenericTypeInference } from "../types";
-import { FlowSignature } from "../types/signatures";
-import { TypeSpecifier } from "../types/typeSystem";
-import { Obj } from "../types/utilTypes";
+import { FlowEnvironment, FlowEnvironmentContent, FlowEnvironmentNamespace } from "../types";
+import { NamespacePath } from "../types/signatures";
 import { ListCache } from "../utils/ListCache";
-import { mem } from "../utils/functional";
+import { mapObjKeys, mem } from "../utils/functional";
 
+// use shared cache since same values appear often in different functions
 const environmentCache = new ListCache(5209);
 
 export const createEnvironment = mem(
-    (content: FlowEnvironmentContent, slug: string): FlowEnvironment => ({ parent: null, content, slug }),
+    (namespace: FlowEnvironmentNamespace): FlowEnvironment => ({ parent: null, namespace }),
     environmentCache,
 );
+// export const createEnvironment = mem(
+//     (content: FlowEnvironmentContent /* , slug: string */): FlowEnvironment => ({ parent: null, content, /* slug */ }),
+//     environmentCache,
+// );
 
 export const pushContent = mem(
-    (parent: FlowEnvironment, content: FlowEnvironmentContent, slug: string): FlowEnvironment => ({ parent, content, slug }),
+    (parent: FlowEnvironment, namespace: FlowEnvironmentNamespace): FlowEnvironment => 
+        ({ parent, namespace }),
     environmentCache,
 );
+// export const pushContent = mem(
+//     (parent: FlowEnvironment, content: FlowEnvironmentContent, slug: string): FlowEnvironment => ({ parent, content, slug }),
+//     environmentCache,
+// );
 export const popContent = (env: FlowEnvironment) => env.parent;
 
-export const pushGenericInference = mem(
-    (parent: FlowEnvironment, inference: GenericTypeInference, slug: string): FlowEnvironment => ({
-        parent,
-        content: {
-            types: { [inference.id]: inference.resolvedSpecifier },
-        },
-        slug,
-    }), environmentCache,
-);
+// export const pushGenericInference = mem(
+//     (parent: FlowEnvironment, inference: GenericTypeInference, slug: string): FlowEnvironment => ({
+//         parent,
+//         content: {
+//             types: { [inference.id]: inference.resolvedSpecifier },
+//         },
+//         slug,
+//     }), 
+//     environmentCache,
+// );
+
+function getNamedContent(namespace: FlowEnvironmentNamespace) {
+    const addNamespaceName = (key: string) => `${namespace.name}::${key}`;
+    const cont: FlowEnvironmentContent = {
+        signatures: mapObjKeys(
+            namespace.content.signatures, 
+            addNamespaceName
+        ),
+        types: mapObjKeys(
+            namespace.content.types, 
+            addNamespaceName
+        ),
+    };
+    return cont;
+}
 
 export const collectTotalEnvironmentContent = mem(
     (env: FlowEnvironment): FlowEnvironmentContent => {
-        const totalCurr = addAdditionalContent(env.content);
-        if (!env.parent) {
-            return totalCurr;
+        let currContent = env.namespace ? 
+            getNamedContent(env.namespace) : { signatures: {}, types: {} };
+        if (env.parent == null) {
+            return currContent;
         }
+
         const parent = collectTotalEnvironmentContent(env.parent);
         return {
             // children overwrite parents
-            signatures: { ...parent.signatures, ...totalCurr.signatures },
-            types: { ...parent.types, ...totalCurr.types },
+            signatures: { ...parent.signatures, ...currContent.signatures },
+            types: { ...parent.types, ...currContent.types },
         };
     },
     environmentCache,
 );
 
-export const getScopedSignature = mem(
-    (env: FlowEnvironment, signatureId: string) => {
-        let signature: FlowSignature | undefined;
-        while (env != null) {
-            if (env.content.signatures?.[signatureId] != null) {
-                signature = env.content.signatures?.[signatureId];
-                return [ signature, getScopePath(env) ] as const;
-            }
-            env = env.parent!;
-        }
-    },
-    environmentCache,
-);
+// export const getSignature = mem(
+//     (env: FlowEnvironment, path: NamespacePath) => {
+//         const envContent = collectTotalEnvironmentContent(env);
+//         return envContent.signatures?.[path.path];
+//     },
+//     environmentCache,
+// );
 
-export const getScopePath = (env: FlowEnvironment | null) => {
-    let scopePath: string[] = [];
-    while (env != null) {
-        scopePath.unshift(env.slug);
-        env = env.parent;
-    }
-    return scopePath.join(':');
-}
+// export const getScopePath = (env: FlowEnvironment | null) => {
+//     let scopePath: string[] = [];
+//     while (env != null) {
+//         scopePath.unshift(env.slug);
+//         env = env.parent;
+//     }
+//     return scopePath.join(':');
+// }
 
-export const findEnvironmentSignature = (env: FlowEnvironment, signatureId: string) =>
-    collectTotalEnvironmentContent(env).signatures?.[signatureId];
+export const findEnvironmentSignature = (env: FlowEnvironment, path: NamespacePath) =>
+    collectTotalEnvironmentContent(env).signatures?.[path.path];
 
-export const findEnvironmentType = (env: FlowEnvironment, typeName: string) =>
-    collectTotalEnvironmentContent(env).types?.[typeName];
+export const findEnvironmentType = (env: FlowEnvironment, path: NamespacePath) =>
+    collectTotalEnvironmentContent(env).types?.[path.path];
 
-const addAdditionalContent = mem(
-    (scope: FlowEnvironmentContent): FlowEnvironmentContent => {
-        return {
-            types: scope.types,
-            signatures: {
-                ...scope.signatures,
-                ...(scope.types && generateLayerTypeSignatures(scope.types)),
-            }
-        };
-    },
-    environmentCache,
-);
+// const addAdditionalContent = mem(
+//     (scope: FlowEnvironmentContent): FlowEnvironmentContent => {
+//         return {
+//             types: scope.types,
+//             signatures: {
+//                 ...scope.signatures,
+//                 ...(scope.types && generateLayerTypeSignatures(scope.types)),
+//             }
+//         };
+//     },
+//     environmentCache,
+// );
 
-function generateLayerTypeSignatures(types: Obj<TypeSpecifier>) {
-    const signatureMap: Obj<FlowSignature> = {};
-    for (const [name, type] of Object.entries(types)) {
-        const syntaxSignatures = generateTypeSyntaxSignatures(name, type);
-        for (const s of syntaxSignatures) {
-            signatureMap[s.id] = s;
-        }
-    }
-    return signatureMap;
-}
+// function generateLayerTypeSignatures(types: Obj<TypeSpecifier>) {
+//     const signatureMap: Obj<FlowSignature> = {};
+//     for (const [name, type] of Object.entries(types)) {
+//         const syntaxSignatures = generateTypeSyntaxSignatures(name, type);
+//         for (const s of syntaxSignatures) {
+//             signatureMap[s.id] = s;
+//         }
+//     }
+//     return signatureMap;
+// }
 
-const generateTypeSyntaxSignatures = mem(
-    (name: string, spec: TypeSpecifier) => {
+// const generateTypeSyntaxSignatures = mem(
+//     (name: string, spec: TypeSpecifier) => {
 
-        return [] as FlowSignature[];
+//         return [] as FlowSignature[];
 
-        // if (typeof spec !== 'object' ||
-        //     // combinable types:
-        //     spec.type !== 'map' &&
-        //     spec.type !== 'tuple'
-        // ) {
-        //     return [];
-        // }
+//         // if (typeof spec !== 'object' ||
+//         //     // combinable types:
+//         //     spec.type !== 'map' &&
+//         //     spec.type !== 'tuple'
+//         // ) {
+//         //     return [];
+//         // }
 
-        // const category = 'Combine/Separate';
+//         // const category = 'Combine/Separate';
 
-        // // combiner
-        // const combiner: FlowSignature = {
-        //     id: getInternalId('combine', name),
-        //     name: `Combine ${name}`,
-        //     description: `Combines required data into a ${name}`,
-        //     attributes: { category },
-        //     generics: [],
-        //     inputs: getCombinerInputRows(spec),
-        //     output: {
-        //         id: 'output',
-        //         rowType: 'output-simple',
-        //         label: name,
-        //         specifier: name, // reference
-        //     },
-        // };
+//         // // combiner
+//         // const combiner: FlowSignature = {
+//         //     id: getInternalId('combine', name),
+//         //     name: `Combine ${name}`,
+//         //     description: `Combines required data into a ${name}`,
+//         //     attributes: { category },
+//         //     generics: [],
+//         //     inputs: getCombinerInputRows(spec),
+//         //     output: {
+//         //         id: 'output',
+//         //         rowType: 'output-simple',
+//         //         label: name,
+//         //         specifier: name, // reference
+//         //     },
+//         // };
 
-        // // separator
-        // const separator: FlowSignature = {
-        //     id: getInternalId('separate', name),
-        //     name: `Separate ${name}`,
-        //     description: `Separates ${name} into its `,
-        //     attributes: { category },
-        //     generics: [],
-        //     inputs: [
-        //         {
-        //             id: 'input',
-        //             rowType: 'input-simple',
-        //             label: name,
-        //             specifier: name, // reference
-        //         }
-        //     ],
-        //     outputs: getSeparatorOutputRows(spec),
-        // };
+//         // // separator
+//         // const separator: FlowSignature = {
+//         //     id: getInternalId('separate', name),
+//         //     name: `Separate ${name}`,
+//         //     description: `Separates ${name} into its `,
+//         //     attributes: { category },
+//         //     generics: [],
+//         //     inputs: [
+//         //         {
+//         //             id: 'input',
+//         //             rowType: 'input-simple',
+//         //             label: name,
+//         //             specifier: name, // reference
+//         //         }
+//         //     ],
+//         //     outputs: getSeparatorOutputRows(spec),
+//         // };
 
-        // return [combiner, separator];
-    },
-    environmentCache,
-);
+//         // return [combiner, separator];
+//     },
+//     environmentCache,
+// );
 
 // function getCombinerInputRows(type: TupleTypeSpecifier | MapTypeSpecifier): InputRowSignature[] {
 //     if (type.type === 'tuple') {

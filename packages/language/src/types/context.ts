@@ -1,5 +1,6 @@
 import { TypeSystemExceptionData } from '../typeSystem/exceptionHandling';
-import { FlowSignature } from './signatures';
+import { FlowModule } from './module';
+import { FlowSignature, NamespacePath } from './signatures';
 import {
     FlowDocument,
     FlowGraph,
@@ -13,12 +14,15 @@ import { Obj } from './utilTypes';
 
 export type FlowEnvironment = {
     parent: FlowEnvironment | null;
-    slug: string;
+    namespace: FlowEnvironmentNamespace | null;
+}
+export interface FlowEnvironmentNamespace {
+    name: string;
     content: FlowEnvironmentContent;
 }
 export interface FlowEnvironmentContent {
-    signatures?: Obj<FlowSignature>;
-    types?: Obj<TypeSpecifier>;
+    signatures: FlowSignature[];
+    types: TypeSpecifier[];
 }
 
 export type EdgeColor = 'normal' | 'redundant' | 'cyclic';
@@ -102,7 +106,7 @@ export type FlowProblem =
 interface MissingSignature {
     type: 'missing-signature';
     message: string;
-    signature: string;
+    signature: NamespacePath;
 }
 export type NodeProblem =
     | MissingSignature

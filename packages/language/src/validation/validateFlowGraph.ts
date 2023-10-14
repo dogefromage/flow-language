@@ -1,5 +1,5 @@
 import { createReducedTemplateType } from "../typeSystem";
-import { FlowEnvironment, FlowGraph, FlowSignature, TemplatedTypeSpecifier } from "../types";
+import { FlowEnvironment, FlowGraph, FlowSignature, TemplatedTypeSpecifier, pathTail } from "../types";
 import { EdgeColor, FlowEdge, FlowGraphContext } from "../types/context";
 import { deepFreeze } from "../utils";
 import { findDependencies, sortTopologically } from "../utils/algorithms";
@@ -8,7 +8,7 @@ import { validateNode } from "./validateNode";
 
 export const validateFlowGraph = mem((
     flow: FlowGraph,
-    flowEnvironment: FlowEnvironment,
+    baseEnvironment: FlowEnvironment,
 ): FlowGraphContext => {
 
     const result: FlowGraphContext = {
@@ -76,7 +76,7 @@ export const validateFlowGraph = mem((
     let outputIndex = -1;
     for (let i = 0; i < nodeEntries.length; i++) {
         const node = nodeEntries[i][1];
-        if (node.signature === 'output') {
+        if (pathTail(node.signature) === 'output') {
             outputIndex = i;
             break;
         }
