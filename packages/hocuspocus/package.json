@@ -8,8 +8,8 @@
     "dev": "nodemon --watch './src/**/*.ts' ./src/index.ts"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "dogefromage",
+  "license": "MIT",
   "devDependencies": {
     "@swc/core": "^1.2.244",
     "@swc/helpers": "^0.4.11",

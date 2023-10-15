@@ -7,7 +7,7 @@
     "dev": "tsc --watch",
     "build": "tsc"
   },
-  "author": "",
+  "author": "dogefromage",
   "license": "MIT",
   "dependencies": {
     "react": "^18.2.0"

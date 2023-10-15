@@ -1,4 +1,5 @@
-import { FlowSignature, JointLocation, isSubsetType, collectTotalEnvironmentContent } from "@noodles/language";
+import * as lang from "@noodles/language";
+import { NamespacePath } from "@noodles/language";
 import React, { useCallback, useMemo } from "react";
 import { selectPanelState } from "../redux/panelStateEnhancer";
 import { useAppDispatch, useAppSelector } from "../redux/stateHooks";
@@ -27,17 +28,17 @@ const FlowNodeCatalog = ({ panelId }: Props) => {
 
     const catalogState = panelState && isCatalogOpen(panelState.state) && panelState.state || undefined;
 
-    const addNode = useCallback((signature: FlowSignature) => {
+    const addNode = useCallback((signaturePath: lang.NamespacePath, signature: lang.FlowSignature) => {
         if (!flowId || !catalogState) return;
-        createAddFlowAction(flowId, signature, catalogState, dispatch);
+        createAddFlowAction(flowId, signaturePath, signature, catalogState, dispatch);
     }, [flowId, catalogState, dispatch]);
 
     const environmentSignatures = useMemo(() => {
         if (!graphValidation?.flowEnvironment) {
             return;
         }
-        const envContent = collectTotalEnvironmentContent(graphValidation?.flowEnvironment);
-        return Array.from(Object.values(envContent.signatures || []));
+        const envContent = lang.collectTotalEnvironmentContent(graphValidation?.flowEnvironment);
+        return envContent.signatures;
     }, [graphValidation?.flowEnvironment]);
 
     const menuShape = useMemo(() => {
@@ -73,9 +74,9 @@ function isCatalogOpen(
 }
 
 function generateCatalogMenuShape(
-    signatures: FlowSignature[],
+    signatures: Record<string, lang.FlowSignature>,
     searchValue: string,
-    addNode: (signature: FlowSignature) => void,
+    addNode: (signaturePath: lang.NamespacePath, signature: lang.FlowSignature) => void,
 ) {
     const title: TitleMenuElement = {
         type: 'title',
@@ -93,15 +94,16 @@ function generateCatalogMenuShape(
 
     if (searchValue.length > 0) {
         // render filtered
-        const filtered = signatures
-            .filter(t => t.id.toLowerCase().includes(searchValue.toLowerCase()));
+        const filtered = lang.utils.filterObj(signatures,
+            t => t.id.toLowerCase().includes(searchValue.toLowerCase()));
 
-        const listTemplates: MenuElement[] = filtered.map(signature => ({
-            type: 'button',
-            key: signature.id,
-            name: signature.id,
-            onClick: () => addNode(signature),
-        }));
+        const listTemplates: MenuElement[] = Object.entries(filtered)
+            .map(([path, signature]) => ({
+                type: 'button',
+                key: signature.id,
+                name: signature.id,
+                onClick: () => addNode({ path }, signature),
+            }));
 
         const menuShape: FloatingMenuShape = {
             type: 'floating',
@@ -114,13 +116,13 @@ function generateCatalogMenuShape(
         return menuShape;
     } else {
         // render grouped
-        const groupedTemplatesMap = signatures
+        const groupedTemplatesMap = Object.entries(signatures)
             .reduce((groupes, current) => {
-                const key = current!.attributes?.category || 'Other';
+                const key = current![1].attributes?.category || 'Other';
                 if (groupes[key] == null) { groupes[key] = []; }
                 groupes[key]!.push(current!);
                 return groupes;
-            }, {} as Record<string, FlowSignature[]>);
+            }, {} as Record<string, [ string, lang.FlowSignature ][]>);
 
         const sortedGroupes = Object.entries(groupedTemplatesMap)
             .sort(([a], [b]) => a.localeCompare(b));
@@ -131,12 +133,12 @@ function generateCatalogMenuShape(
             name: category,
             sublist: {
                 type: 'floating',
-                list: tempOfGroup.map(template => ({
+                list: tempOfGroup.map(([ path, signature ]) => ({
                     type: 'button',
-                    key: template.id,
-                    name: template.id,
-                    onClick: () => addNode(template),
-                }))
+                    key: path,
+                    name: signature.id,
+                    onClick: () => addNode({ path }, signature),
+                })),
             }
         }));
         const menuShape: FloatingMenuShape = {
@@ -150,11 +152,11 @@ function generateCatalogMenuShape(
         return menuShape;
     }
 }
-function createAddFlowAction(flowId: string, signature: FlowSignature, addNodeState: AddNodeState, dispatch: AppDispatch) {
+function createAddFlowAction(flowId: string, signaturePath: NamespacePath, signature: lang.FlowSignature, addNodeState: AddNodeState, dispatch: AppDispatch) {
     let nodePosition = addNodeState.location.worldPosition;
 
     if (addNodeState.type === 'add-node-at-position') {
-        dispatch(createBasicAddNodeAction(flowId, signature.id, nodePosition));
+        dispatch(createBasicAddNodeAction(flowId, signaturePath, nodePosition));
         return;
     }
 
@@ -164,7 +166,7 @@ function createAddFlowAction(flowId: string, signature: FlowSignature, addNodeSt
         [signature.output] : signature.inputs;
     let compatibleRowId: string | undefined;
     for (const row of connectionColumn) {
-        if (isSubsetType(row.specifier, drag.dataType, drag.environment)) {
+        if (lang.isSubsetType(row.specifier, drag.dataType, drag.environment)) {
             compatibleRowId = row.id;
             break;
         }
@@ -181,14 +183,14 @@ function createAddFlowAction(flowId: string, signature: FlowSignature, addNodeSt
             y: nodePosition.y,
         };
     }
-    dispatch(createBasicAddNodeAction(flowId, signature.id, nodePosition));
+    dispatch(createBasicAddNodeAction(flowId, signaturePath, nodePosition));
 
     // if still no row
     if (compatibleRowId == null) {
         return;
     }
 
-    let newLocation: JointLocation = drag.fromJoint.direction === 'input' ?
+    let newLocation: lang.JointLocation = drag.fromJoint.direction === 'input' ?
         ({ nodeId: '*', direction: 'output', }) :
         ({ nodeId: '*', rowId: compatibleRowId, direction: 'input', accessor: '0' });
 
@@ -200,9 +202,9 @@ function createAddFlowAction(flowId: string, signature: FlowSignature, addNodeSt
     }));
 }
 
-function createBasicAddNodeAction(flowId: string, signatureId: string, position: Vec2) {
+function createBasicAddNodeAction(flowId: string, signature: lang.NamespacePath, position: Vec2) {
     return flowsAddNode({
-        flowId, signatureId, position,
+        flowId, signature, position,
         undo: { desc: `Added new node to active flow.` },
     });
 }

@@ -1,5 +1,5 @@
 {
-    "name": "@noodles/language",
+    "name": "@noodles/bytecode",
     "version": "1.0.0",
     "description": "",
     "types": "lib/types/index.d.ts",
@@ -9,13 +9,14 @@
         "dev": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json --watch",
         "build": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json"
     },
-    "dependencies": {
-        "lodash": "^4.17.21"
-    },
     "author": "dogefromage",
     "license": "MIT",
     "devDependencies": {
+        "@noodles/language": "workspace:^",
         "@types/lodash": "^4.14.195",
         "typescript": "5.0.2"
+    },
+    "dependencies": {
+        "lodash": "^4.17.21"
     }
 }

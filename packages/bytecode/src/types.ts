@@ -1,3 +1,4 @@
+import { NamespacePath } from "@noodles/language";
 
 export enum ByteOperation {
     // Unary ops
@@ -52,6 +53,8 @@ export const operationNameTags = [
     'thunk_identity',
 ];
 
+export const MACHINE_ENTRY_LABEL = 'start';
+
 export interface ThunkValue {
     label: string;
     args: StackValue[];
@@ -90,10 +93,33 @@ export interface ByteCompilerConfig {
     skipValidation?: boolean;
 }
 
-export const byteCodeShorthands = {
-    op: (operation: ByteOperation): OperationByteInstruction => ({ type: 'operation', operation }),
-    data: (data: StackValue): DataByteInstruction => ({ type: 'data', data }),
-    thunk: (args: ThunkValue['args'], chunk: ThunkValue['chunk'], label: string, result: ThunkValue['result'] = null,
-        ): ThunkValue => ({ args, chunk, label, result }),
-    chunk: (arity: number, instructions: ByteInstruction[]): CallableChunk => ({ arity, instructions }),
-};
+export class ByteInstructionStream {
+    private instructions: ByteInstruction[] = [];
+    
+    public push(...instr: ByteInstruction[]) {
+        this.instructions.push(...instr);
+    }
+
+    public exportInline(): ByteInstruction[] {
+        const instr = this.instructions;
+        this.instructions = [];
+        return instr;
+    }
+
+    public exportChunk(arity: number): CallableChunk {
+        const chunk: CallableChunk = {
+            arity,
+            instructions: this.instructions,
+        };
+        this.instructions = [];
+        return chunk;
+    }
+}
+
+export abstract class ByteSource {
+    public abstract get chunks(): Record<string, CallableChunk>;
+    public abstract useRoutine(bs: ByteInstructionStream, path: NamespacePath): boolean
+}
+
+
+

@@ -1,6 +1,6 @@
 import { findEnvironmentType } from "../core/environment";
 import { FlowEnvironment } from "../types/context";
-import { TypeSpecifier } from "../types/typeSystem";
+import { AliasTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
 import { TypeSystemException, TypeTreePath } from "./exceptionHandling";
 
 export function tryResolveTypeAlias(X: TypeSpecifier, env: FlowEnvironment) {
@@ -11,13 +11,13 @@ export function tryResolveTypeAlias(X: TypeSpecifier, env: FlowEnvironment) {
 
 export function resolveTypeAlias(
     path: TypeTreePath, X: TypeSpecifier, env: FlowEnvironment, checkedAliases = new Set<string>()
-): Exclude<TypeSpecifier, string> {
-    if (typeof X !== 'string') {
+): Exclude<TypeSpecifier, AliasTypeSpecifier> {
+    if (X.type !== 'alias') {
         return X;
     }
-    const namedPath = path.add({ key: X, formatting: 'alias' });
+    const namedPath = path.add({ key: X.alias, formatting: 'alias' });
     
-    if (checkedAliases.has(X)) {
+    if (checkedAliases.has(X.alias)) {
         throw new TypeSystemException({
             type: 'cyclic-definition', 
             message: 'Types are circularly defined and cannot be resolved.',
@@ -25,15 +25,16 @@ export function resolveTypeAlias(
         });
     }
 
-    const envType = findEnvironmentType(env, X);
+    const aliasNamePath = { path: X.alias };
+    const envType = findEnvironmentType(env, aliasNamePath);
     if (!envType) {
         throw new TypeSystemException({
             type: 'unknown-reference', 
-            message: `Could not find any type for the alias '${X}'.`,
+            message: `Could not find any type for the alias '${X.alias}'.`,
             path: namedPath,
         });
     }
 
-    checkedAliases.add(X);
+    checkedAliases.add(X.alias);
     return resolveTypeAlias(namedPath, envType, env, checkedAliases);
 }

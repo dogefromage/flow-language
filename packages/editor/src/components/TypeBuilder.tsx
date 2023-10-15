@@ -15,7 +15,7 @@ const WrapperDiv = styled.div`
 interface TypeBuilderProps {
     X: lang.TypeSpecifier;
     env?: lang.FlowEnvironment;
-    generics: lang.GenericParameter[];
+    generics: lang.TemplateParameter[];
     onChange?: (X: lang.TypeSpecifier) => void;
 }
 
@@ -68,7 +68,7 @@ const TypeDiv = styled.div`
 interface TypeTagProps {
     X: lang.TypeSpecifier;
     env: lang.FlowEnvironment;
-    generics: lang.GenericParameter[];
+    generics: lang.TemplateParameter[];
     onChange?: (X: lang.TypeSpecifier) => void;
 }
 
@@ -90,15 +90,15 @@ const TypeTag = ({ X, env, generics, onChange }: PropsWithChildren<TypeTagProps>
         if (env) {
             const envContent = lang.collectTotalEnvironmentContent(env);
             for (const [alias, _] of Object.entries(envContent.types || {})) {
-                const key = `alias_or_generic.${alias}`;
-                typeMap[key] = alias;
+                const key = `alias.${alias}`;
+                typeMap[key] = lang.createAliasType(alias);
                 nameMap[key] = alias;
             }
         }
         if (generics) {
             for (const g of generics) {
-                const key = `alias_or_generic.${g.id}`;
-                typeMap[key] = g.id;
+                const key = `generic.${g.id}`;
+                typeMap[key] = lang.createGenericType(g.id);
                 nameMap[key] = g.id;
             }
         }

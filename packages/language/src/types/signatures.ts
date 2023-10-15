@@ -1,5 +1,4 @@
 import { assertDef } from "../utils";
-import { ByteInstruction, CallableChunk } from "./byteCode";
 import { TemplateParameter, InitializerValue, TypeSpecifier } from "./typeSystem";
 
 interface BaseRow<R extends string> {
@@ -28,9 +27,6 @@ export interface AnonymousFlowSignature {
     generics: TemplateParameter[];
     inputs: InputRowSignature[];
     output: OutputRowSignature;
-    byteCode?: 
-        | { type: 'callable', chunk: CallableChunk }
-        | { type: 'inline', instructions: ByteInstruction[] }
 }
 
 export const reserverNodeIds = ['input', 'output'] as const;

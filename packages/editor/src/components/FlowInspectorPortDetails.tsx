@@ -135,7 +135,7 @@ export default FlowInspectorPortDetails;
 interface RowDetailsProps {
     row: AllRowSignatures;
     env: lang.FlowEnvironment | undefined;
-    generics: lang.GenericParameter[];
+    generics: lang.TemplateParameter[];
     rowTypes: RowTypes[];
     onReplace: (newRowType: RowTypes) => void;
     onChangeSpecifier: (X: lang.TypeSpecifier) => void;

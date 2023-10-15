@@ -1,8 +1,9 @@
-import { ByteInstruction, ByteOperation, ByteProgram, CallFrame, CallableChunk, StackValue, ThunkValue, byteCodeShorthands, operationNameTags } from "../types/byteCode";
-import { assertDef, assertNever, assertTruthy } from "../utils";
-import { instructionToString } from "./byteCodeUtils";
+import * as lang from "@noodles/language";
+import { shorthands } from "./shorthands";
+import { ByteInstruction, ByteOperation, ByteProgram, CallFrame, CallableChunk, MACHINE_ENTRY_LABEL, StackValue, ThunkValue, operationNameTags } from "./types";
+import { instructionToString } from "./utils";
 
-const { op, thunk } = byteCodeShorthands;
+const { op, thunk } = shorthands;
 
 interface StackMachineArgs {
     trace?: boolean;
@@ -39,17 +40,16 @@ export class StackMachine {
     }
 
     getChunk(label: string) {
-        return assertDef(this.program.chunks.get(label), `Could not find chunk with label '${label}'`);
+        return lang.assertDef(this.program.chunks.get(label), `Could not find chunk with label '${label}'`);
     }
 
     interpret() {
         try {
-            const entryLabel = 'start';
-            this.execCall(entryLabel, this.getChunk(entryLabel));
+            this.execCall(MACHINE_ENTRY_LABEL, this.getChunk(MACHINE_ENTRY_LABEL));
 
             while (this.callStack.length) {
                 const scope = this.callStack.at(-1)!;
-                assertTruthy(0 <= scope.ip && scope.ip < scope.chunk.instructions.length,
+                lang.assertTruthy(0 <= scope.ip && scope.ip < scope.chunk.instructions.length,
                     `Instruction pointer out of bounds: ${scope.ip}, chunk size: ${scope.chunk.instructions.length}.`);
                 const instr = scope.chunk.instructions[scope.ip];
                 scope.ip++;
@@ -161,7 +161,7 @@ export class StackMachine {
             }
             case ByteOperation.apop: {
                 const arr: any[] = this.dpop();
-                assertTruthy(arr.length > 0, 'Cannot pop array of length zero.');
+                lang.assertTruthy(arr.length > 0, 'Cannot pop array of length zero.');
                 this.dpush(arr.slice(1));
                 this.dpush(arr[0]);
                 break;
@@ -172,7 +172,7 @@ export class StackMachine {
             case ByteOperation.aget: {
                 const i = this.dpop();
                 const arr = this.dpop();
-                assertTruthy(i >= -arr.length && i < arr.length, `Index out of bounds (length=${arr.length}, index=${i}).`);
+                lang.assertTruthy(i >= -arr.length && i < arr.length, `Index out of bounds (length=${arr.length}, index=${i}).`);
                 this.dpush(arr.at(i));
                 break;
             }
@@ -223,19 +223,19 @@ export class StackMachine {
                 this.sideStack.push(this.dpop());
                 break;
             case ByteOperation.moveback:
-                this.dpush(assertDef(this.sideStack.pop()));
+                this.dpush(lang.assertDef(this.sideStack.pop()));
                 break;
             case ByteOperation.getarg: {
                 const index = this.dpop();
                 const args = this.getFrame().args;
-                assertTruthy(0 <= index && index < args.length, 'Arg access out of bounds.');
+                lang.assertTruthy(0 <= index && index < args.length, 'Arg access out of bounds.');
                 this.dpush(args[index]);
                 break;
             }
             case ByteOperation.getlocal: {
                 const index = this.dpop();
                 const locals = this.getFrame().locals;
-                assertTruthy(0 <= index && index < locals.length, 'Local access out of bounds.');
+                lang.assertTruthy(0 <= index && index < locals.length, 'Local access out of bounds.');
                 this.dpush(locals[index]);
                 break;
             }
@@ -295,7 +295,7 @@ export class StackMachine {
                 break;
             }
             default:
-                assertNever(`Unknown instruction '${JSON.stringify(instr)}'`);
+                lang.assertNever(`Unknown instruction '${JSON.stringify(instr)}'`);
         }
     }
 
@@ -309,7 +309,7 @@ export class StackMachine {
         this.maxCallStackHeight = Math.max(this.maxCallStackHeight, this.callStack.length);
 
         if (this.callStack.length >= 100000) {
-            assertNever(`Stack overflow (call stack has ${this.callStack.length} entries).`);
+            lang.assertNever(`Stack overflow (call stack has ${this.callStack.length} entries).`);
         }
         this.callStack.push({
             label,
@@ -328,24 +328,24 @@ export class StackMachine {
         if (this.args.trace) {
             console.log(`RETURN`);
         }
-        const frame = assertDef(this.callStack.pop(), 'Cannot pop call stack');
+        const frame = lang.assertDef(this.callStack.pop(), 'Cannot pop call stack');
         // memoize result
         if (frame.thunk != null) {
             frame.thunk.result = this.dpeek(0);
         }
     }
     getFrame() {
-        return assertDef(this.callStack.at(-1), 'Call stack is empty.');
+        return lang.assertDef(this.callStack.at(-1), 'Call stack is empty.');
     }
 
     dpeek(index: number) {
-        assertTruthy(0 <= index && index < this.stack.length,
+        lang.assertTruthy(0 <= index && index < this.stack.length,
             `Value stack index out of bounds '${index}'.`);
         const x = this.stack[this.stack.length - 1 - index];
         return x;
     }
     dpop() {
-        assertTruthy(this.stack.length > 0, 'Data stack is empty.');
+        lang.assertTruthy(this.stack.length > 0, 'Data stack is empty.');
         return this.stack.pop() as any;
     }
     dpush(d: StackValue) { 

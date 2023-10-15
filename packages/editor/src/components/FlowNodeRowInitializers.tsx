@@ -29,11 +29,14 @@ const FunctionInitializer = (props: RowComponentProps<lang.InputRowSignature>) =
     const dispatch = useAppDispatch();
     const { panelId, type, env, flowId, nodeId, row, context } = props;
 
-    const signatures = useMemo(() => {
+    const [signaturePaths, signaturePathNames] = useMemo(() => {
         const envContent = lang.collectTotalEnvironmentContent(env);
-        return Object
-            .entries(envContent.signatures || {})
-            .map(([_, signature]) => signature.id);
+        const paths = Object.keys(envContent.signatures);
+        const pathNames = paths.map<[string, string]>(path => [path, lang.pathTail({ path })]);
+        return [
+            paths,
+            Object.fromEntries(pathNames),
+        ];
     }, [env]);
 
     return (
@@ -48,14 +51,14 @@ const FunctionInitializer = (props: RowComponentProps<lang.InputRowSignature>) =
                         nodeId,
                         accessor: '0',
                         rowId: row.id,
-                        // initializer: 'function',
                     }}
                     env={env}
                 />
                 <FlowNodeRowNameP $align="left">{formatFlowLabel(row.id)}</FlowNodeRowNameP>
                 <FormSelectOption
                     value={context?.ref?.value || ''}
-                    options={signatures}
+                    options={signaturePaths}
+                    mapName={signaturePathNames}
                     onChange={newSignatureId => {
                         dispatch(flowsSetRowValue({
                             flowId, nodeId, rowId: row.id,
@@ -83,7 +86,6 @@ const PrimitiveInitializer = (props: RowComponentProps<lang.InputRowSignature>) 
                         nodeId,
                         accessor: '0',
                         rowId: row.id,
-                        // initializer: 'first',
                     }}
                     env={env}
                 />

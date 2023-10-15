@@ -1,8 +1,8 @@
-import { createAnyType, createFunctionType, createListType, createMapType, createReducedTemplateType, createTemplatedType, createTupleType } from ".";
+import { createAnyType, createFunctionType, createGenericType, createListType, createMapType, createReducedTemplateType, createTemplatedType, createTupleType } from ".";
 import { FlowEnvironment } from "../types/context";
-import { FunctionTypeSpecifier, TemplateParameter, InstantiationConstraints, ListTypeSpecifier, MapTypeSpecifier, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
+import { FunctionTypeSpecifier, InstantiationConstraints, ListTypeSpecifier, MapTypeSpecifier, TemplateParameter, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
 import { Obj } from "../types/utilTypes";
-import { assertNever } from "../utils";
+import { assertNever, assertTruthy } from "../utils";
 import { mapObj, zipInner } from "../utils/functional";
 import { isSubsetType } from "./comparison";
 import { TypeSystemException, TypeTreePath } from "./exceptionHandling";
@@ -16,21 +16,21 @@ export function mapTypeInference(
     initialType: TypeSpecifier,
     restrictingType: TypeSpecifier,
     freeGenerics: FreeGenericsMap,
-    restrictingGenerics: Set<string>,
     env: FlowEnvironment
 ): InstantiationMap {
-    if (typeof initialType === 'string' && typeof freeGenerics[initialType] !== 'undefined') {
-        const constrainingType = freeGenerics[initialType];
+    if (initialType.type === 'generic') {
+        assertTruthy(typeof freeGenerics[initialType.alias] !== 'undefined');
+        const constrainingType = freeGenerics[initialType.alias];
         // if constraint is not fullfilled, return constraint such that comparison fails
         const constraintsNotFullfilled = constrainingType != null && !isSubsetType(restrictingType, constrainingType, env);
         if (constraintsNotFullfilled) {
-            return { [initialType]: constrainingType };
+            return { [initialType.alias]: constrainingType };
         }
         // possible mapping
-        return { [initialType]: restrictingType };
+        return { [initialType.alias]: restrictingType };
     }
 
-    if (typeof restrictingType === 'string' && restrictingGenerics.has(restrictingType)) {
+    if (restrictingType.type === 'generic') {
         // we cannot see further here
         return {};
     }
@@ -42,7 +42,7 @@ export function mapTypeInference(
 
     if (initialType.type === 'list' && restrictingType.type === 'tuple') {
         return mapTypeInferenceListTuple(pathWithType,
-            initialType, restrictingType, freeGenerics, restrictingGenerics, env);
+            initialType, restrictingType, freeGenerics, env);
     }
 
     if (initialType.type !== restrictingType.type) {
@@ -52,47 +52,46 @@ export function mapTypeInference(
     switch (initialType.type) {
         case 'list':
             return mapTypeInference(pathWithType,
-                initialType.element, (restrictingType as ListTypeSpecifier).element, freeGenerics, restrictingGenerics, env);
+                initialType.element, (restrictingType as ListTypeSpecifier).element, freeGenerics, env);
         case 'tuple':
             return mapTypeInferenceTuple(pathWithType,
-                initialType, restrictingType as TupleTypeSpecifier, freeGenerics, restrictingGenerics, env);
+                initialType, restrictingType as TupleTypeSpecifier, freeGenerics, env);
         case 'map':
             return mapTypeInferenceMap(pathWithType,
-                initialType, restrictingType as MapTypeSpecifier, freeGenerics, restrictingGenerics, env);
+                initialType, restrictingType as MapTypeSpecifier, freeGenerics, env);
         case 'function':
             return mapTypeInferenceFunction(pathWithType,
-                initialType, restrictingType as FunctionTypeSpecifier, freeGenerics, restrictingGenerics, env);
+                initialType, restrictingType as FunctionTypeSpecifier, freeGenerics, env);
         case 'primitive':
         case 'any':
             return {};
-        default:
-            throw new Error(`Unknown type "${(initialType as any).type}"`);
     }
+    assertNever();
 }
 
 function mapTypeInferenceListTuple(
     path: TypeTreePath, initialType: ListTypeSpecifier, restrictingType: TupleTypeSpecifier,
-    freeGenerics: FreeGenericsMap, restrictingGenerics: Set<string>, env: FlowEnvironment
+    freeGenerics: FreeGenericsMap, env: FlowEnvironment
 ): InstantiationConstraints {
     return restrictingType.elements.map((Ri, i) => {
         const propPath = path.add({ key: i.toString(), formatting: 'property' });
-        return mapTypeInference(propPath, initialType.element, Ri, freeGenerics, restrictingGenerics, env);
+        return mapTypeInference(propPath, initialType.element, Ri, freeGenerics, env);
     }).reduce(combineInstantiation, {});
 }
 function mapTypeInferenceTuple(
     path: TypeTreePath, initialType: TupleTypeSpecifier, restrictingType: TupleTypeSpecifier,
-    freeGenerics: FreeGenericsMap, restrictingGenerics: Set<string>, env: FlowEnvironment
+    freeGenerics: FreeGenericsMap, env: FlowEnvironment
 ): InstantiationConstraints {
     return zipInner(initialType.elements, restrictingType.elements)
         .map(([initI, restrI], i) => {
             const propPath = path.add({ key: i.toString(), formatting: 'property' });
-            return mapTypeInference(propPath, initI, restrI, freeGenerics, restrictingGenerics, env);
+            return mapTypeInference(propPath, initI, restrI, freeGenerics, env);
         })
         .reduce(combineInstantiation, {});
 }
 function mapTypeInferenceMap(
     path: TypeTreePath, initialType: MapTypeSpecifier, restrictingType: MapTypeSpecifier,
-    freeGenerics: FreeGenericsMap, restrictingGenerics: Set<string>, env: FlowEnvironment
+    freeGenerics: FreeGenericsMap, env: FlowEnvironment
 ): InstantiationConstraints {
     const gottenKeys = new Set(Object.keys(restrictingType.elements));
     const instantiations: InstantiationConstraints[] = [];
@@ -102,7 +101,7 @@ function mapTypeInferenceMap(
         if (restProp == null) {
             continue; // dunno
         }
-        instantiations.push(mapTypeInference(propPath, initProp, restProp, freeGenerics, restrictingGenerics, env));
+        instantiations.push(mapTypeInference(propPath, initProp, restProp, freeGenerics, env));
         gottenKeys.delete(key);
     }
     return instantiations
@@ -110,13 +109,13 @@ function mapTypeInferenceMap(
 }
 function mapTypeInferenceFunction(
     path: TypeTreePath, initialType: FunctionTypeSpecifier, restrictingType: FunctionTypeSpecifier,
-    freeGenerics: FreeGenericsMap, restrictingGenerics: Set<string>, env: FlowEnvironment
+    freeGenerics: FreeGenericsMap, env: FlowEnvironment
 ): InstantiationConstraints {
     return [
         mapTypeInference(path.add({ key: 'parameter', formatting: 'property' }),
-            initialType.parameter, restrictingType.parameter, freeGenerics, restrictingGenerics, env),
+            initialType.parameter, restrictingType.parameter, freeGenerics, env),
         mapTypeInference(path.add({ key: 'output', formatting: 'property' }),
-            initialType.output, restrictingType.output, freeGenerics, restrictingGenerics, env),
+            initialType.output, restrictingType.output, freeGenerics, env),
     ].reduce(combineInstantiation, {});
 }
 
@@ -125,8 +124,8 @@ function combineInstantiation(older: InstantiationConstraints, newer: Instantiat
 }
 
 export function substituteGeneric(X: TypeSpecifier, oldName: string, newType: TypeSpecifier): TypeSpecifier {
-    if (typeof X === 'string') {
-        return X === oldName ? newType : X;
+    if (X.type === 'generic') {
+        return X.alias === oldName ? newType : X;
     }
     switch (X.type) {
         case 'function':
@@ -148,6 +147,7 @@ export function substituteGeneric(X: TypeSpecifier, oldName: string, newType: Ty
             );
         case 'any':
         case 'primitive':
+        case 'alias':
             return X;
     }
     assertNever();
@@ -179,7 +179,7 @@ export function instantiateTemplatedType<T extends TypeSpecifier>(
             const otherNames = new Set(instantiationGenerics.map(g => g.id));
             const allNames = new Set([...templateGenericNames, ...otherNames]);
             const newName = getNextTemplateLiteral(allNames);
-            instantiation = substituteGeneric(instantiation, oldName, newName) as MapTypeSpecifier;
+            instantiation = substituteGeneric(instantiation, oldName, createGenericType(newName)) as MapTypeSpecifier;
             instantiationGenerics[i] = { id: newName, constraint: instantiationGenerics[i].constraint };
         }
     }
@@ -225,7 +225,7 @@ export function disjoinTemplateLiterals(templates: TemplatedTypeSpecifier[]) {
         for (let j = 0; j < generics.length; j++) {
             if (usedLiterals.has(generics[j].id)) {
                 const newLiteral = getNextTemplateLiteral(usedLiterals);
-                specifier = substituteGeneric(specifier, generics[j].id, newLiteral);
+                specifier = substituteGeneric(specifier, generics[j].id, createGenericType(newLiteral));
                 generics[j] = { id: newLiteral, constraint: generics[j].constraint };
             }
             usedLiterals.add(generics[j].id);

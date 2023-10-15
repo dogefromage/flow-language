@@ -5,17 +5,13 @@ export const listItemRegex = /^[A-Za-z_][A-Za-z_0-9]*$/;
 
 export type FlowsSliceState = Record<string, lang.FlowGraph>;
 
-export const defaultDocumentConfig: lang.FlowDocumentConfig = {
-    entryFlows: {},
-}
-
 export const mainSignature: lang.AnonymousFlowSignature = {
     generics: [{ id: 'T', constraint: null }],
     inputs: [],
     output: {
         id: 'value',
         rowType: 'output-simple',
-        specifier: 'T',
+        specifier: lang.createGenericType('T'),
     },
 }
 
@@ -25,14 +21,14 @@ export const emptyFlowSignature: lang.AnonymousFlowSignature = {
         {
             id: 'x',
             rowType: 'input-variable',
-            specifier: 'number',
+            specifier: lang.createAliasType('number'),
             defaultValue: 0,
         },
     ],
     output: {
         id: 'y',
         rowType: 'output-simple',
-        specifier: 'number',
+        specifier: lang.createAliasType('number'),
     },
 }
 
@@ -44,11 +40,12 @@ export const initialDefaultRootFlow: lang.FlowGraph = {
     nodes: {
         a: {
             id: 'a',
-            signature: 'output',
+            signature: { path: `document::${lang.MAIN_FLOW_ID}::output` },
             rowStates: {},
             position: { x: 400, y: 294 }
         },
     },
+    imports: [ 'standard' ],
 };
 
 export const defaultFlows = {

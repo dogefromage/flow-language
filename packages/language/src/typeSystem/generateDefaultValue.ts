@@ -1,5 +1,5 @@
 import { typeSystemCache } from ".";
-import { primitiveTypes } from "../content/types";
+import { primitiveTypes } from "../content/standardModule";
 import { FlowEnvironment, InitializerValue, TypeSpecifier } from "../types";
 import { mem } from "../utils/functional";
 import { TypeTreePath } from "./exceptionHandling";

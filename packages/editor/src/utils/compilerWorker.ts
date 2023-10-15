@@ -1,19 +1,25 @@
 import * as lang from '@noodles/language';
+import * as bc from '@noodles/bytecode';
 import { ConsumerOutput } from '@noodles/shared';
 import { expose } from 'comlink';
 
-function validateCompileInterpret(document: lang.FlowDocument, config: lang.ByteCompilerConfig): ConsumerOutput {
+function validateCompileInterpret(document: lang.FlowDocument, config: bc.ByteCompilerConfig): ConsumerOutput {
     const context = lang.validateDocument(document);
     try {
-        const program = lang.compileDocument(context, config);
-        const sm = new lang.StackMachine(program, {
+        // COMPILE
+        const program = bc.compileDocument(context, config);
+        console.log(bc.byteProgramToString(program));
+
+        // INTERPRET
+        const sm = new bc.StackMachine(program, {
             // trace: true, 
             countExecutedInstructions: true,
             // recordMaximumStackHeights: true,
         });
         sm.interpret();
+
+        // OUTPUT
         const res = sm.dpop();
-        // console.log(res);
         return {
             data: res.toString() + '\n',
         };

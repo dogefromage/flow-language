@@ -3,15 +3,15 @@ import * as lang from '@noodles/language';
 import React, { useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
+import { editorSetActiveFlow } from '../slices/editorSlice';
 import { flowsMoveSelection, selectSingleFlow } from '../slices/flowsSlice';
-import { flowEditorPanelsPushFlowId, flowEditorSetRelativeClientJointPosition, flowEditorSetSelection } from '../slices/panelFlowEditorSlice';
+import { flowEditorSetRelativeClientJointPosition, flowEditorSetSelection } from '../slices/panelFlowEditorSlice';
 import { FlowNodeDiv } from '../styles/flowStyles';
 import { FlowEditorPanelState, JointLocationKey, SelectionStatus, Vec2 } from '../types';
 import { vectorScreenToWorld } from '../utils/planarCameraMath';
 import { FLOW_JOINT_TARGET_CLASS } from './FlowJoint';
 import FlowNodeContent from './FlowNodeContent';
 import { FlowNodeMissingContent } from './FlowNodeMissingContent';
-import { editorSetActiveFlow } from '../slices/editorSlice';
 
 export const FLOW_NODE_DIV_CLASS = 'flow-node-div';
 
@@ -148,7 +148,7 @@ const FlowNodeElement = ({ panelId, flowId, context, getPanelState, selectionSta
                         env={env}
                     />
                 ) : (
-                    <FlowNodeMissingContent signature={context.ref.signature} />
+                    <FlowNodeMissingContent signaturePath={context.ref.signature} />
                 )
             }
             {catcher}

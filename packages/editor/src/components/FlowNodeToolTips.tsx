@@ -165,6 +165,12 @@ export const FlowNodeHeaderToolTip = ({ signature, context, env }: FlowNodeHeade
                     </Bold>
                 </p>
                 <p>
+                    Signature:&nbsp;
+                    <Bold $color={colors.title}>
+                        {context.ref.signature.path}
+                    </Bold>
+                </p>
+                <p>
                     Type Signature:&nbsp;
                     <Bold $color={colors.specifier}>
                         {formatSpecifierWithGenerics(

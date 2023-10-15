@@ -1,6 +1,7 @@
-import { resolveTypeAlias } from "./resolution";
-import { FlowEnvironment, FunctionTypeSpecifier, ListTypeSpecifier, MapTypeSpecifier, PrimitiveTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types";
+import { FlowEnvironment, FunctionTypeSpecifier, GenericTypeSpecifier, ListTypeSpecifier, MapTypeSpecifier, PrimitiveTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types";
+import { assertNever } from "../utils";
 import { TypeSystemException, TypeTreePath } from "./exceptionHandling";
+import { resolveTypeAlias } from "./resolution";
 
 export function isSubsetType(X: TypeSpecifier, Y: TypeSpecifier, env: FlowEnvironment) {
     try {
@@ -21,9 +22,10 @@ export function assertSubsetType(X: TypeSpecifier, Y: TypeSpecifier, env: FlowEn
     return assertSubsetSwitch(new TypeTreePath(), X, Y, env);
 }
 function assertSubsetSwitch(path: TypeTreePath, argX: TypeSpecifier, argY: TypeSpecifier, env: FlowEnvironment) {
-
     // base case for recursive definitions
-    if (typeof argX === 'string' && argX === argY) {
+    if (argX.type === 'alias' && 
+        argY.type === 'alias' && 
+        argX.alias === argY.alias) {
         return;
     }
     const X = resolveTypeAlias(path, argX, env);
@@ -61,6 +63,16 @@ function assertSubsetSwitch(path: TypeTreePath, argX: TypeSpecifier, argY: TypeS
                 });
             }
             return;
+        case 'generic':
+            const Yg = (Y as GenericTypeSpecifier);
+            if (X.alias !== Yg.alias) {
+                throw new TypeSystemException({
+                    type: 'incompatible-type',
+                    message: `Generic type '${X.alias}' gotten, '${Yg.alias}' expected.`,
+                    path: pathWithTypeX,
+                });
+            }
+            return;
         case 'list':
             assertSubsetSwitch(path, X.element, (Y as ListTypeSpecifier).element, env);
             return;
@@ -73,9 +85,8 @@ function assertSubsetSwitch(path: TypeTreePath, argX: TypeSpecifier, argY: TypeS
         case 'function':
             assertSubsetFunction(pathWithTypeX, X, Y as FunctionTypeSpecifier, env);
             return;
-        default:
-            throw new Error(`Unknown type "${(X as any).type}"`);
     }
+    assertNever();
 }
 
 function assertSubsetTuple(path: TypeTreePath, X: TupleTypeSpecifier, Y: TupleTypeSpecifier, env: FlowEnvironment) {
@@ -105,7 +116,7 @@ function assertSubsetMap(path: TypeTreePath, X: MapTypeSpecifier, Y: MapTypeSpec
         assertSubsetSwitch(propPath, gottenType, type, env);
         gottenKeys.delete(key);
     }
-    // if (gottenKeys.size > 0) // allow since subset
+    // { gottenKeys.size > 0 } is allowed
 }
 
 function assertSubsetFunction(path: TypeTreePath, X: FunctionTypeSpecifier, Y: FunctionTypeSpecifier, env: FlowEnvironment) {

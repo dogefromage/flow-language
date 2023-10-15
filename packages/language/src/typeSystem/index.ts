@@ -1,14 +1,12 @@
 import { FlowSignature } from "../types/signatures";
-import { AnyTypeSpecifier, FunctionTypeSpecifier, TemplateParameter, ListTypeSpecifier, MapTypeSpecifier, PrimitiveTypeSpecifier, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
+import { AliasTypeSpecifier, AnyTypeSpecifier, FunctionTypeSpecifier, GenericTypeSpecifier, ListTypeSpecifier, MapTypeSpecifier, PrimitiveTypeSpecifier, TemplateParameter, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
 import { assertNever, assertTruthy } from "../utils";
 import { ListCache } from "../utils/ListCache";
 import { always, mem, memoList } from "../utils/functional";
 
 export const typeSystemCache = new ListCache(3037);
 
-const createConstantTypeSingle = <T>(name: T) => ({ type: name });
-// export const createMissingType = always<MissingTypeSpecifier>(createConstantTypeSingle('missing'));
-export const createAnyType = always<AnyTypeSpecifier>(createConstantTypeSingle('any'));
+export const createAnyType = always<AnyTypeSpecifier>({ type: 'any' })
 
 export const createPrimitiveType = mem(
     (name: string): PrimitiveTypeSpecifier => ({ type: 'primitive', name }),
@@ -24,6 +22,14 @@ export const createTupleType = mem(
 );
 export const createFunctionType = mem(
     (parameter: TypeSpecifier, output: TypeSpecifier): FunctionTypeSpecifier => ({ type: 'function', parameter, output }),
+    typeSystemCache,
+);
+export const createAliasType = mem(
+    (alias: string): AliasTypeSpecifier => ({ type: 'alias', alias }),
+    typeSystemCache,
+);
+export const createGenericType = mem(
+    (alias: string): GenericTypeSpecifier => ({ type: 'generic', alias }),
     typeSystemCache,
 );
 
@@ -48,22 +54,19 @@ export const createMapType = (elements: Record<string, TypeSpecifier>) => {
     return createMapFromFlat(...flatEntries);
 }
 
-export const createGenericParameter = mem(
+export const createTemplateParameter = mem(
     (id: string, constraint: TypeSpecifier | null): TemplateParameter => ({ id, constraint }),
     typeSystemCache,
 )
 
 export const createTemplatedType = mem(
     <T extends TypeSpecifier>(generics: TemplateParameter[], specifier: T
-        ): TemplatedTypeSpecifier<T> => ({ generics, specifier }),
+    ): TemplatedTypeSpecifier<T> => ({ generics, specifier }),
     typeSystemCache,
 )
 
 // memoization does not guarantee uniqueness but helps if the exact same type is passed multiple times
 export const memoizeTypeStructure = mem(<T extends TypeSpecifier>(X: T): T => {
-    if (typeof X !== 'object' || X == null) {
-        return X;
-    }
     switch (X.type) {
         case 'tuple':
             return createTupleType(...X.elements.map(Y => memoizeTypeStructure(Y))) as T;
@@ -83,19 +86,21 @@ export const memoizeTypeStructure = mem(<T extends TypeSpecifier>(X: T): T => {
             ) as T;
         case 'primitive':
             return createPrimitiveType(X.name) as T;
-        // case 'missing':
         case 'any':
-            return createConstantTypeSingle(X.type) as T;
-        default:
-            throw new Error(`Unknown type "${(X as any).type}"`);
+            return createAnyType() as T;
+        case 'alias':
+            return createAliasType(X.alias) as T;
+        case 'generic':
+            return createGenericType(X.alias) as T;
     }
+    assertNever();
 }, typeSystemCache);
 
 export const memoizeTemplatedType = <T extends TypeSpecifier>(X: TemplatedTypeSpecifier<T>): TemplatedTypeSpecifier<T> => {
     const memGenerics = memoList(...X.generics
-        .map(g => createGenericParameter(
+        .map(g => createTemplateParameter(
             g.id,
-            g.constraint && memoizeTypeStructure(g.constraint), 
+            g.constraint && memoizeTypeStructure(g.constraint),
         ))
     );
     return createTemplatedType(
@@ -122,32 +127,31 @@ function getSignatureType(signature: FlowSignature): FunctionTypeSpecifier {
     );
 }
 
-export function findAllTypeLiterals(X: TypeSpecifier, literals: Set<string>) {
-    if (typeof X === 'string') {
-        literals.add(X);
-        return;
-    }
-
+export function findAllGenericLiterals(X: TypeSpecifier, literals: Set<string>) {
     switch (X.type) {
+        case 'generic':
+            literals.add(X.alias);
+            return;
         case 'function':
-            findAllTypeLiterals(X.output, literals);
-            findAllTypeLiterals(X.parameter, literals);
+            findAllGenericLiterals(X.output, literals);
+            findAllGenericLiterals(X.parameter, literals);
             return;
         case 'list':
-            findAllTypeLiterals(X.element, literals);
+            findAllGenericLiterals(X.element, literals);
             return;
         case 'tuple':
             for (const el of X.elements) {
-                findAllTypeLiterals(el, literals);
+                findAllGenericLiterals(el, literals);
             }
             return;
         case 'map':
             for (const el of Object.values(X.elements)) {
-                findAllTypeLiterals(el, literals);
+                findAllGenericLiterals(el, literals);
             }
             return;
         case 'any':
         case 'primitive':
+        case 'alias':
             return;
     }
     assertNever();
@@ -155,7 +159,7 @@ export function findAllTypeLiterals(X: TypeSpecifier, literals: Set<string>) {
 
 export function createReducedTemplateType<T extends TypeSpecifier>(generics: TemplateParameter[], X: T) {
     const literals = new Set<string>()
-    findAllTypeLiterals(X, literals);
+    findAllGenericLiterals(X, literals);
     generics = generics.filter(X => literals.has(X.id));
     return createTemplatedType<T>(generics, X);
 }

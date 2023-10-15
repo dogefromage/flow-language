@@ -8,13 +8,14 @@
         "build": "tsc",
         "schemagen": "sh src/dev/schemagen.sh"
     },
-    "author": "",
+    "author": "dogefromage",
     "license": "MIT",
     "dependencies": {
+        "@hocuspocus/provider": "^2.2.3",
+        "@noodles/bytecode": "workspace:^",
         "@noodles/interactive": "workspace:^",
         "@noodles/language": "workspace:^",
         "@noodles/shared": "workspace:^",
-        "@hocuspocus/provider": "^2.2.3",
         "@react-hook/resize-observer": "^1.2.6",
         "@reduxjs/toolkit": "^1.9.5",
         "@uiw/react-color": "^1.3.3",

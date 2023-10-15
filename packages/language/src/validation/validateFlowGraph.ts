@@ -1,7 +1,9 @@
-import { createReducedTemplateType } from "../typeSystem";
-import { FlowEnvironment, FlowGraph, FlowSignature, TemplatedTypeSpecifier, pathTail } from "../types";
-import { EdgeColor, FlowEdge, FlowGraphContext } from "../types/context";
-import { deepFreeze } from "../utils";
+import { pushContent } from "../core/environment";
+import { createAnyType, createMapType, createReducedTemplateType } from "../typeSystem";
+import { FlowEnvironment, FlowGraph, FlowSignature, InputRowSignature, OutputRowSignature, TemplateParameter, TemplatedTypeSpecifier, pathTail } from "../types";
+import { EdgeColor, FlowEdge, FlowEnvironmentContent, FlowEnvironmentNamespace, FlowGraphContext } from "../types/context";
+import { FlowModule } from "../types/module";
+import { assertDef, assertTruthy, deepFreeze } from "../utils";
 import { findDependencies, sortTopologically } from "../utils/algorithms";
 import { mem, memoObjectByFlatEntries } from "../utils/functional";
 import { validateNode } from "./validateNode";
@@ -9,7 +11,11 @@ import { validateNode } from "./validateNode";
 export const validateFlowGraph = mem((
     flow: FlowGraph,
     baseEnvironment: FlowEnvironment,
+    availableModules: FlowModule[],
 ): FlowGraphContext => {
+
+    const flowEnvironment = pushFlowEnvironmentContent(baseEnvironment, flow.id, 
+        flow.generics, flow.inputs, flow.output, flow.imports, availableModules);
 
     const result: FlowGraphContext = {
         ref: flow,
@@ -34,10 +40,10 @@ export const validateFlowGraph = mem((
 
         for (const [inputRowId, inputRow] of Object.entries(inputNode.rowStates)) {
             const { connections } = inputRow!;
-            for (const [ inputAccessor, connection ] of Object.entries(connections)) {
-                const { 
-                    nodeId: outputNodeId, 
-                    accessor: outputAccessor 
+            for (const [inputAccessor, connection] of Object.entries(connections)) {
+                const {
+                    nodeId: outputNodeId,
+                    accessor: outputAccessor
                 } = connection;
                 // check if present
                 const depIndex = nodeEntries
@@ -137,7 +143,7 @@ export const validateFlowGraph = mem((
         // flatten into sequence with pairwise id and value for memoization
         ...coloredEdges
             .sort((a, b) => a.id.localeCompare(b.id))
-            .map(edge => [ edge.id, edge ])
+            .map(edge => [edge.id, edge])
             .flat()
     );
     result.edges = memoizedEdgeObj;
@@ -148,7 +154,7 @@ export const validateFlowGraph = mem((
     for (const nodeId of namedTopSort) {
         const node = flow.nodes[nodeId];
         const isUsed = usedNodeIds.has(nodeId);
-        
+
         const inferredOutputTypes = memoObjectByFlatEntries(...inferredOutputTypesFlat);
         const nodeResult = validateNode(node, flowEnvironment, inferredOutputTypes, isUsed);
 
@@ -177,15 +183,15 @@ export const getFlowSignature = (flow: FlowGraph) => {
     return _getFlowSignature(flow.id, flow.attributes, flow.generics, flow.inputs, flow.output);
 }
 const _getFlowSignature = mem((
-    id:         FlowGraph['id'], 
-    attributes: FlowGraph['attributes'], 
-    generics:   FlowGraph['generics'], 
-    inputs:     FlowGraph['inputs'], 
-    output:    FlowGraph['output'], 
+    id: FlowGraph['id'],
+    attributes: FlowGraph['attributes'],
+    generics: FlowGraph['generics'],
+    inputs: FlowGraph['inputs'],
+    output: FlowGraph['output'],
 ) => {
     const flowSignature: FlowSignature = {
         id,
-        attributes: { 
+        attributes: {
             category: 'Flows',
             ...attributes,
         },
@@ -224,3 +230,72 @@ const finalizeEdge = mem(
         ...edge, color,
     })
 );
+
+const pushFlowEnvironmentContent = mem(pushFlowEnvironmentContentInitial);
+function pushFlowEnvironmentContentInitial(
+    env: FlowEnvironment,
+    flowId: string,
+    generics: FlowGraph['generics'],
+    flowInputs: FlowGraph['inputs'],
+    flowOutput: FlowGraph['output'],
+    imports: FlowGraph['imports'],
+    availableModules: FlowModule[],
+): FlowEnvironment {
+    const input: FlowSignature = {
+        id: 'input',
+        description: null,
+        attributes: { category: 'In/Out' },
+        generics,
+        inputs: [],
+        output: {
+            id: 'inputs',
+            specifier: createMapType(
+                Object.fromEntries(
+                    flowInputs.map(input => [input.id, input.specifier])
+                )
+            ),
+            rowType: 'output-destructured',
+        },
+    }
+
+    const outputInputs: InputRowSignature[] = [];
+    if (flowOutput != null) {
+        outputInputs.push({
+            id: flowOutput.id,
+            specifier: flowOutput.specifier,
+            rowType: 'input-simple',
+        });
+    }
+    const output: FlowSignature = {
+        id: 'output',
+        description: null,
+        attributes: { category: 'In/Out' },
+        generics,
+        inputs: outputInputs,
+        output: {
+            id: 'output',
+            rowType: 'output-hidden',
+            specifier: createAnyType(),
+        },
+    }
+
+    // add env internal content
+    env = pushContent(env, {
+        name: `document::${flowId}`,
+        content: {
+            signatures: [input, output],
+            types: {},
+        },
+    });
+
+    // modules
+    for (const currImport of imports) {
+        const importedModule = assertDef(availableModules
+            .find(m => m.name == currImport), "add problem here");
+        env = pushContent(env, {
+            name: `module::${importedModule.name}`,
+            content: importedModule.declarations,
+        });
+    }
+    return env;
+}

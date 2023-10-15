@@ -105,6 +105,13 @@ export function mapObjKeys<X>(
     const mapped = pairs.map<[ string, X ]>(([ oldKey, x ]) => [ map(oldKey), x ]);
     return Object.fromEntries(mapped);
 }
+export function filterObj<X>(
+    obj: Record<string, X>, predicate: (x: X, key: string) => any
+): Record<string, X> {
+    const pairs = Object.entries(obj);
+    const filtered = pairs.filter(([ key, x ]) => predicate(x, key));
+    return Object.fromEntries(filtered);
+}
 
 /**
  * Expects array to contain numberic keys

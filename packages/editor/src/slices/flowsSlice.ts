@@ -65,7 +65,7 @@ function listConnectionsToArr(obj: Record<string, lang.FlowConnection>) {
     return unholy;
 }
 
-type ListedState = lang.InputRowSignature | lang.GenericParameter;
+type ListedState = lang.InputRowSignature | lang.TemplateParameter;
 type RowSignature = lang.InputRowSignature | lang.OutputRowSignature;
 
 function createRowSignature(id: string, label: string, blueprint: RowSignatureBlueprint) {
@@ -96,11 +96,11 @@ export const flowsSlice = createSlice({
             const flow: lang.FlowGraph = {
                 ...a.payload.signature,
                 id,
-                // name: a.payload.name,
+                imports: [ 'standard' ],
                 attributes: {},
                 nodes: {
-                    a: { id: 'a', signature: 'input', position: { x: 400, y: 200 }, rowStates: {} },
-                    b: { id: 'b', signature: 'output', position: { x: 1000, y: 200 }, rowStates: {} },
+                    a: { id: 'a', signature: { path: `document::${id}::input`  }, position: { x: 400, y: 200 }, rowStates: {} },
+                    b: { id: 'b', signature: { path: `document::${id}::output` }, position: { x: 1000, y: 200 }, rowStates: {} },
                 },
                 idCounter: 2,
             }
@@ -124,12 +124,12 @@ export const flowsSlice = createSlice({
                 delete g.attributes[a.payload.key];
             }
         },
-        addNode: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, signatureId: string, position: Vec2, rowStates?: lang.FlowNode['rowStates'] }>) => {
+        addNode: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, signature: lang.NamespacePath, position: Vec2, rowStates?: lang.FlowNode['rowStates'] }>) => {
             const g = getFlow(s, a);
             if (!g) return;
             const node: lang.FlowNode = {
                 id: generateAlphabeticalId(g.idCounter++),
-                signature: a.payload.signatureId,
+                signature: a.payload.signature,
                 rowStates: a.payload.rowStates || {},
                 position: a.payload.position,
             }
@@ -304,7 +304,7 @@ export const flowsSlice = createSlice({
             if (!g) return;
             Object.assign(g.output, a.payload.newState);
         },
-        replaceGeneric: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, genericId: string, constraint: lang.GenericParameter['constraint'] }>) => {
+        replaceGeneric: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, genericId: string, constraint: lang.TemplateParameter['constraint'] }>) => {
             const g = getFlow(s, a);
             if (!g) return;
             const generic = g.generics.find(gen => gen.id === a.payload.genericId);

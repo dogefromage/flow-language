@@ -1,5 +1,5 @@
-import { getSignature } from "../core/environment";
-import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, OutputRowSignature, TemplatedTypeSpecifier, TypeSpecifier } from "../types";
+import { findEnvironmentSignature } from "../core/environment";
+import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, OutputRowSignature, TemplatedTypeSpecifier } from "../types";
 import { FlowNodeContext, RowContext, RowDisplay } from "../types/context";
 import { Obj } from "../types/utilTypes";
 import { assertTruthy } from "../utils";
@@ -12,19 +12,15 @@ export const validateNode = mem((
     inferredNodeOutputs: Obj<TemplatedTypeSpecifier>,
     isUsed: boolean,
 ): FlowNodeContext => {
-    const searchRes = getSignature(env, node.signature);
-    if (searchRes == null) {
+    const templateSignature = findEnvironmentSignature(env, node.signature);
+    if (templateSignature == null) {
         return noSignatureContext(node, isUsed);
     }
-    const [templateSignature, baseScopeLabel] = searchRes;
-    const scopedNodeLabel = `${baseScopeLabel}:${templateSignature.id}`;
-
     const { inferredType, rowContexts } =
         validateNodeSyntax(node.rowStates, templateSignature, inferredNodeOutputs, env);
 
     return bundleNodeContext(
         node,
-        scopedNodeLabel,
         isUsed,
         templateSignature,
         inferredType,
@@ -39,7 +35,6 @@ export const validateNode = mem((
 const noSignatureContext = mem(
     (node: FlowNode, isUsed: boolean): FlowNodeContext => ({
         ref: node,
-        scopedLabel: 'missing',
         problems: [{
             type: 'missing-signature',
             signature: node.signature,
@@ -65,7 +60,6 @@ const outputDisplayTypes: Record<OutputRowSignature['rowType'], RowDisplay> = {
 
 const bundleNodeContext = mem((
     node: FlowNode,
-    scopedLabel: string,
     isUsed: boolean,
     templateSignature: FlowSignature,
     inferredType: TemplatedTypeSpecifier<FunctionTypeSpecifier>,
@@ -73,7 +67,6 @@ const bundleNodeContext = mem((
 ): FlowNodeContext => {
     const result: FlowNodeContext = {
         ref: node,
-        scopedLabel,
         problems: [],
         criticalSubProblems: 0,
         templateSignature,
@@ -94,5 +87,4 @@ const bundleNodeContext = mem((
     return result;
 }, undefined, {
     tag: 'bundleNodeContext',
-    // debugHitMiss: true,
 });

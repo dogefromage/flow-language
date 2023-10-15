@@ -1,5 +1,5 @@
-import { ByteProgram, operationNameTags, ByteInstruction, StackValue } from "../types";
-import { assertDef, assertNever } from "../utils";
+import { assertDef, assertNever, AnonymousFlowSignature } from "@noodles/language";
+import { ByteProgram, operationNameTags, ByteInstruction, StackValue } from "./types";
 
 export function byteProgramToString(program: ByteProgram) {
     const lines: string[] = [];
@@ -26,7 +26,7 @@ export function instructionToString(instr: ByteInstruction) {
 export function dataToString(data: StackValue) {
     switch (typeof data) {
         case 'object':
-            return Array.isArray(data) ? 
+            return Array.isArray(data) ?
                 '[...]' : '{...}';
         case 'string':
             return `"${data}"`;

@@ -1,5 +1,4 @@
 import { TypeSystemExceptionData } from '../typeSystem/exceptionHandling';
-import { FlowModule } from './module';
 import { FlowSignature, NamespacePath } from './signatures';
 import {
     FlowDocument,
@@ -9,7 +8,7 @@ import {
     OutputJointLocation,
     RowState
 } from './state';
-import { FunctionTypeSpecifier, TemplatedTypeSpecifier, InitializerValue, TypeSpecifier } from './typeSystem';
+import { FunctionTypeSpecifier, InitializerValue, TemplatedTypeSpecifier, TypeSpecifier } from './typeSystem';
 import { Obj } from './utilTypes';
 
 export type FlowEnvironment = {
@@ -22,7 +21,11 @@ export interface FlowEnvironmentNamespace {
 }
 export interface FlowEnvironmentContent {
     signatures: FlowSignature[];
-    types: TypeSpecifier[];
+    types: Record<string, TypeSpecifier>;
+}
+export interface FlowNamedEnvironmentContent {
+    signatures: Record<string, FlowSignature>;
+    types: Record<string, TypeSpecifier>;
 }
 
 export type EdgeColor = 'normal' | 'redundant' | 'cyclic';
@@ -57,7 +60,6 @@ export interface FlowGraphContext {
 
 export interface FlowNodeContext {
     ref: FlowNode;
-    scopedLabel: string;
     problems: NodeProblem[];
     criticalSubProblems: number;
     inputRows: Obj<RowContext>;

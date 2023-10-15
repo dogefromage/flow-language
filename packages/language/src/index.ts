@@ -18,6 +18,9 @@ export {
     createFunctionType,
     createMapType,
     getTemplatedSignatureType,
+    createAliasType,
+    createGenericType,
+    createTemplateParameter,
 } from './typeSystem';
 
 export {
@@ -27,12 +30,10 @@ export {
 export {
     isSubsetType,
 } from './typeSystem/comparison';
-
 export {
-    compileDocument,
-} from './byteCode/byteCompiler';
-export {
-    StackMachine,
-} from './byteCode/stackMachine';
+    assertDef,
+    assertNever,
+    assertTruthy,
+} from './utils/index';
 
 export * as utils from './utils/functional';

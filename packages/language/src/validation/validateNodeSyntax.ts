@@ -1,12 +1,12 @@
 import { findEnvironmentSignature } from "../core/environment";
-import { createAnyType, createFunctionType, createMapType, createReducedTemplateType, createTemplatedType, createTupleType, findAllTypeLiterals, getTemplatedSignatureType, memoizeTemplatedType } from "../typeSystem";
+import { createAnyType, createFunctionType, createMapType, createReducedTemplateType, createTemplatedType, createTupleType, findAllGenericLiterals, getTemplatedSignatureType, memoizeTemplatedType } from "../typeSystem";
 import { assertSubsetType } from "../typeSystem/comparison";
 import { TypeSystemException, TypeSystemExceptionData, TypeTreePath } from "../typeSystem/exceptionHandling";
 import { generateDefaultValue } from "../typeSystem/generateDefaultValue";
 import { closeTemplatedSpecifier, disjoinTemplateLiterals, instantiateTemplatedType, mapTypeInference } from "../typeSystem/generics";
 import { resolveTypeAlias, tryResolveTypeAlias } from "../typeSystem/resolution";
 import { checkElementOfType } from "../typeSystem/validateElement";
-import { FlowConnection, FlowEnvironment, FlowSignature, FunctionTypeSpecifier, InputRowSignature, RowContext, RowProblem, RowState, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types";
+import { FlowConnection, FlowEnvironment, FlowSignature, FunctionTypeSpecifier, InputRowSignature, NamespacePath, RowContext, RowProblem, RowState, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types";
 import { Obj } from "../types/utilTypes";
 import { assertDef, assertTruthy } from "../utils";
 import { mapObj, mem, objToArr, zipInner } from "../utils/functional";
@@ -40,15 +40,13 @@ export const validateNodeSyntax = mem((
                 (acc, next) => ({ ...acc, [next.id]: next.constraint }),
                 {} as Obj<TypeSpecifier | null>,
             );
-            const restrictingGenerics = new Set(incomingTemplate.generics
-                .map(x => x.id));
 
             const rawAccumulatedType = getFunctionParamType(templatedAccumulatedType.specifier, inputIndex);
             const rawInstantiationMap = mapTypeInference(new TypeTreePath(),
-                rawAccumulatedType, incomingTemplate.specifier, freeGenerics, restrictingGenerics, env);
+                rawAccumulatedType, incomingTemplate.specifier, freeGenerics, env);
             // find all generics from restricting type which are referenced in instantiation map
             const literals = new Set<string>()
-            Object.values(rawInstantiationMap).forEach(X => findAllTypeLiterals(X, literals));
+            Object.values(rawInstantiationMap).forEach(X => findAllGenericLiterals(X, literals));
             const instantiationGenerics = incomingTemplate.generics.filter(X => literals.has(X.id));
 
             templatedAccumulatedType = instantiateTemplatedType(new TypeTreePath(),
@@ -108,10 +106,10 @@ function findIncomingType(
     });
     const firstConnectedType = incomingTypeMap[0];
 
-    resolvedInputType = resolveTypeAlias(new TypeTreePath(), resolvedInputType, env);
+    const inputType = tryResolveTypeAlias(resolvedInputType, env);
 
     if (input.rowType === 'input-variable' &&
-        (resolvedInputType.type === 'list' || resolvedInputType.type === 'tuple')) {
+        (inputType?.type === 'list' || inputType?.type === 'tuple')) {
         // treat inputs as list
         const incomingList = objToArr(incomingTypeMap);
         // remove holes
@@ -139,7 +137,7 @@ function findIncomingType(
         };
     }
     if (input.rowType === 'input-variable' &&
-        resolvedInputType.type === 'function') {
+        inputType?.type === 'function') {
         if (firstConnectedType != null) {
             return {
                 incomingTemplate: firstConnectedType,
@@ -154,20 +152,20 @@ function findIncomingType(
             });
             return { incomingTemplate: fallbackFunction, rowProblems };
         }
-        const nameValue = rowState!.value;
-        const funcSignature = findEnvironmentSignature(env, nameValue);
+        const nameValuePath: NamespacePath = { path: rowState!.value };
+        const funcSignature = findEnvironmentSignature(env, nameValuePath);
         const templatedFunctionSpec = funcSignature && getTemplatedSignatureType(funcSignature);
         if (templatedFunctionSpec == null) {
             rowProblems.push({
                 type: 'invalid-value',
-                message: `Could not find function named '${nameValue}'.`,
+                message: `Could not find function with path '${nameValuePath.path}'.`,
             });
             return { incomingTemplate: fallbackFunction, rowProblems };
         }
         return { incomingTemplate: templatedFunctionSpec, rowProblems };
     }
     if (input.rowType === 'input-variable' &&
-        resolvedInputType.type === 'map') {
+        inputType?.type === 'map') {
         // make independent
         const entries = Object.entries(incomingTypeMap);
         const keys = entries.map(x => x[0]);
