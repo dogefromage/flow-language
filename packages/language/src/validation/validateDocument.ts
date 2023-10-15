@@ -4,11 +4,13 @@ import { FlowDocument, FlowSignature } from "../types";
 import { DocumentProblem, FlowDocumentContext, FlowEnvironmentNamespace, FlowGraphContext } from "../types/context";
 import { FlowModule } from "../types/module";
 import { Obj } from "../types/utilTypes";
+import { ListCache } from "../utils/ListCache";
 import { mem } from "../utils/functional";
 import { getFlowSignature, validateFlowGraph } from "./validateFlowGraph";
 
 /**
  * update with some module collection system
+ * dont forget to memoize this
  */
 const availableModules: FlowModule[] = [
     standardModule,
@@ -16,11 +18,12 @@ const availableModules: FlowModule[] = [
 
 export const validateDocument = mem((document: FlowDocument) => {
     const { flows: rawFlowMap } = document;
-
+    
     const flowContexts: Obj<FlowGraphContext> = {};
     const problems: DocumentProblem[] = [];
     let criticalSubProblems = 0;
 
+    // sort s.t. memoization works
     const flowsSorted = Object.values(rawFlowMap)
         .sort((a, b) => a.id.localeCompare(b.id));
     const documentNamespace = makeDocumentNamespace(
@@ -42,6 +45,9 @@ export const validateDocument = mem((document: FlowDocument) => {
         environment: baseEnvironment,
     };
     return result;
+}, new ListCache(5), {
+    tag: 'validateDocument',
+    printGroup: true,
 });
 
 const makeDocumentNamespace = mem(

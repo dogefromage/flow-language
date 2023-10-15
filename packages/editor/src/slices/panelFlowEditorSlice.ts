@@ -111,11 +111,13 @@ export const flowEditorPanelsSlice = createSlice({
             if (!ps) return;
             ps.selection = a.payload.selection;
         },
-        setRelativeClientJointPosition: (s, a: PayloadAction<{ panelId: string, jointKey: JointLocationKey, relativeClientPosition: Vec2 }>) => {
+        setRelativeClientJointPositions: (s, a: PayloadAction<{ panelId: string, updates: Array<{ jointKey: JointLocationKey, relativeClientPosition: Vec2 }> }>) => {
             const ps = getPanelState(s, a);
             if (!ps) return;
-            const relativeWorldPos = vectorScreenToWorld(ps.camera, a.payload.relativeClientPosition);
-            ps.relativeJointPosition.set(a.payload.jointKey, relativeWorldPos);
+            for (const { jointKey, relativeClientPosition } of a.payload.updates) {
+                const relativeWorldPos = vectorScreenToWorld(ps.camera, relativeClientPosition);
+                ps.relativeJointPosition.set(jointKey, relativeWorldPos);
+            }
         },
         setClipboard: (s, a: PayloadAction<{ panelId: string, clipboard: EditorClipboardNodeContent }>) => {
             const ps = getPanelState(s, a);
@@ -135,7 +137,7 @@ export const {
     updateDragginLinkPosition: flowEditorUpdateDragginLinkPosition,
     setStateAddNodeWithConnection: flowEditorSetStateAddNodeWithConnection,
     setSelection: flowEditorSetSelection,
-    setRelativeClientJointPosition: flowEditorSetRelativeClientJointPosition,
+    setRelativeClientJointPositions: flowEditorSetRelativeClientJointPositions,
     setClipboard: flowEditorSetClipboard,
 } = flowEditorPanelsSlice.actions;
 

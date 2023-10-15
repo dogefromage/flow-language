@@ -52,7 +52,7 @@ const FlowEdgeGroup = styled.g<{ color: EdgeColor, key: string }>`
         pointer-events: none;
     }
 
-    .path-catcher:hover:not([data-ke="${NEW_LINK_KEY}"]) + .path-display {
+    .path-catcher:hover:not([data-key="${NEW_LINK_KEY}"]) + .path-display {
         stroke-width: 5px;
     }
 `

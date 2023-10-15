@@ -1,7 +1,6 @@
-import { flowsRemoveNodes } from "../../slices/flowsSlice";
+import { flowsRemoveNodes, selectFlows } from "../../slices/flowsSlice";
 import { flowEditorSetClipboard, flowEditorSetStateAddNodeAtPosition } from "../../slices/panelFlowEditorSlice";
 import { Command, ViewTypes } from "../../types";
-import clipboardSchema from '../../content/schemas/EditorClipboardNodeContent.json?raw';
 
 export const flowEditorCommands: Command[] = [
     {
@@ -40,7 +39,7 @@ export const flowEditorCommands: Command[] = [
         id: 'flowEditor.copySelection',
         name: 'Copy Selected',
         actionCreator({ appState, activePanelId, panelState: { flowStack, selection } }, params) {
-            const flow = appState.document.flows[flowStack[0]];
+            const flow = selectFlows(appState)[flowStack[0]];
             if (!flow) return console.error(`Could not find flow.`);
             const selectedNodes = selection
                 .map(nodeId => flow.nodes[nodeId]);
@@ -57,8 +56,7 @@ export const flowEditorCommands: Command[] = [
         id: 'flowEditor.paste',
         name: 'Paste',
         actionCreator({ appState, panelState: { clipboard } }, params) {
-            console.log('pasting:');
-            console.log(clipboard);
+            console.log('TODO paste', clipboard);
         },
         keyCombinations: [{ key: 'v', ctrlKey: true }],
     },

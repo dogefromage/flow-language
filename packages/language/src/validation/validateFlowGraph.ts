@@ -1,9 +1,9 @@
 import { pushContent } from "../core/environment";
 import { createAnyType, createMapType, createReducedTemplateType } from "../typeSystem";
-import { FlowEnvironment, FlowGraph, FlowSignature, InputRowSignature, OutputRowSignature, TemplateParameter, TemplatedTypeSpecifier, pathTail } from "../types";
-import { EdgeColor, FlowEdge, FlowEnvironmentContent, FlowEnvironmentNamespace, FlowGraphContext } from "../types/context";
+import { FlowEnvironment, FlowGraph, FlowSignature, InputRowSignature, TemplatedTypeSpecifier, pathTail } from "../types";
+import { EdgeColor, FlowEdge, FlowGraphContext } from "../types/context";
 import { FlowModule } from "../types/module";
-import { assertDef, assertTruthy, deepFreeze } from "../utils";
+import { assertDef, deepFreeze } from "../utils";
 import { findDependencies, sortTopologically } from "../utils/algorithms";
 import { mem, memoObjectByFlatEntries } from "../utils/functional";
 import { validateNode } from "./validateNode";
@@ -175,7 +175,7 @@ export const validateFlowGraph = mem((
     return result;
 }, undefined, {
     tag: 'validateFlowGraph',
-    // debugHitMiss: true,
+    generateInfo: (args) => `flowId=${args[0].id}`,
 });
 
 

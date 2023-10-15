@@ -1,17 +1,20 @@
 import { useMouseDrag } from '@noodles/interactive';
 import * as lang from '@noodles/language';
-import React, { useEffect, useRef } from 'react';
+import React, { useDeferredValue, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { editorSetActiveFlow } from '../slices/editorSlice';
 import { flowsMoveSelection, selectSingleFlow } from '../slices/flowsSlice';
-import { flowEditorSetRelativeClientJointPosition, flowEditorSetSelection } from '../slices/panelFlowEditorSlice';
+import { flowEditorSetRelativeClientJointPositions, flowEditorSetSelection } from '../slices/panelFlowEditorSlice';
 import { FlowNodeDiv } from '../styles/flowStyles';
 import { FlowEditorPanelState, JointLocationKey, SelectionStatus, Vec2 } from '../types';
 import { vectorScreenToWorld } from '../utils/planarCameraMath';
 import { FLOW_JOINT_TARGET_CLASS } from './FlowJoint';
 import FlowNodeContent from './FlowNodeContent';
 import { FlowNodeMissingContent } from './FlowNodeMissingContent';
+import useTrigger from '../utils/useTrigger';
+import _ from 'lodash';
+import { useDebouncedValue } from '../utils/useDebouncedValue';
 
 export const FLOW_NODE_DIV_CLASS = 'flow-node-div';
 
@@ -30,28 +33,35 @@ const FlowNodeElement = ({ panelId, flowId, context, getPanelState, selectionSta
 
     const referencedFlow = useAppSelector(selectSingleFlow(context.templateSignature?.id!)) as lang.FlowGraph | undefined;
 
+    const debouncedContext = useDebouncedValue(context, 300);
     useEffect(() => {
         if (wrapperRef.current == null) return;
         const div = wrapperRef.current;
         const nodeRect = wrapperRef.current.getBoundingClientRect();
 
-        div.querySelectorAll(`.${FLOW_JOINT_TARGET_CLASS}`).forEach(joint => {
-            const jointRect = joint.getBoundingClientRect();
-            const relativeClientPosition = {
-                x: jointRect.x + 0.5 * jointRect.width - nodeRect.x,
-                y: jointRect.y + 0.5 * jointRect.height - nodeRect.y,
-            };
-            const jointKeyAttr = joint.attributes.getNamedItem('data-joint-key');
-            if (jointKeyAttr != null) {
-                dispatch(flowEditorSetRelativeClientJointPosition({
-                    panelId,
+        const updates = Array
+            .from(div.querySelectorAll(`.${FLOW_JOINT_TARGET_CLASS}`))
+            .map(joint => {
+                const jointRect = joint.getBoundingClientRect();
+                const relativeClientPosition = {
+                    x: jointRect.x + 0.5 * jointRect.width - nodeRect.x,
+                    y: jointRect.y + 0.5 * jointRect.height - nodeRect.y,
+                };
+                const jointKeyAttr = joint.attributes.getNamedItem('data-joint-key');
+                if (jointKeyAttr == null) {
+                    return;
+                }
+                return { 
                     relativeClientPosition,
                     jointKey: jointKeyAttr.value as JointLocationKey,
-                }));
-            }
-        });
-        
-    }, [ context ]);
+                };
+            })
+            .filter((x): x is NonNullable<typeof x> => x != null);
+        dispatch(flowEditorSetRelativeClientJointPositions({
+            panelId, updates,
+        }));
+
+    }, [debouncedContext]);
 
     const dragRef = useRef<{
         startCursor: Vec2;

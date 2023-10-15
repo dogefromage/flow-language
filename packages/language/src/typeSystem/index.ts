@@ -6,6 +6,27 @@ import { always, mem, memoList } from "../utils/functional";
 
 export const typeSystemCache = new ListCache(3037);
 
+// export const createAnyType = always<AnyTypeSpecifier>({ type: 'any' })
+
+// export const createPrimitiveType = mem(
+//     (name: string): PrimitiveTypeSpecifier => ({ type: 'primitive', name }),
+//     typeSystemCache,
+// );
+// export const createListType = mem(
+//     (element: TypeSpecifier): ListTypeSpecifier => ({ type: 'list', element }),
+//     typeSystemCache,
+// );
+// export const createTupleType = mem(
+//     (...elements: TypeSpecifier[]): TupleTypeSpecifier => ({ type: 'tuple', elements }),
+//     typeSystemCache,
+// );
+
+
+
+
+
+
+
 export const createAnyType = always<AnyTypeSpecifier>({ type: 'any' })
 
 export const createPrimitiveType = mem(
@@ -20,6 +41,15 @@ export const createTupleType = mem(
     (...elements: TypeSpecifier[]): TupleTypeSpecifier => ({ type: 'tuple', elements }),
     typeSystemCache,
 );
+
+
+
+
+
+
+
+
+
 export const createFunctionType = mem(
     (parameter: TypeSpecifier, output: TypeSpecifier): FunctionTypeSpecifier => ({ type: 'function', parameter, output }),
     typeSystemCache,

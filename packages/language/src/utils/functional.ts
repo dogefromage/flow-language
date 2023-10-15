@@ -3,58 +3,61 @@ import { Obj } from '../types/utilTypes';
 import { ListCache } from './ListCache';
 import { randomU32 } from './hashing';
 
-interface MemOptions {
+type MemFunction = (...args: any[]) => any;
+
+interface MemOptions<F extends MemFunction> {
     tag: string;
-    debugHitMiss?: boolean;
-    // debugCacheFull?: boolean;
+    generateInfo?: (args: Parameters<F>) => string,
+    printGroup?: boolean,
     debugHitMissRate?: boolean;
-    // debugPrint?: boolean;
-    // debugValues?: boolean;
 }
 
-export function mem<F extends (...args: any[]) => any>(
+const ALWAYS_PRINT_GROUP = true;
+
+export function mem<F extends MemFunction>(
     fn: F,
-    cache = new ListCache(1009),
-    options?: MemOptions
+    cache = new ListCache(233),
+    options?: MemOptions<F>,
 ) {
     let hits = 0;
     let misses = 0;
     const handlerTag = randomU32(); // unique for every handler instance
+    const printGroup = options?.printGroup || ALWAYS_PRINT_GROUP;
+    const tag = options?.tag || '<untagged>';
 
     return ((...plainArgs: Parameters<F>) => {
         const taggedArgs = [handlerTag, ...plainArgs];
 
         const cached = cache.get(taggedArgs);
         if (typeof cached !== 'undefined') {
-            if (options?.debugHitMiss) {
-                console.log(`Cache hit: ${options.tag}`);
-            }
             hits++;
-            // if (options?.debugValues) {
-            //     console.log('hit', taggedArgs, cached);
-            // }
+            
+            if (printGroup) {
+                console.log(`hit [${tag}]`);
+            }
+
             return cached;
         }
 
-        if (options?.debugHitMiss) {
-            console.log(`Cache miss: ${options.tag}`);
-        }
-        const result = fn(...plainArgs);
-        deepFreeze(result);
-        cache.set(taggedArgs, result);
-        // if (options?.debugValues) {
-        //     console.log('miss', taggedArgs, result);
-        // }
         misses++;
-        // if (options?.debugCacheFull) {
-        //     console.log(`Cache full: ${options.tag} ${cache.getCacheFull().toFixed(4)}`);
-        // }
-        // if (options?.debugPrint) {
-        //     console.log(cache);
-        // }
         if (options?.debugHitMissRate) {
             console.log(`Hits/Misses: ${options.tag} ${(hits / misses).toFixed(4)}`);
         }
+
+        if (printGroup) {
+            const info = options?.generateInfo?.(plainArgs) || '<noinfo>';
+            const msg = `eval [${tag}] (${info})`;
+            console.groupCollapsed(msg);
+        }
+
+        const result = fn(...plainArgs);
+        deepFreeze(result);
+        cache.set(taggedArgs, result);
+
+        if (printGroup) {
+            console.groupEnd();
+        }
+
         return result;
     }) as F;
 }
