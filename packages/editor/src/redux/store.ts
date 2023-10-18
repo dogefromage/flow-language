@@ -39,7 +39,6 @@ function generateMiddleware(getDefaultMiddleWare: CurriedGetDefaultMiddleware) {
 }
 
 export const initStore = _.memoize(() => {
-    console.log('enabled map set');
     enableMapSet()
 
     const store = configureStore({
