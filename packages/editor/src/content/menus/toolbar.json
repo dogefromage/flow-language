@@ -1,7 +1,18 @@
 {
-    "$schema": "../schemas/menu.json",
+    "$schema": "../schemas/menuShape.json",
     "type": "inline",
     "list": [
+        {
+            "name": "Document",
+            "key": "document",
+            "type": "expand",
+            "sublist": {
+                "type": "floating",
+                "list": [
+                    { "type": "command", "key": "export", "name": "Export Document", "command": "global.export_document" }
+                ]
+            }
+        },
         {
             "name": "Edit",
             "key": "edit",
@@ -9,8 +20,8 @@
             "sublist": {
                 "type": "floating",
                 "list": [
-                    {  "type": "command", "key": "undo", "name": "Undo", "command": "global.undo" },
-                    {  "type": "command", "key": "redo", "name": "Redo", "command": "global.redo" }
+                    { "type": "command", "key": "undo", "name": "Undo", "command": "global.undo" },
+                    { "type": "command", "key": "redo", "name": "Redo", "command": "global.redo" }
                 ]
             }
         }

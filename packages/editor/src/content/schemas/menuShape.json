@@ -1,0 +1,235 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "anyOf": [
+        {
+            "$ref": "#/definitions/FloatingMenuShape"
+        },
+        {
+            "$ref": "#/definitions/InlineMenuShape"
+        }
+    ],
+    "definitions": {
+        "ButtonMenuElement": {
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "onClick": {
+                    "type": "object"
+                },
+                "tabIndex": {
+                    "type": "number"
+                },
+                "type": {
+                    "const": "button",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "key",
+                "name",
+                "onClick",
+                "type"
+            ],
+            "type": "object"
+        },
+        "ColorMenuElement": {
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tabIndex": {
+                    "type": "number"
+                },
+                "type": {
+                    "const": "color",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "key",
+                "name",
+                "type"
+            ],
+            "type": "object"
+        },
+        "CommandMenuElement": {
+            "properties": {
+                "command": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tabIndex": {
+                    "type": "number"
+                },
+                "type": {
+                    "const": "command",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "command",
+                "key",
+                "name",
+                "type"
+            ],
+            "type": "object"
+        },
+        "ExpandMenuElement": {
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sublist": {
+                    "$ref": "#/definitions/FloatingMenuShape"
+                },
+                "tabIndex": {
+                    "type": "number"
+                },
+                "type": {
+                    "const": "expand",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "key",
+                "name",
+                "sublist",
+                "type"
+            ],
+            "type": "object"
+        },
+        "FloatingMenuShape": {
+            "properties": {
+                "list": {
+                    "items": {
+                        "$ref": "#/definitions/MenuElement"
+                    },
+                    "type": "array"
+                },
+                "type": {
+                    "const": "floating",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "list",
+                "type"
+            ],
+            "type": "object"
+        },
+        "InlineMenuShape": {
+            "properties": {
+                "list": {
+                    "items": {
+                        "$ref": "#/definitions/ExpandMenuElement"
+                    },
+                    "type": "array"
+                },
+                "type": {
+                    "const": "inline",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "list",
+                "type"
+            ],
+            "type": "object"
+        },
+        "MenuElement": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/ExpandMenuElement"
+                },
+                {
+                    "$ref": "#/definitions/CommandMenuElement"
+                },
+                {
+                    "$ref": "#/definitions/ButtonMenuElement"
+                },
+                {
+                    "$ref": "#/definitions/SearchMenuElement"
+                },
+                {
+                    "$ref": "#/definitions/TitleMenuElement"
+                },
+                {
+                    "$ref": "#/definitions/ColorMenuElement"
+                }
+            ]
+        },
+        "SearchMenuElement": {
+            "properties": {
+                "autofocus": {
+                    "type": "boolean"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "placeholder": {
+                    "type": "string"
+                },
+                "tabIndex": {
+                    "type": "number"
+                },
+                "type": {
+                    "const": "search",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "autofocus",
+                "key",
+                "name",
+                "placeholder",
+                "type"
+            ],
+            "type": "object"
+        },
+        "TitleMenuElement": {
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tabIndex": {
+                    "type": "number"
+                },
+                "type": {
+                    "const": "title",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "key",
+                "name",
+                "type"
+            ],
+            "type": "object"
+        }
+    }
+}
+

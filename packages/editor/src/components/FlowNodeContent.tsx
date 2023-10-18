@@ -19,7 +19,8 @@ const FlowNodeContent = (props: Props) => {
     const commonProps = { panelId, flowId, nodeId: context.ref.id };
 
     let inputType: lang.TupleTypeSpecifier | undefined;
-    if (typeof context.inferredType?.specifier.parameter !== 'string' && context.inferredType?.specifier.parameter.type === 'tuple') {
+    if (typeof context.inferredType?.specifier.parameter !== 'string' && 
+        context.inferredType?.specifier.parameter.type === 'tuple') {
         inputType = context.inferredType.specifier.parameter;
     }
     const outputType = context.inferredType?.specifier.output;

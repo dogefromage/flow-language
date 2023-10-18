@@ -1,4 +1,4 @@
-import { AnyAction, combineReducers } from "@reduxjs/toolkit";
+import { combineReducers } from "@reduxjs/toolkit";
 import commandsReducer from "../slices/commandsSlice";
 import contextMenuReducer from "../slices/contextMenuSlice";
 import contextReducer from "../slices/contextSlice";
@@ -10,7 +10,6 @@ import flowInspectorPanelsReducer from "../slices/panelFlowInspectorSlice";
 import panelManagerReducer from "../slices/panelManagerSlice";
 import pageOutlinerPanelsReducer from "../slices/panelPageOutlinerSlice";
 import { ViewTypes } from "../types";
-import { getAndDeserializeLocalProject, serializeAndStoreProjectLocally } from "../utils/localProjectStorage";
 import storageEnhancer from "./storageEnhancer";
 import undoableEnhancer from "./undoableEnhancer";
 
@@ -19,15 +18,11 @@ const documentReducer = combineReducers({
 });
 
 const rootReducer = combineReducers({
-    document: /* enhanceReducer( */
-        undoableEnhancer(
-            storageEnhancer<ReturnType<typeof documentReducer>, AnyAction>(
-                documentReducer,
-                getAndDeserializeLocalProject,
-                serializeAndStoreProjectLocally,
-            ),
+    document: undoableEnhancer(
+        storageEnhancer(
+            documentReducer
         ),
-    /* ), */
+    ),
     context: contextReducer,
     editor: editorReducer,
     panels: combineReducers({

@@ -1,5 +1,5 @@
 import { AnyAction, PayloadAction, Reducer } from "@reduxjs/toolkit";
-import produce, { Draft } from "immer";
+import { produce, Draft } from "immer";
 import { useCallback } from "react";
 import { RootState } from "../redux/store";
 import { PanelState } from "../types";

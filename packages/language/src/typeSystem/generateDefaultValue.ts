@@ -1,14 +1,12 @@
-import { typeSystemCache } from ".";
 import { primitiveTypes } from "../content/standardModule";
 import { FlowEnvironment, InitializerValue, TypeSpecifier } from "../types";
-import { mem } from "../utils/functional";
 import { TypeTreePath } from "./exceptionHandling";
 import { resolveTypeAlias } from "./resolution";
 
 export function generateDefaultValue(specifier: TypeSpecifier, env: FlowEnvironment) {
     return _generateDefaultValue(new TypeTreePath(), specifier, env);
 }
-const _generateDefaultValue = mem((
+const _generateDefaultValue = (
     path: TypeTreePath, X: TypeSpecifier, env: FlowEnvironment,
 ): InitializerValue => {
     X = resolveTypeAlias(path, X, env);
@@ -28,4 +26,4 @@ const _generateDefaultValue = mem((
         throw new Error(`Unknown primitive ${X.name}`);
     }
     throw new Error(`Cannot generate default value for  '${(X as any).type}'`);
-}, typeSystemCache);
+}

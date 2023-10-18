@@ -8,20 +8,22 @@ interface ValidatorProps {
 }
 
 const Validator = ({}: PropsWithChildren<ValidatorProps>) => {
-    const dispatch = useAppDispatch();
-    const document = useAppSelector(selectDocument);
+    
+    // const dispatch = useAppDispatch();
+    // const document = useAppSelector(selectDocument);
 
-    useEffect(() => {
-        try {
-            const projectContext = lang.validateDocument(document);
-            dispatch(validationSetResult({
-                context: projectContext,
-            }));
+    // useEffect(() => {
+    //     try {
+    //         console.log('\n\nStarting validation\n\n\n')
+    //         const projectContext = lang.validateDocument(document);
+    //         dispatch(validationSetResult({
+    //             context: projectContext,
+    //         }));
 
-        } catch (e) {
-            console.error(e);
-        }
-    });
+    //     } catch (e) {
+    //         console.error(e);
+    //     }
+    // } /* intentionally left blank */ );
 
     return null;
 }

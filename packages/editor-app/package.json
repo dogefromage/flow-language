@@ -12,16 +12,18 @@
   },
   "dependencies": {
     "@noodles/editor": "workspace:^",
+    "@noodles/language": "workspace:^",
+    "@supabase/supabase-js": "^2.38.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "styled-components": "6.0.0-rc.3",
-    "sass": "^1.62.1"
+    "sass": "^1.62.1",
+    "styled-components": "6.0.0-rc.3"
   },
   "devDependencies": {
     "@types/react": "^18.0.37",
     "@types/react-dom": "^18.0.11",
-    "@vitejs/plugin-react": "^4.0.0",
     "@types/styled-components": "^5.1.26",
+    "@vitejs/plugin-react": "^4.0.0",
     "typescript": "^5.0.2",
     "vite": "^4.3.9"
   }

@@ -1,7 +1,8 @@
 import { FlowEnvironment, FlowEnvironmentContent, FlowEnvironmentNamespace, FlowNamedEnvironmentContent } from "../types";
 import { FlowSignature, NamespacePath } from "../types/signatures";
 import { ListCache } from "../utils/ListCache";
-import { mapObjKeys, mem } from "../utils/functional";
+import { mapObjKeys } from "../utils/functional";
+import { mem } from '../utils/mem';
 
 // use shared cache since same values appear often in different functions
 const environmentCache = new ListCache(5209);
@@ -9,12 +10,14 @@ const environmentCache = new ListCache(5209);
 export const createEnvironment = mem(
     (namespace: FlowEnvironmentNamespace): FlowEnvironment => ({ parent: null, namespace }),
     environmentCache,
+    { tag: 'createEnvironment' },
 );
 
 export const pushContent = mem(
     (parent: FlowEnvironment, namespace: FlowEnvironmentNamespace): FlowEnvironment => 
         ({ parent, namespace }),
     environmentCache,
+    { tag: 'pushContent' },
 );
 export const popContent = (env: FlowEnvironment) => env.parent;
 
@@ -54,6 +57,7 @@ export const collectTotalEnvironmentContent = mem(
         };
     },
     environmentCache,
+    { tag: 'collectTotalEnvironmentContent' },
 );
 
 export const findEnvironmentSignature = (env: FlowEnvironment, path: NamespacePath) => {

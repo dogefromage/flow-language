@@ -1,33 +1,15 @@
-import { jsonReplacer, jsonReviver } from "./serialization";
-
-export function getAndDeserializeLocalProject() {
-    const stored = getLocalProjectJson();
-    if (stored != null) {
-        try {
-            return JSON.parse(stored, jsonReviver);
-        } catch (e) {
-            console.error(e);
-        }
-    }
-}
-
-export function serializeAndStoreProjectLocally(data: any) {
-    try {
-        const stateJSON = JSON.stringify(data, jsonReplacer);
-        storeLocalProjectJson(stateJSON);
-    } catch (e) {
-        console.error(e);
-    }
-}
+import { deserializeProject, serializeProject } from "./serialization";
 
 const PROJECT_KEY = 'project';
-function getLocalProjectJson() {
-    return localStorage.getItem(PROJECT_KEY);
+
+export function getAndDeserializeLocalProject() {
+    const stored = localStorage.getItem(PROJECT_KEY);
+    return deserializeProject(stored)
 }
-function storeLocalProjectJson(json: string | null) {
-    if (json) {
-        localStorage.setItem(PROJECT_KEY, json);
-    } else {
-        localStorage.removeItem(PROJECT_KEY);
+
+export function serializeAndStoreProjectLocally(project: any) {
+    const projectJson = serializeProject(project);
+    if (projectJson != null) {
+        localStorage.setItem(PROJECT_KEY, projectJson);
     }
 }

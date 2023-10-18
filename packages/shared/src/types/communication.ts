@@ -35,4 +35,5 @@ export abstract class DocumentConsumer extends Emittery<{
 
     abstract setDocument(document: lang.FlowDocument): void;
     abstract signalInput(input: ConsumerInputSignal): void;
+    abstract init(): void;
 }

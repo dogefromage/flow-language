@@ -2,68 +2,55 @@ import { FlowSignature } from "../types/signatures";
 import { AliasTypeSpecifier, AnyTypeSpecifier, FunctionTypeSpecifier, GenericTypeSpecifier, ListTypeSpecifier, MapTypeSpecifier, PrimitiveTypeSpecifier, TemplateParameter, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
 import { assertNever, assertTruthy } from "../utils";
 import { ListCache } from "../utils/ListCache";
-import { always, mem, memoList } from "../utils/functional";
-
-export const typeSystemCache = new ListCache(3037);
-
-// export const createAnyType = always<AnyTypeSpecifier>({ type: 'any' })
-
-// export const createPrimitiveType = mem(
-//     (name: string): PrimitiveTypeSpecifier => ({ type: 'primitive', name }),
-//     typeSystemCache,
-// );
-// export const createListType = mem(
-//     (element: TypeSpecifier): ListTypeSpecifier => ({ type: 'list', element }),
-//     typeSystemCache,
-// );
-// export const createTupleType = mem(
-//     (...elements: TypeSpecifier[]): TupleTypeSpecifier => ({ type: 'tuple', elements }),
-//     typeSystemCache,
-// );
-
-
-
-
-
-
+import { always, memoList } from "../utils/functional";
+import { mem } from '../utils/mem';
 
 export const createAnyType = always<AnyTypeSpecifier>({ type: 'any' })
 
-export const createPrimitiveType = mem(
-    (name: string): PrimitiveTypeSpecifier => ({ type: 'primitive', name }),
-    typeSystemCache,
-);
-export const createListType = mem(
-    (element: TypeSpecifier): ListTypeSpecifier => ({ type: 'list', element }),
-    typeSystemCache,
-);
-export const createTupleType = mem(
-    (...elements: TypeSpecifier[]): TupleTypeSpecifier => ({ type: 'tuple', elements }),
-    typeSystemCache,
-);
+export const createPrimitiveType =
+    (name: string): PrimitiveTypeSpecifier => ({ type: 'primitive', name });
 
+export const createListType =
+    (element: TypeSpecifier): ListTypeSpecifier => ({ type: 'list', element });
 
+export const createTupleType =
+    (...elements: TypeSpecifier[]): TupleTypeSpecifier => ({ type: 'tuple', elements });
 
+export const createMapType =
+    (elements: Record<string, TypeSpecifier>): MapTypeSpecifier =>
+        ({ type: 'map', elements });
 
+export const createFunctionType =
+    (parameter: TypeSpecifier, output: TypeSpecifier): FunctionTypeSpecifier =>
+        ({ type: 'function', parameter, output });
 
+export const createAliasType =
+    (alias: string): AliasTypeSpecifier => ({ type: 'alias', alias });
 
+export const createGenericType =
+    (alias: string): GenericTypeSpecifier => ({ type: 'generic', alias });
 
+export const createTemplatedType = <T extends TypeSpecifier>
+    (specifier: T, ...generics: TemplateParameter[]): TemplatedTypeSpecifier<T> =>
+    ({ generics, specifier });
 
+export const createTemplateParameter =
+    (id: string, constraint: TypeSpecifier | null): TemplateParameter =>
+        ({ id, constraint });
 
-export const createFunctionType = mem(
-    (parameter: TypeSpecifier, output: TypeSpecifier): FunctionTypeSpecifier => ({ type: 'function', parameter, output }),
-    typeSystemCache,
-);
-export const createAliasType = mem(
-    (alias: string): AliasTypeSpecifier => ({ type: 'alias', alias }),
-    typeSystemCache,
-);
-export const createGenericType = mem(
-    (alias: string): GenericTypeSpecifier => ({ type: 'generic', alias }),
-    typeSystemCache,
-);
+const typeSystemCache = new ListCache(3037);
 
-export const createMapFromFlat = mem(
+const createAnyTypeMemo = createAnyType; // no params
+const createPrimitiveTypeMemo =     mem(createPrimitiveType,     typeSystemCache, { tag: 'createPrimitiveTypeMemo' });
+const createListTypeMemo =          mem(createListType,          typeSystemCache, { tag: 'createListTypeMemo' });
+const createTupleTypeMemo =         mem(createTupleType,         typeSystemCache, { tag: 'createTupleTypeMemo' });
+const createFunctionTypeMemo =      mem(createFunctionType,      typeSystemCache, { tag: 'createFunctionTypeMemo' });
+const createAliasTypeMemo =         mem(createAliasType,         typeSystemCache, { tag: 'createAliasTypeMemo' });
+const createGenericTypeMemo =       mem(createGenericType,       typeSystemCache, { tag: 'createGenericTypeMemo' });
+const createTemplatedTypeMemo =     mem(createTemplatedType,     typeSystemCache, { tag: 'createTemplatedTypeMemo' });
+const createTemplateParameterMemo = mem(createTemplateParameter, typeSystemCache, { tag: 'createTemplateParameterMemo' });
+
+const createMapFromFlatMemo = mem(
     (...flatEntries: (string | TypeSpecifier)[]): MapTypeSpecifier => {
         const map: MapTypeSpecifier = {
             type: 'map',
@@ -78,64 +65,52 @@ export const createMapFromFlat = mem(
         return map;
     },
     typeSystemCache,
+    { tag: 'createMapFromFlatMemo' },
 );
-export const createMapType = (elements: Record<string, TypeSpecifier>) => {
-    const flatEntries = Object.entries(elements).flat();
-    return createMapFromFlat(...flatEntries);
-}
 
-export const createTemplateParameter = mem(
-    (id: string, constraint: TypeSpecifier | null): TemplateParameter => ({ id, constraint }),
-    typeSystemCache,
-)
-
-export const createTemplatedType = mem(
-    <T extends TypeSpecifier>(generics: TemplateParameter[], specifier: T
-    ): TemplatedTypeSpecifier<T> => ({ generics, specifier }),
-    typeSystemCache,
-)
-
-// memoization does not guarantee uniqueness but helps if the exact same type is passed multiple times
-export const memoizeTypeStructure = mem(<T extends TypeSpecifier>(X: T): T => {
+/**
+ * TODO 
+ * write unit tests for this crap
+ */
+export const memoizePlainType = mem(<T extends TypeSpecifier>(X: T): T => {
     switch (X.type) {
-        case 'tuple':
-            return createTupleType(...X.elements.map(Y => memoizeTypeStructure(Y))) as T;
+        case 'any':
+            return createAnyTypeMemo() as T;
+        case 'primitive':
+            return createPrimitiveTypeMemo(X.name) as T;
         case 'list':
-            return createListType(memoizeTypeStructure(X.element)) as T;
+            return createListTypeMemo(memoizePlainType(X.element)) as T;
+        case 'tuple':
+            return createTupleTypeMemo(...X.elements.map(Y => memoizePlainType(Y))) as T;
+        case 'function':
+            return createFunctionTypeMemo(
+                memoizePlainType(X.parameter),
+                memoizePlainType(X.output),
+            ) as T;
+        case 'alias':
+            return createAliasTypeMemo(X.alias) as T;
+        case 'generic':
+            return createGenericTypeMemo(X.alias) as T;
         case 'map':
-            return createMapFromFlat(
+            return createMapFromFlatMemo(
                 ...Object.entries(X.elements)
-                    .map(([key, valueType]) => [key, memoizeTypeStructure(valueType)] as const)
+                    .map(([key, valueType]) => [key, memoizePlainType(valueType)] as const)
                     .sort((a, b) => a[0].localeCompare(b[0]))
                     .flat()
             ) as T;
-        case 'function':
-            return createFunctionType(
-                memoizeTypeStructure(X.parameter),
-                memoizeTypeStructure(X.output),
-            ) as T;
-        case 'primitive':
-            return createPrimitiveType(X.name) as T;
-        case 'any':
-            return createAnyType() as T;
-        case 'alias':
-            return createAliasType(X.alias) as T;
-        case 'generic':
-            return createGenericType(X.alias) as T;
     }
     assertNever();
-}, typeSystemCache);
+}, typeSystemCache, { tag: 'memoizePlainType' });
 
 export const memoizeTemplatedType = <T extends TypeSpecifier>(X: TemplatedTypeSpecifier<T>): TemplatedTypeSpecifier<T> => {
-    const memGenerics = memoList(...X.generics
-        .map(g => createTemplateParameter(
+    const memoizedGenerics = X.generics
+        .map(g => createTemplateParameterMemo(
             g.id,
-            g.constraint && memoizeTypeStructure(g.constraint),
-        ))
-    );
-    return createTemplatedType(
-        memGenerics,
-        memoizeTypeStructure(X.specifier),
+            g.constraint && memoizePlainType(g.constraint),
+        ));
+    return createTemplatedTypeMemo(
+        memoizePlainType(X.specifier),
+        ...memoizedGenerics,
     );
 }
 
@@ -191,5 +166,5 @@ export function createReducedTemplateType<T extends TypeSpecifier>(generics: Tem
     const literals = new Set<string>()
     findAllGenericLiterals(X, literals);
     generics = generics.filter(X => literals.has(X.id));
-    return createTemplatedType<T>(generics, X);
+    return createTemplatedType<T>(X, ...generics);
 }

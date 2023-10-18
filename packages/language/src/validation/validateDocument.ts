@@ -5,7 +5,7 @@ import { DocumentProblem, FlowDocumentContext, FlowEnvironmentNamespace, FlowGra
 import { FlowModule } from "../types/module";
 import { Obj } from "../types/utilTypes";
 import { ListCache } from "../utils/ListCache";
-import { mem } from "../utils/functional";
+import { mem } from '../utils/mem';
 import { getFlowSignature, validateFlowGraph } from "./validateFlowGraph";
 
 /**
@@ -45,9 +45,8 @@ export const validateDocument = mem((document: FlowDocument) => {
         environment: baseEnvironment,
     };
     return result;
-}, new ListCache(5), {
+}, new ListCache(1), {
     tag: 'validateDocument',
-    printGroup: true,
 });
 
 const makeDocumentNamespace = mem(
@@ -57,5 +56,7 @@ const makeDocumentNamespace = mem(
             signatures: signatureList,
             types: {},
         },
-    })
+    }),
+    undefined,
+    { tag: 'makeDocumentNamespace' },
 );

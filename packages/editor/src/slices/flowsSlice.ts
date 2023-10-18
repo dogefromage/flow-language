@@ -1,13 +1,12 @@
 import * as lang from "@noodles/language";
 import { createSlice } from "@reduxjs/toolkit";
-import { Draft, enableMapSet } from "immer";
+import { Draft } from "immer";
 import { useCallback } from "react";
 import { selectDocument } from "../redux/stateHooks";
 import { RootState } from "../redux/store";
 import { FlowsSliceState, UndoAction, Vec2, defaultFlows, flowsIdRegex, listItemRegex } from "../types";
 import { RowSignatureBlueprint } from "../types/flowInspectorView";
 import { getBasePowers } from "../utils/math";
-enableMapSet();
 
 function getFlow(s: Draft<FlowsSliceState>, a: { payload: { flowId: string } }) {
     const g = s[a.payload.flowId];

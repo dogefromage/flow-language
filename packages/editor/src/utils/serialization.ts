@@ -15,6 +15,7 @@ export function jsonReplacer(key: string, value: any) {
     }
     return value;
 }
+
 export function jsonReviver(key: string, value: any) {
     if (typeof value === 'object' && value !== null) {
         if (value.__type__ === 'Map') {
@@ -25,4 +26,22 @@ export function jsonReviver(key: string, value: any) {
         }
     }
     return value;
+}
+
+export function serializeProject(data: any) {
+    try {
+        return JSON.stringify(data, jsonReplacer);
+    } catch (e) {
+        console.error(e);
+    }
+}
+export function deserializeProject(json: string | null) {
+    if (!json) {
+        return;
+    }
+    try {
+        return JSON.parse(json, jsonReviver);
+    } catch (e) {
+        console.error(e);
+    }
 }

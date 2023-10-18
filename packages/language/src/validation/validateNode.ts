@@ -3,7 +3,8 @@ import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, Output
 import { FlowNodeContext, RowContext, RowDisplay } from "../types/context";
 import { Obj } from "../types/utilTypes";
 import { assertTruthy } from "../utils";
-import { mem, memoList } from "../utils/functional";
+import { memoList } from "../utils/functional";
+import { mem } from '../utils/mem';
 import { validateNodeSyntax } from "./validateNodeSyntax";
 
 export const validateNode = mem((
@@ -30,6 +31,9 @@ export const validateNode = mem((
             ),
         ),
     );
+}, undefined, { 
+    tag: 'validateNode',
+    generateInfo: ([node]) => `nodeId=${node.id}`,
 });
 
 const noSignatureContext = mem(
@@ -49,7 +53,9 @@ const noSignatureContext = mem(
             problems: [],
         },
         isUsed,
-    })
+    }),
+    undefined,
+    { tag: 'noSignatureContext' },
 );
 
 const outputDisplayTypes: Record<OutputRowSignature['rowType'], RowDisplay> = {

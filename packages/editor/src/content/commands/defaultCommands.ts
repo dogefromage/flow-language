@@ -1,5 +1,8 @@
-import { undo, redo } from "../../redux/undoableEnhancer";
+import { selectDocument } from "../../redux/stateHooks";
+import { undoEnhancerUndo, undoEnhancerRedo } from "../../redux/undoableEnhancer";
 import { Command } from "../../types";
+import { download } from "../../utils/download";
+import { serializeProject } from "../../utils/serialization";
 import { flowEditorCommands } from "./flowEditorCommands";
 import { pageOutlinerCommands } from "./pageOutlinerCommands";
 
@@ -11,15 +14,30 @@ export const defaultCommands: Command[] = [
         id: 'global.undo',
         name: 'Undo',
         scope: 'global',
-        actionCreator: undo,
+        actionCreator: undoEnhancerUndo,
         keyCombinations: [{ key: 'z', ctrlKey: true }],
     },
     {
         id: 'global.redo',
         name: 'Redo',
         scope: 'global',
-        actionCreator: redo,
+        actionCreator: undoEnhancerRedo,
         keyCombinations: [{ key: 'y', ctrlKey: true }],
+    },
+    {
+        id: 'global.export_document',
+        name: "Export Document",
+        scope: 'global',
+        actionCreator: ({ appState }) => {
+            const doc = selectDocument(appState);
+            const jsonProject = serializeProject(doc);
+            const fileName = 'document.noodles';
+            if (jsonProject) {
+                download(jsonProject, 'application/json', fileName);
+            } else {
+                console.error(`No Project found.`);
+            }
+        }
     },
     // /**
     //  * Console view

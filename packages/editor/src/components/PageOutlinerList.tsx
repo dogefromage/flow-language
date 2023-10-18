@@ -68,8 +68,19 @@ const PageOutlinerEntry = ({ panelId, flowId }: PropsWithChildren<PageOutlinerEn
 }
 
 
-const ListSpacerDiv = styled.div`
+const ListRemainingDiv = styled.div`
     height: 100%;
+
+    .add {
+        background-color: unset;
+        border: unset;
+        outline: unset;
+        cursor: pointer;
+        width: 100%;
+        justify-content: center;
+        font-size: 14px;
+        padding: 0.25rem 0.5rem;
+    }
 `;
 
 interface PageOutlinerListProps {
@@ -125,11 +136,18 @@ const PageOutlinerList = ({ panelId }: PropsWithChildren<PageOutlinerListProps>)
                     }}
                 />
             }
-            <ListSpacerDiv
+            <ListRemainingDiv
                 onDoubleClick={() => {
                     setAdditional(true);
                 }}
-            ></ListSpacerDiv>
+            > {
+                !additional &&
+                <button className="add" 
+                    onClick={() => setAdditional(true)}>
+                    Add flow
+                </button>
+            }
+            </ListRemainingDiv>
         </OutlinerListDiv>
     );
 }

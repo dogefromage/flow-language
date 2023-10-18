@@ -10,9 +10,7 @@ import ConsoleLines from './ConsoleLines';
 
 const ConsoleView = (viewProps: ViewProps) => {
     const [consumer, setConsumer] = useState<DocumentConsumer>(new OfflineConsumer());
-    const [lines, setLines] = useState<ConsumerOutput[]>([ 
-        { data: 'Hello Console!\n' },
-    ]);
+    const [lines, setLines] = useState<ConsumerOutput[]>([]);
     const [displayState, setDisplayState] = useState<string>('Loading');
 
     useEffect(() => {
@@ -39,6 +37,8 @@ const ConsoleView = (viewProps: ViewProps) => {
 
         consumer.on('state-changed', handleStateChange);
         consumer.on('output', handleOutput);
+        
+        consumer.init();
 
         handleStateChange(consumer.state);
 

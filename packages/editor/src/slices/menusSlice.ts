@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { WritableDraft } from "immer/dist/internal";
+import { WritableDraft } from ".pnpm/immer@9.0.21/node_modules/immer/dist/internal";
 import { useCallback } from "react";
 import { RootState } from "../redux/store";
 import { MenusSliceState, MenuStackNode, MenuState } from "../types";

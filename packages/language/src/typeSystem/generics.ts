@@ -230,7 +230,7 @@ export function disjoinTemplateLiterals(templates: TemplatedTypeSpecifier[]) {
             }
             usedLiterals.add(generics[j].id);
         }
-        templates[i] = createTemplatedType(generics, specifier);
+        templates[i] = createTemplatedType(specifier, ...generics);
     }
     return templates;
 }

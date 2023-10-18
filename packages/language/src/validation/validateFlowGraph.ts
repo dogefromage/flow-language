@@ -1,11 +1,12 @@
 import { pushContent } from "../core/environment";
-import { createAnyType, createMapType, createReducedTemplateType } from "../typeSystem";
+import { createAnyType, createMapType, createReducedTemplateType, memoizeTemplatedType } from "../typeSystem";
 import { FlowEnvironment, FlowGraph, FlowSignature, InputRowSignature, TemplatedTypeSpecifier, pathTail } from "../types";
 import { EdgeColor, FlowEdge, FlowGraphContext } from "../types/context";
 import { FlowModule } from "../types/module";
 import { assertDef, deepFreeze } from "../utils";
 import { findDependencies, sortTopologically } from "../utils/algorithms";
-import { mem, memoObjectByFlatEntries } from "../utils/functional";
+import { memoObjectByFlatEntries } from "../utils/functional";
+import { mem } from '../utils/mem';
 import { validateNode } from "./validateNode";
 
 export const validateFlowGraph = mem((
@@ -14,7 +15,7 @@ export const validateFlowGraph = mem((
     availableModules: FlowModule[],
 ): FlowGraphContext => {
 
-    const flowEnvironment = pushFlowEnvironmentContent(baseEnvironment, flow.id, 
+    const flowEnvironment = pushFlowEnvironmentContent(baseEnvironment, flow.id,
         flow.generics, flow.inputs, flow.output, flow.imports, availableModules);
 
     const result: FlowGraphContext = {
@@ -163,9 +164,11 @@ export const validateFlowGraph = mem((
             result.criticalSubProblems += nodeResult.criticalSubProblems + nodeResult.problems.length;
         }
         if (nodeResult.inferredType != null) {
-            const templatedOutput = createReducedTemplateType(
-                nodeResult.inferredType.generics,
-                nodeResult.inferredType.specifier.output,
+            const templatedOutput = memoizeTemplatedType(
+                createReducedTemplateType(
+                    nodeResult.inferredType.generics,
+                    nodeResult.inferredType.specifier.output,
+                )
             );
             inferredOutputTypesFlat.push(nodeId, templatedOutput);
         }
@@ -175,7 +178,7 @@ export const validateFlowGraph = mem((
     return result;
 }, undefined, {
     tag: 'validateFlowGraph',
-    generateInfo: (args) => `flowId=${args[0].id}`,
+    generateInfo: ([flow]) => `flowId=${flow.id}`,
 });
 
 
@@ -201,7 +204,7 @@ const _getFlowSignature = mem((
         output,
     };
     return flowSignature;
-});
+}, undefined, { tag: '_getFlowSignature' });
 
 const makeUncoloredEdge = mem((
     id: string,
@@ -223,15 +226,21 @@ const makeUncoloredEdge = mem((
         rowId: inputRow,
         accessor: inputAccessor,
     },
-}) satisfies Partial<FlowEdge>);
+}) satisfies Partial<FlowEdge>, undefined, { tag: 'makeUncoloredEdge' });
 
 const finalizeEdge = mem(
     (edge: ReturnType<typeof makeUncoloredEdge>, color: EdgeColor): FlowEdge => ({
         ...edge, color,
-    })
+    }),
+    undefined,
+    { tag: 'finalizeEdge' },
 );
 
-const pushFlowEnvironmentContent = mem(pushFlowEnvironmentContentInitial);
+const pushFlowEnvironmentContent = mem(
+    pushFlowEnvironmentContentInitial,
+    undefined,
+    { tag: 'pushFlowEnvironmentContent' },
+);
 function pushFlowEnvironmentContentInitial(
     env: FlowEnvironment,
     flowId: string,

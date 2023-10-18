@@ -1,66 +1,6 @@
-import { assertTruthy, deepFreeze } from '.';
+import { assertTruthy } from '.';
 import { Obj } from '../types/utilTypes';
-import { ListCache } from './ListCache';
-import { randomU32 } from './hashing';
-
-type MemFunction = (...args: any[]) => any;
-
-interface MemOptions<F extends MemFunction> {
-    tag: string;
-    generateInfo?: (args: Parameters<F>) => string,
-    printGroup?: boolean,
-    debugHitMissRate?: boolean;
-}
-
-const ALWAYS_PRINT_GROUP = true;
-
-export function mem<F extends MemFunction>(
-    fn: F,
-    cache = new ListCache(233),
-    options?: MemOptions<F>,
-) {
-    let hits = 0;
-    let misses = 0;
-    const handlerTag = randomU32(); // unique for every handler instance
-    const printGroup = options?.printGroup || ALWAYS_PRINT_GROUP;
-    const tag = options?.tag || '<untagged>';
-
-    return ((...plainArgs: Parameters<F>) => {
-        const taggedArgs = [handlerTag, ...plainArgs];
-
-        const cached = cache.get(taggedArgs);
-        if (typeof cached !== 'undefined') {
-            hits++;
-            
-            if (printGroup) {
-                console.log(`hit [${tag}]`);
-            }
-
-            return cached;
-        }
-
-        misses++;
-        if (options?.debugHitMissRate) {
-            console.log(`Hits/Misses: ${options.tag} ${(hits / misses).toFixed(4)}`);
-        }
-
-        if (printGroup) {
-            const info = options?.generateInfo?.(plainArgs) || '<noinfo>';
-            const msg = `eval [${tag}] (${info})`;
-            console.groupCollapsed(msg);
-        }
-
-        const result = fn(...plainArgs);
-        deepFreeze(result);
-        cache.set(taggedArgs, result);
-
-        if (printGroup) {
-            console.groupEnd();
-        }
-
-        return result;
-    }) as F;
-}
+import { mem } from './mem';
 
 export const always = <T>(v: T) => () => v;
 
@@ -76,6 +16,8 @@ export const memoObjectByFlatEntries = mem(
         }
         return res;
     },
+    undefined,
+    { tag: 'memoObjectByFlatEntries' },
 )
 
 export function memoObject<T extends any>(obj: Obj<T>): Obj<T> {
@@ -83,7 +25,11 @@ export function memoObject<T extends any>(obj: Obj<T>): Obj<T> {
     return memoObjectByFlatEntries(...flatEntries);
 }
 
-export const memoList = mem(<T>(...items: T[]) => items);
+export const memoList = mem(
+    <T>(...items: T[]) => items, 
+    undefined, 
+    { tag: 'memoList' }
+);
 
 export const zipInner = <X, Y>(x: X[], y: Y[]) => {
     const pairs: [X, Y][] = [];

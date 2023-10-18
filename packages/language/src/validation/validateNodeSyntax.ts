@@ -4,12 +4,13 @@ import { assertSubsetType } from "../typeSystem/comparison";
 import { TypeSystemException, TypeSystemExceptionData, TypeTreePath } from "../typeSystem/exceptionHandling";
 import { generateDefaultValue } from "../typeSystem/generateDefaultValue";
 import { closeTemplatedSpecifier, disjoinTemplateLiterals, instantiateTemplatedType, mapTypeInference } from "../typeSystem/generics";
-import { resolveTypeAlias, tryResolveTypeAlias } from "../typeSystem/resolution";
+import { tryResolveTypeAlias } from "../typeSystem/resolution";
 import { checkElementOfType } from "../typeSystem/validateElement";
 import { FlowConnection, FlowEnvironment, FlowSignature, FunctionTypeSpecifier, InputRowSignature, NamespacePath, RowContext, RowProblem, RowState, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types";
 import { Obj } from "../types/utilTypes";
 import { assertDef, assertTruthy } from "../utils";
-import { mapObj, mem, objToArr, zipInner } from "../utils/functional";
+import { mapObj, objToArr, zipInner } from "../utils/functional";
+import { mem } from '../utils/mem';
 
 export const validateNodeSyntax = mem((
     rowStates: Obj<RowState>,
@@ -87,7 +88,7 @@ export const validateNodeSyntax = mem((
     const finalInferredType = memoizeTemplatedType(templatedAccumulatedType);
     
     return { inferredType: finalInferredType, rowContexts };
-});
+}, undefined, { tag: 'validateNodeSyntax' });
 
 function findIncomingType(
     input: InputRowSignature,
@@ -97,7 +98,7 @@ function findIncomingType(
     resolvedInputType: TypeSpecifier,
 ): { incomingTemplate: TemplatedTypeSpecifier, rowProblems: RowProblem[] } {
     const rowProblems: RowProblem[] = [];
-    const fallbackType = createTemplatedType([], createAnyType());
+    const fallbackType = createTemplatedType(createAnyType());
 
     const incomingTypeMap = mapObj(rowState?.connections || {}, connection => {
         const { connectedType, accessorProblem } = resolveRowConnection(connection, previousOutputTypes, env);
@@ -130,8 +131,8 @@ function findIncomingType(
         const allSpecifiers = incomingIndependent.map(t => t.specifier);
         return {
             incomingTemplate: createTemplatedType(
-                allGenerics,
                 createTupleType(...allSpecifiers),
+                ...allGenerics,
             ),
             rowProblems,
         };
@@ -144,7 +145,7 @@ function findIncomingType(
                 rowProblems
             };
         }
-        const fallbackFunction = createTemplatedType([], createFunctionType(createAnyType(), createAnyType()));
+        const fallbackFunction = createTemplatedType(createFunctionType(createAnyType(), createAnyType()));
         if (typeof rowState?.value !== 'string' || !rowState?.value.length) {
             rowProblems.push({
                 type: 'invalid-value',
@@ -176,15 +177,15 @@ function findIncomingType(
         const independentMap = Object.fromEntries(zipInner(keys, allSpecifiers));
         return {
             incomingTemplate: createTemplatedType(
-                allGenerics,
                 createMapType(independentMap),
+                ...allGenerics,
             ),
             rowProblems,
         };
     }
     if (input.rowType === 'input-variable') {
         return {
-            incomingTemplate: firstConnectedType || createTemplatedType([], input.specifier),
+            incomingTemplate: firstConnectedType || createTemplatedType(input.specifier),
             rowProblems,
         };
     }

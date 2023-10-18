@@ -1,5 +1,4 @@
 import { DragzonePortalMount } from '@noodles/interactive';
-// import { DragzonePortalMount } from '@noodles/interactive';
 import { Store } from '@reduxjs/toolkit';
 import React, { PropsWithChildren, useState } from 'react';
 import { Provider } from 'react-redux';
@@ -12,12 +11,19 @@ import KeyboardCommandListener from './KeyboardCommandListener';
 import LayoutRoot from './LayoutRoot';
 import { MenuPortalMount } from './MenuPortalMount';
 import Validator from './Validator';
+import { StorageChannel } from '../types/storage';
+import StorageChannelManager from './StorageChannelManager';
 
-interface EditorProps {
-
+export interface EditorConfig {
+    storageChannels?: Record<string, StorageChannel>;
+    defaultStorageChannel?: string;
 }
 
-const Editor = ({}: PropsWithChildren<EditorProps>) => {
+interface EditorProps {
+    config: EditorConfig;
+}
+
+const Editor = ({ config }: PropsWithChildren<EditorProps>) => {
     const [store] = useState<Store>(initStore);
 
     return (<>
@@ -40,6 +46,9 @@ const Editor = ({}: PropsWithChildren<EditorProps>) => {
                 <MenuPortalMount />
                 <DragzonePortalMount />
                 {/* DATA */}
+                <StorageChannelManager 
+                    defaultStorageChannel={config.defaultStorageChannel} 
+                    storageChannels={config.storageChannels} />
             </ThemeProvider>
         </Provider>
     </>);

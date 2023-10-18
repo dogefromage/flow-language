@@ -1,4 +1,4 @@
-import { Reducer } from "@reduxjs/toolkit";
+import { AnyAction, Reducer } from "@reduxjs/toolkit";
 import { MAX_LENGTH, UndoAction, UndoHistory } from "../types/undoTypes";
 
 enum UndoableActionTypes {
@@ -6,10 +6,10 @@ enum UndoableActionTypes {
     Redo = 'undo.redo',
 }
 
-export const undo = () => ({ type: UndoableActionTypes.Undo, payload: {} });
-export const redo = () => ({ type: UndoableActionTypes.Redo, payload: {} });
+export const undoEnhancerUndo = () => ({ type: UndoableActionTypes.Undo, payload: {} });
+export const undoEnhancerRedo = () => ({ type: UndoableActionTypes.Redo, payload: {} });
 
-export default function undoableEnhancer<S, A extends UndoAction>
+export default function undoableEnhancer<S, A extends AnyAction>
     (reducer: Reducer<S, A>): Reducer<UndoHistory<S>, A> {
 
     const initialState: UndoHistory<S> = {
@@ -18,11 +18,13 @@ export default function undoableEnhancer<S, A extends UndoAction>
         future: [],
     };
 
-    const enhancer: Reducer<UndoHistory<S>, A> = (state, action): UndoHistory<S> => {
+    const enhancer: Reducer<UndoHistory<S>, A> = (state, _action): UndoHistory<S> => {
         if (state == null) {
             state = initialState;
         }
         let { past, present, future, lastRecord } = state;
+        
+        const action: UndoAction = _action as any;
 
         if (action.type === UndoableActionTypes.Undo) {
             const previous = past[past.length - 1];
@@ -49,7 +51,7 @@ export default function undoableEnhancer<S, A extends UndoAction>
             }
         }
 
-        const newPresent = reducer(present, action);
+        const newPresent = reducer(present, _action);
 
         // nothing changed
         if (present === newPresent) {
