@@ -1,9 +1,6 @@
 import { createGlobalStyle } from 'styled-components';
 import 'react-reflex/styles.css';
 
-/* @import url('https://fonts.googleapis.com/css2?family=Fira+Code&display=swap'); */
-/* @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300'); */
-
 const GlobalStyle = createGlobalStyle`
 
     :root {
@@ -47,6 +44,10 @@ const GlobalStyle = createGlobalStyle`
     input, button {
         font-family: inherit;
         font-size: inherit;
+    }
+
+    .reflex-container > .reflex-splitter {
+        z-index: unset;
     }
 `;
 

@@ -1,12 +1,10 @@
-import React, { PropsWithChildren } from 'react';
+import { PropsWithChildren } from 'react';
 import styled, { css } from 'styled-components';
-import useHover from '../utils/useHover';
 import { RowComponentProps } from './FlowNodeRowComponents';
-import { FlowNodeRowContextToolTip } from './FlowNodeToolTips';
+import { FlowNodeRowContextToolTipContent } from './FlowNodeToolTips';
+import { ToolTipAnchor, ToolTipContentComponent } from './ToolTip';
 
 const ErrorUnderlineDiv = styled.div<{ $hasErrors: boolean, $debugBackColor?: string }>`
-    position: relative;
-
     ${({ $debugBackColor: debugBackColor }) => debugBackColor && css`
         &>div {
             background-color: ${debugBackColor};
@@ -20,27 +18,28 @@ const ErrorUnderlineDiv = styled.div<{ $hasErrors: boolean, $debugBackColor?: st
 
 interface FlowNodeErrorWrapperProps {
     hasErrors: boolean;
-    tooltip: JSX.Element;
 }
 
-export const FlowNodeErrorWrapper = ({ children, tooltip, hasErrors }: PropsWithChildren<FlowNodeErrorWrapperProps>) => {
-    const { handlers, hovering } = useHover(700);
+export const FlowNodeErrorWrapper = ({ children, hasErrors }: PropsWithChildren<FlowNodeErrorWrapperProps>) => {
     return (
-        <ErrorUnderlineDiv $hasErrors={hasErrors} {...handlers}>
-            {children} 
-            {hovering && tooltip}            
+        <ErrorUnderlineDiv $hasErrors={hasErrors}>
+            {children}
         </ErrorUnderlineDiv>
     );
 }
 
 export const FlowNodeRowErrorWrapper = (props: PropsWithChildren<RowComponentProps>) => {
     const { children, context } = props;
+
+    const RowTooltip: ToolTipContentComponent = () => (
+        <FlowNodeRowContextToolTipContent {...props} />
+    );
+
     return (
-        <FlowNodeErrorWrapper
-            hasErrors={!!context?.problems.length}
-            tooltip={<FlowNodeRowContextToolTip {...props} />}
-        >
-            { children }
-        </FlowNodeErrorWrapper>
+        <ToolTipAnchor tooltip={RowTooltip}>
+            <FlowNodeErrorWrapper hasErrors={!!context?.problems.length}>
+                {children}
+            </FlowNodeErrorWrapper>
+        </ToolTipAnchor>
     );
 }

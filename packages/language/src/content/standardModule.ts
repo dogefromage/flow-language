@@ -126,7 +126,7 @@ signatures.push({
     attributes: { category: 'Numbers' },
     description: null,
     generics: [],
-    inputs: [varRow.number('number', 0)],
+    inputs: [varRow.number('n', 0)],
     output: outputRow.number('output'),
     // byteCode: inlineCode([]),
 
@@ -136,7 +136,7 @@ signatures.push({
     attributes: { category: 'Logic' },
     description: null,
     generics: [],
-    inputs: [varRow.boolean('boolean', false)],
+    inputs: [varRow.boolean('b', false)],
     output: outputRow.boolean('output'),
     // byteCode: inlineCode([]),
 
@@ -146,7 +146,7 @@ signatures.push({
     attributes: { category: 'Strings' },
     description: null,
     generics: [],
-    inputs: [varRow.string('string', '')],
+    inputs: [varRow.string('s', '')],
     output: outputRow.string('output'),
     // byteCode: inlineCode([]),
 

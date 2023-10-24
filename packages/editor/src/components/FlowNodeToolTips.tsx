@@ -5,40 +5,8 @@ import { Bold } from '../styles/common';
 import { flowRowTypeNames } from '../utils/flows';
 import { formatSpecifier, formatSpecifierWithGenerics } from '../utils/typeFormatting';
 import { RowComponentProps } from './FlowNodeRowComponents';
-
-const ToolTipWrapperDiv = styled.div`
-    position: absolute;
-    z-index: 100;
-
-    width: max-content;
-    
-    left: 0;
-    bottom: calc(100% + 0.5rem);
-    padding: 0.25rem 0.5rem;
-
-    background-color: var(--color-3);
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-
-    max-width: 600px;
-
-    p {
-        word-wrap: break-word;
-    }
-
-    h1 {
-        margin: 0;
-        padding: 0;
-    }
-`;
-
-const ToolTipSection = styled.div`
-    :not(:first-child) {
-        border-top: 1px solid var(--color-1);
-    }
-    padding: 0.25rem 0;
-`;
-
+import { ToolTipContainer, ToolTipSectionDiv } from './ToolTip';
+import { Vec2 } from '../types';
 
 const colors = {
     title:              '#ffcc5e',
@@ -49,11 +17,11 @@ const colors = {
     typeProblemMessage: '#ff3463',
 }
 
-export const FlowNodeRowContextToolTip = (props: RowComponentProps) => {
+export const FlowNodeRowContextToolTipContent = (props: RowComponentProps) => {
     const { context, type, row, env } = props;
     return (
-        <ToolTipWrapperDiv>
-            <ToolTipSection>
+        <>
+            <ToolTipSectionDiv>
                 <p>
                     Row Type:&nbsp;
                     <Bold $color={colors.title}>
@@ -66,7 +34,7 @@ export const FlowNodeRowContextToolTip = (props: RowComponentProps) => {
                         {formatSpecifier(type, env)}
                     </Bold>
                 </p>
-            </ToolTipSection>
+            </ToolTipSectionDiv>
             {
                 context?.problems.map((problem, index) =>
                     <FlowNodeRowProblemMessage
@@ -75,7 +43,7 @@ export const FlowNodeRowContextToolTip = (props: RowComponentProps) => {
                     />
                 )
             }
-        </ToolTipWrapperDiv>
+        </>
     );
 }
 
@@ -85,13 +53,13 @@ interface ProblemProps {
 
 const FlowNodeRowProblemMessage = ({ problem }: PropsWithChildren<ProblemProps>) => {
     return (<>
-        <ToolTipSection>
+        <ToolTipSectionDiv>
             <p>
                 <Bold $color={colors.problem}>
                     {problem.message}
                 </Bold>
             </p>
-        </ToolTipSection>
+        </ToolTipSectionDiv>
         <TypeProblemLocation problem={problem} />
     </>);
 }
@@ -138,14 +106,14 @@ const TypeProblemLocation = ({ problem }: PropsWithChildren<ProblemProps>) => {
     );
 
     return (<>
-        <ToolTipSection>
+        <ToolTipSectionDiv>
             <PreP>
                 Type Problem Location:<br />
                 {lines.map((line, index) =>
                     <Fragment key={index}>{ line }</Fragment>
                 )}
             </PreP>
-        </ToolTipSection>
+        </ToolTipSectionDiv>
     </>);
 }
 
@@ -154,10 +122,10 @@ interface FlowNodeHeaderToolTipProps {
     context: lang.FlowNodeContext;
     env: lang.FlowEnvironment;
 }
-export const FlowNodeHeaderToolTip = ({ signature, context, env }: FlowNodeHeaderToolTipProps) => {
+export const FlowNodeHeaderToolTipContent = ({ signature, context, env }: FlowNodeHeaderToolTipProps) => {
     return (
-        <ToolTipWrapperDiv>
-            <ToolTipSection>
+        <>
+            <ToolTipSectionDiv>
                 <p>
                     Node:&nbsp;
                     <Bold $color={colors.title}>
@@ -188,11 +156,11 @@ export const FlowNodeHeaderToolTip = ({ signature, context, env }: FlowNodeHeade
                         )}
                     </Bold>
                 </p>
-            </ToolTipSection>
+            </ToolTipSectionDiv>
             {
                 signature.description &&
                 <p>{ signature.description }</p>
             }
-        </ToolTipWrapperDiv>
+        </>
     );
 }

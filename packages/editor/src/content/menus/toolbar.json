@@ -9,7 +9,9 @@
             "sublist": {
                 "type": "floating",
                 "list": [
-                    { "type": "command", "key": "export", "name": "Export Document", "command": "global.export_document" }
+                    { "type": "command", "key": "save", "name": "Save", "command": "global.save" },
+                    { "type": "command", "key": "save_as", "name": "Save to New Location", "command": "global.save_as" },
+                    { "type": "command", "key": "export", "name": "Export", "command": "global.export_document" }
                 ]
             }
         },

@@ -1,21 +1,21 @@
 import styled from 'styled-components';
-import { Vec2 } from '../types';
+import { Size, Vec2 } from '../types';
 
 export const VERTICAL_MENU_WIDTH = 240;
 
 export interface MenuVerticalDivProps {
     $anchor: Vec2;
-    width?: string;
     $maxHeight: number;
     $outlineRed?: boolean;
+    $menuWidth: number;
 }
 
 const MenuVerticalDiv = styled.div.attrs<MenuVerticalDivProps>(({
-    $anchor, width
+    $anchor, $menuWidth,
 }) => {
     return {
         style: {
-            width,
+            width: $menuWidth + 'px',
             left: $anchor.x + 'px',
             top: $anchor.y + 'px',
         },
@@ -27,7 +27,6 @@ const MenuVerticalDiv = styled.div.attrs<MenuVerticalDivProps>(({
     display: flex;
     flex-direction: column;
 
-    width: ${VERTICAL_MENU_WIDTH}px;
     max-height: ${({ $maxHeight }) => (Math.min($maxHeight, 600)) + 'px'};
 
     overflow-y: auto;
@@ -37,8 +36,6 @@ const MenuVerticalDiv = styled.div.attrs<MenuVerticalDivProps>(({
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     outline: solid 1px #00000077;
-
-    /* ${({$outlineRed}) => $outlineRed && 'outline: 1px solid red;'} */
 
     z-index: 1;
 
@@ -58,6 +55,13 @@ const MenuVerticalDiv = styled.div.attrs<MenuVerticalDivProps>(({
             background: var(--color);
         }
     }
+
+    /* hides element briefly */
+    @keyframes become-visible {
+        to   { visibility: visible; }
+    }
+    visibility: hidden;
+    animation: become-visible 10ms 10ms linear infinite alternate;
 `;
 
 export default MenuVerticalDiv;

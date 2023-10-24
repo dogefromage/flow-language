@@ -1,10 +1,9 @@
-import useResizeObserver from '@react-hook/resize-observer';
-import React, { useMemo, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useAppSelector } from '../redux/stateHooks';
-import { selectSingleMenu } from '../slices/menusSlice';
 import { selectPanelManager } from '../slices/panelManagerSlice';
 import MenuFloatingDiv, { VERTICAL_MENU_WIDTH } from '../styles/MenuFloatingDiv';
-import { ButtonMenuElement, ColorMenuElement, CommandMenuElement, ExpandMenuElement, FloatingMenuShape, MenuElement, Rect, SearchMenuElement, Size, TitleMenuElement, Vec2 } from '../types';
+import { ButtonMenuElement, ColorMenuElement, CommandMenuElement, ExpandMenuElement, FloatingMenuShape, MenuElement, SearchMenuElement, TitleMenuElement, Vec2 } from '../types';
+import useAdjustedAnchor from '../utils/useAdjustedAnchor';
 import MenuButton from './MenuButton';
 import MenuColor from './MenuColor';
 import MenuCommand from './MenuCommand';
@@ -46,57 +45,25 @@ interface Props {
     shape: FloatingMenuShape;
     leftAnchor: Vec2;
     parentWidth: number;
+    desiredWidth?: number;
 }
 
-const margin = 8; // px
-
-type HorizontalPos = { x: number, anchorDir: 'left' | 'right' };
-function adjustHorizontally(leftX: number, parentWidth: number, menuWidth: number, availableSpace: Rect): HorizontalPos {
-    // TODO: keep going into same direction as before if possible
-
-    if (leftX + parentWidth + menuWidth < availableSpace.w) {
-        // must go left
-        return { x: leftX + parentWidth, anchorDir: 'right' };
-    }
-    // go right
-    return { x: leftX - menuWidth, anchorDir: 'left' };
-}
-
-function adjustVertically(preferredY: number, menuHeight: number, availableSpace: Rect): number {
-    // TODO consider case where menu too large (interpolate from cursor.y)
-
-    if (preferredY + menuHeight > availableSpace.y + (availableSpace.h - margin)) {
-        return availableSpace.y + (availableSpace.h - margin) - menuHeight;
-    }
-    return preferredY;
-}
-
-const MenuFloating = ({ menuId, depth, shape, leftAnchor, parentWidth, focusPath }: Props) => {
+const MenuFloating = ({ menuId, depth, shape, leftAnchor, parentWidth, focusPath, desiredWidth }: Props) => {
     const panelManagerState = useAppSelector(selectPanelManager);
     const { rootClientRect } = panelManagerState;
 
     const divRef = useRef<HTMLDivElement>(null);
-    const [ menuSize, setMenuSize ] = useState<Size>({ w: VERTICAL_MENU_WIDTH, h: 0 });
-
-    const adjustedAnchor = useMemo(() => ({
-            ...adjustHorizontally(leftAnchor.x, parentWidth, menuSize.w, rootClientRect),
-            y: adjustVertically(leftAnchor.y, menuSize.h, rootClientRect),
-        }),
-        [ rootClientRect, leftAnchor, parentWidth, menuSize ],
+    const { adjustedAnchor } = useAdjustedAnchor(divRef, leftAnchor, 
+        { w: parentWidth, h: 0 }, 
+        { type: 'flip', sign: 1 },
+        { type: 'clip', sign: 1 },
     );
-
-    useResizeObserver(divRef, observer => {
-        const paddingAndBorderPixels = 4;
-        setMenuSize({
-            w: observer.contentRect.width + 2 * paddingAndBorderPixels,
-            h: observer.contentRect.height + 2 * paddingAndBorderPixels,
-        });
-    });
 
     return (
         <MenuFloatingDiv 
             ref={divRef} 
             $anchor={adjustedAnchor}
+            $menuWidth={desiredWidth ?? VERTICAL_MENU_WIDTH}
             $maxHeight={rootClientRect.h}
         >{
             shape.list.map((element, elementIndex) =>

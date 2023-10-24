@@ -1,20 +1,23 @@
-import { Editor, EditorConfig } from '@noodles/editor';
-import React, { useEffect, useState } from 'react';
-import { CloudStorageChannel } from './storage';
+import { createBrowserRouter } from 'react-router-dom';
+import AuthRedirectPage from './components/AuthRedirectPage';
+import MainEditor from './components/MainEditor';
+import { RouterProvider } from 'react-router-dom';
 
-const projectIdParam = new URL(window.location.toString())
-    .searchParams
-    .get('projectId');
-
-const config: EditorConfig = {
-    // defaultStorageChannel: 'cloud',
-    storageChannels: {
-        'cloud': new CloudStorageChannel(projectIdParam),
-    }
-}
+const router = createBrowserRouter([
+    {
+        path: "/",
+        element: <MainEditor />,
+    },
+    {
+        path: "/auth-redirect",
+        element: <AuthRedirectPage />,
+    },
+]);
 
 const App = () => (
-    <Editor config={config} />
+    <RouterProvider router={router} />
 );
 
 export default App;
+
+

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import styled from 'styled-components';
 import { useAppDispatch } from '../redux/stateHooks';
@@ -8,7 +8,6 @@ import { useBindMenuState } from '../utils/menus';
 import useClickedOutside from '../utils/useClickedOutside';
 import useStopMouseEvents from '../utils/useStopMouseEvents';
 import MenuFloating from './MenuFloating';
-import { MENU_PORTAL_MOUNT_ID } from './MenuPortalMount';
 
 const FixedFullscreenDiv = styled.div`
     position: fixed;
@@ -24,9 +23,10 @@ interface Props {
     initialFocusPath?: string;
     onClose: () => void;
     anchor: Vec2;
+    desiredWidth?: number;
 }
 
-const MenuRootFloating = ({ menuId, menuType, shape, onClose, anchor, initialFocusPath }: Props) => {
+const MenuRootFloating = ({ menuId, menuType, shape, onClose, anchor, initialFocusPath, desiredWidth }: Props) => {
 
     const { menuState } = useBindMenuState(menuId, menuType, initialFocusPath);
     const wrapperDivRef = useRef<HTMLDivElement>(null);
@@ -59,10 +59,11 @@ const MenuRootFloating = ({ menuId, menuType, shape, onClose, anchor, initialFoc
                     shape={shape as FloatingMenuShape}
                     leftAnchor={anchor}
                     parentWidth={0}
+                    desiredWidth={desiredWidth}
                 />
             }
         </FixedFullscreenDiv>,
-        document.querySelector(`#${MENU_PORTAL_MOUNT_ID}`)!
+        document.querySelector(`#menu-portal-mount`)!
     );
 }
 

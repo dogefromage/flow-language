@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { shorthands } from "./shorthands";
 import { DocumentSource, StandardSource } from "./sources";
 import { ByteCompilerConfig, ByteInstructionStream, ByteOperation, ByteProgram, ByteSource, CallableChunk, MACHINE_ENTRY_LABEL } from "./types";
+import { ByteCodeOptimizer } from "./ByteCodeOptimizer";
 
 const { op, data } = shorthands;
 
@@ -44,7 +45,8 @@ class Compiler {
 
         this.emitDocument();
 
-        // TODO call optimizer here
+        new ByteCodeOptimizer(this.program)
+            .optimize();
 
         return this.program;
     }

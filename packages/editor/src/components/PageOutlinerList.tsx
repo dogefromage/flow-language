@@ -1,12 +1,12 @@
-import React, { PropsWithChildren, useMemo, useState } from 'react';
+import { PropsWithChildren, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { editorSetActiveFlow, selectEditor } from '../slices/editorSlice';
-import { flowsCreate, selectFlows } from '../slices/flowsSlice';
-import { emptyFlowSignature, flowsIdRegex } from '../types';
-import FormRenameField from './FormRenameField';
 import { selectDocumentContext } from '../slices/contextSlice';
+import { editorSetActiveFlow, selectEditor } from '../slices/editorSlice';
+import { flowsCreate } from '../slices/flowsSlice';
+import { emptyFlowSignature, flowsIdRegex } from '../types';
 import useContextMenu from '../utils/useContextMenu';
+import FormRenameField from './FormRenameField';
 
 const OutlinerListDiv = styled.div`
     display: flex;
@@ -46,9 +46,10 @@ const PageOutlinerEntry = ({ panelId, flowId }: PropsWithChildren<PageOutlinerEn
     const editorState = useAppSelector(selectEditor);
     const contextHandler = useContextMenu(
         panelId,
-        'Flow', [
-        'pageOutliner.deleteFlowEntry',
-    ],
+        'Flow',
+        [
+            'pageOutliner.deleteFlowEntry',
+        ],
         () => ({ flowId }),
     );
 
@@ -141,12 +142,12 @@ const PageOutlinerList = ({ panelId }: PropsWithChildren<PageOutlinerListProps>)
                     setAdditional(true);
                 }}
             > {
-                !additional &&
-                <button className="add" 
-                    onClick={() => setAdditional(true)}>
-                    Add flow
-                </button>
-            }
+                    !additional &&
+                    <button className="add"
+                        onClick={() => setAdditional(true)}>
+                        Add flow
+                    </button>
+                }
             </ListRemainingDiv>
         </OutlinerListDiv>
     );

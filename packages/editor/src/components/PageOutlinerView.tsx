@@ -1,12 +1,10 @@
-import React, { PropsWithChildren } from 'react';
-import { selectPanelState } from '../redux/panelStateEnhancer';
-import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
+import { PropsWithChildren } from 'react';
 import { createPageOutlinerPanelState } from '../slices/panelPageOutlinerSlice';
+import { PanelHeaderDiv, PanelHeadingH } from '../styles/common';
 import { ViewProps, ViewTypes } from '../types';
 import { useBindPanelState } from '../utils/panelManager';
-import PanelBody from './PanelBody';
 import PageOutlinerList from './PageOutlinerList';
-import { PanelHeaderDiv, PanelHeadingH } from '../styles/common';
+import PanelBody from './PanelBody';
 
 const PageOutlinerView = (viewProps: PropsWithChildren<ViewProps>) => {
     const { panelId } = viewProps;

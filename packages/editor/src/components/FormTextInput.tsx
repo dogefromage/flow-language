@@ -56,8 +56,10 @@ const SlidableInputDiv = styled.div`
     }
 `;
 
-function formatShort(text: string) {
-    return `"${_.truncate(text, { length: 8 })}"`;
+function formatShort(nameLength: number, text: string) {
+    const maxLength = 14;
+    const length = Math.floor(maxLength - 1.2 * nameLength);
+    return `"${_.truncate(text, { length })}"`;
 }
 
 type Props = {
@@ -138,7 +140,7 @@ const FormTextInput = ({
                 <input
                     ref={inputRef}
                     type='text'
-                    value={isWriting ? textValue : formatShort(value)}
+                    value={isWriting ? textValue : formatShort(name?.length || 0, value)}
                     onChange={e => {
                         setTextValue((e.currentTarget as HTMLInputElement).value);
                     }}

@@ -1,10 +1,10 @@
 import * as lang from '@noodles/language';
-import React from 'react';
 import { FlowNodeNameWrapper, FlowNodeRowNameP } from '../styles/flowStyles';
 import { formatFlowLabel } from '../utils/flows';
 import { FlowNodeErrorWrapper } from './FlowNodeErrorWrapper';
 import { FlowInputRowSwitch, FlowOutputRowSwitch } from './FlowNodeRowComponents';
-import { FlowNodeHeaderToolTip } from './FlowNodeToolTips';
+import { FlowNodeHeaderToolTipContent } from './FlowNodeToolTips';
+import { ToolTipAnchor, ToolTipContentComponent } from './ToolTip';
 
 interface Props {
     panelId: string;
@@ -25,17 +25,24 @@ const FlowNodeContent = (props: Props) => {
     }
     const outputType = context.inferredType?.specifier.output;
 
+    const HeaderToolTip: ToolTipContentComponent = () => (
+        <FlowNodeHeaderToolTipContent
+            env={env} 
+            context={context} 
+            signature={signature} 
+        />
+    );
+
     return (<>
-        <FlowNodeNameWrapper $backColor={signature.attributes.color}>
-            <FlowNodeErrorWrapper
-                hasErrors={!!context.problems.length}
-                tooltip={<FlowNodeHeaderToolTip env={env} context={context} signature={signature} />}
-            >
-                <FlowNodeRowNameP $align='left' $bold={true}>
-                    {formatFlowLabel(signature.id)}
-                </FlowNodeRowNameP>
-            </FlowNodeErrorWrapper>
-        </FlowNodeNameWrapper>
+        <ToolTipAnchor tooltip={HeaderToolTip}>
+            <FlowNodeNameWrapper $backColor={signature.attributes.color}>
+                <FlowNodeErrorWrapper hasErrors={!!context.problems.length}>
+                    <FlowNodeRowNameP $align='left' $bold={true}>
+                        {formatFlowLabel(signature.id)}
+                    </FlowNodeRowNameP>
+                </FlowNodeErrorWrapper>
+            </FlowNodeNameWrapper>
+        </ToolTipAnchor>
         <FlowOutputRowSwitch
             {...commonProps}
             key={signature.output.id}

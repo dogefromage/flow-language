@@ -4,6 +4,8 @@ import _ from "lodash";
 import rootReducer from "./rootReducer";
 import { validatorMiddleware } from "./validatorMiddleware";
 import { enableMapSet } from "immer";
+import { createLogger } from "redux-logger";
+import { UndoAction } from "../types";
 
 function generateMiddleware(getDefaultMiddleWare: CurriedGetDefaultMiddleware) {
     const middleware: Middleware[] = getDefaultMiddleWare({
@@ -17,6 +19,7 @@ function generateMiddleware(getDefaultMiddleWare: CurriedGetDefaultMiddleware) {
                 'panels',
                 'commands',
                 'menus',
+                'projectStorage.storage'
             ],
             ignoreActions: true,
         },

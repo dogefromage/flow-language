@@ -1,22 +1,20 @@
 import { DragzonePortalMount } from '@noodles/interactive';
 import { Store } from '@reduxjs/toolkit';
-import React, { PropsWithChildren, useState } from 'react';
+import { PropsWithChildren, useState } from 'react';
 import { Provider } from 'react-redux';
 import { ThemeProvider } from 'styled-components';
 import { initStore } from '../redux/store';
 import defaultTheme from '../styles/defaultTheme';
 import GlobalStyle from '../styles/globalStyles';
+import { EditorStorage } from '../types/storage';
 import ContextMenu from './ContextMenu';
 import KeyboardCommandListener from './KeyboardCommandListener';
 import LayoutRoot from './LayoutRoot';
-import { MenuPortalMount } from './MenuPortalMount';
+import EditorStorageManager from './EditorStorageManager';
 import Validator from './Validator';
-import { StorageChannel } from '../types/storage';
-import StorageChannelManager from './StorageChannelManager';
 
 export interface EditorConfig {
-    storageChannels?: Record<string, StorageChannel>;
-    defaultStorageChannel?: string;
+    storage?: EditorStorage;
 }
 
 interface EditorProps {
@@ -43,12 +41,13 @@ const Editor = ({ config }: PropsWithChildren<EditorProps>) => {
                 <KeyboardCommandListener />
                 <ContextMenu />
                 {/* PORTAL MOUNTS */}
-                <MenuPortalMount />
                 <DragzonePortalMount />
+                <div id='menu-portal-mount' />
+                <div id="tool-tip-portal-mount" />
                 {/* DATA */}
-                <StorageChannelManager 
-                    defaultStorageChannel={config.defaultStorageChannel} 
-                    storageChannels={config.storageChannels} />
+                <EditorStorageManager
+                    storage={config.storage} />
+                
             </ThemeProvider>
         </Provider>
     </>);

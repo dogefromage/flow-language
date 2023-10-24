@@ -4,7 +4,7 @@ enum StorageActionTypes {
     Replace = 'storageEnhancer.replace',
 }
 type StorageEnhancerAction = 
-    PayloadAction<{ project: any }, StorageActionTypes.Replace>
+    PayloadAction<{ document: any }, StorageActionTypes.Replace>
 
 
 export const storageEnhancerReplace = (payload: StorageEnhancerAction['payload']): StorageEnhancerAction => ({ 
@@ -18,7 +18,7 @@ export default function storageEnhancer<S, A extends AnyAction>
         
         const action: StorageEnhancerAction = _action as any;
         if (action.type === StorageActionTypes.Replace) {
-            return action.payload.project;
+            return action.payload.document;
         }
 
         return reducer(state, _action);

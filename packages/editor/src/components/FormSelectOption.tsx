@@ -1,11 +1,15 @@
-import React, { ReactNode, useMemo, useRef, useState } from 'react';
-import styled from 'styled-components';
+import { useMemo, useRef, useState } from 'react';
+import styled, { css } from 'styled-components';
 import { v4 as uuidv4 } from 'uuid';
 import MaterialSymbol from '../styles/MaterialSymbol';
 import { ButtonMenuElement, FloatingMenuShape, Vec2 } from '../types';
 import MenuRootFloating from './MenuRootFloating';
 
-const SelectOptionDiv = styled.div<{ disabled?: boolean, $widthInline?: boolean }>`
+const SelectOptionDiv = styled.div<{ 
+    disabled?: boolean, 
+    $widthInline?: boolean,
+    $centerValue?: boolean,
+}>`
     position: relative;
     height: 1.6rem;
     max-height: 100%;
@@ -25,6 +29,11 @@ const SelectOptionDiv = styled.div<{ disabled?: boolean, $widthInline?: boolean 
     ${({ disabled }) => disabled && `color: #00000066;` }
 
     p {
+        ${({ $centerValue }) => $centerValue && css`
+            flex-grow: 1;
+            text-align: center;
+        `}
+        
         margin: 0;
         overflow: hidden;
         white-space: nowrap;
@@ -41,12 +50,14 @@ export interface SelectOptionProps {
     icon?: string;
     disabled?: boolean;
     widthInline?: boolean;
+    centerValue?: boolean;
 }
 
-const FormSelectOption = ({ className, icon, value, onChange, options, mapName, disabled, widthInline }: SelectOptionProps) => {
+const FormSelectOption = ({ className, icon, value, onChange, options, mapName, disabled, widthInline, centerValue }: SelectOptionProps) => {
     const [ dropdown, setDropdown ] = useState<{
         menuId: string;
         anchor: Vec2;
+        width: number;
     }>();
     const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -85,12 +96,14 @@ const FormSelectOption = ({ className, icon, value, onChange, options, mapName, 
                 const rect = wrapperRef.current!.getBoundingClientRect();
                 setDropdown({
                     menuId: `select-option-menu:${uuidv4()}`,
-                    anchor: { x: rect.left, y: rect.bottom }
+                    anchor: { x: rect.left, y: rect.bottom },
+                    width: rect.width,
                 });
             }}
             ref={wrapperRef}
             disabled={disabled}
             $widthInline={widthInline}
+            $centerValue={centerValue}
         >
             <p>{mapName?.[ value ] ?? value}</p>
             {
@@ -101,7 +114,7 @@ const FormSelectOption = ({ className, icon, value, onChange, options, mapName, 
                     shape={menuShape}
                     anchor={dropdown.anchor}
                     onClose={() => setDropdown(undefined)}
-                    // initialFocusPath='0'
+                    desiredWidth={dropdown.width}
                 />
             }
             <MaterialSymbol $size={20}>{ icon ?? 'expand_more' }</MaterialSymbol>

@@ -1,10 +1,10 @@
-import React, { useEffect, useRef } from 'react';
-import { menusSetClosed, menusSetState, selectSingleMenu } from '../slices/menusSlice';
+import { useEffect, useRef } from 'react';
+import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
+import { menusSetState, selectSingleMenu } from '../slices/menusSlice';
 import { MenuSearchDiv } from '../styles/MenuSearchDiv';
 import { SearchMenuElement } from '../types';
+import { useFocusMoveHandlers, useFocusNavigation } from '../utils/menus';
 import { MenuElementProps } from './MenuFloating';
-import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { useFocusNavigation, useFocusMoveHandlers } from '../utils/menus';
 
 const MenuSearch = ({ menuId, element, focusPath, neightbourCount }: MenuElementProps<SearchMenuElement>) => {
     const dispatch = useAppDispatch();
