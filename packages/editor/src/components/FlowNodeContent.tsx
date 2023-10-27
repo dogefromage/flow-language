@@ -4,7 +4,7 @@ import { formatFlowLabel } from '../utils/flows';
 import { FlowNodeErrorWrapper } from './FlowNodeErrorWrapper';
 import { FlowInputRowSwitch, FlowOutputRowSwitch } from './FlowNodeRowComponents';
 import { FlowNodeHeaderToolTipContent } from './FlowNodeToolTips';
-import { ToolTipAnchor, ToolTipContentComponent } from './ToolTip';
+import ToolTip from './ToolTip';
 
 interface Props {
     panelId: string;
@@ -25,7 +25,7 @@ const FlowNodeContent = (props: Props) => {
     }
     const outputType = context.inferredType?.specifier.output;
 
-    const HeaderToolTip: ToolTipContentComponent = () => (
+    const HeaderToolTip = () => (
         <FlowNodeHeaderToolTipContent
             env={env} 
             context={context} 
@@ -34,7 +34,7 @@ const FlowNodeContent = (props: Props) => {
     );
 
     return (<>
-        <ToolTipAnchor tooltip={HeaderToolTip}>
+        <ToolTip.Anchor tooltip={HeaderToolTip}>
             <FlowNodeNameWrapper $backColor={signature.attributes.color}>
                 <FlowNodeErrorWrapper hasErrors={!!context.problems.length}>
                     <FlowNodeRowNameP $align='left' $bold={true}>
@@ -42,7 +42,7 @@ const FlowNodeContent = (props: Props) => {
                     </FlowNodeRowNameP>
                 </FlowNodeErrorWrapper>
             </FlowNodeNameWrapper>
-        </ToolTipAnchor>
+        </ToolTip.Anchor>
         <FlowOutputRowSwitch
             {...commonProps}
             key={signature.output.id}

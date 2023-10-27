@@ -1,5 +1,4 @@
 import { flowsRemove } from "../../slices/flowsSlice";
-import { flowEditorSetStateAddNodeAtPosition } from "../../slices/panelFlowEditorSlice";
 import { Command, ViewTypes } from "../../types";
 
 export const pageOutlinerCommands: Command[] = [
@@ -8,7 +7,7 @@ export const pageOutlinerCommands: Command[] = [
         viewType: ViewTypes.PageOutliner,
         id: 'pageOutliner.deleteFlowEntry',
         name: 'Delete Flow',
-        actionCreator({}, params) {
+        async actionCreator({}, params) {
             const flowId = params.flowId || '';
             return flowsRemove({
                 flowId,

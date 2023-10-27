@@ -4,7 +4,7 @@ import React, { useDeferredValue, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { editorSetActiveFlow } from '../slices/editorSlice';
-import { flowsMoveSelection, selectSingleFlow } from '../slices/flowsSlice';
+import { flowsMoveSelection, useSelectSingleFlow } from '../slices/flowsSlice';
 import { flowEditorSetRelativeClientJointPositions, flowEditorSetSelection } from '../slices/panelFlowEditorSlice';
 import { FlowNodeDiv } from '../styles/flowStyles';
 import { FlowEditorPanelState, JointLocationKey, SelectionStatus, Vec2 } from '../types';
@@ -31,7 +31,7 @@ const FlowNodeElement = ({ panelId, flowId, context, getPanelState, selectionSta
     const dispatch = useAppDispatch();
     const wrapperRef = useRef<HTMLDivElement>(null);
 
-    const referencedFlow = useAppSelector(selectSingleFlow(context.templateSignature?.id!)) as lang.FlowGraph | undefined;
+    const referencedFlow = useAppSelector(useSelectSingleFlow(context.templateSignature?.id!)) as lang.FlowGraph | undefined;
 
     const debouncedContext = useDebouncedValue(context, 300);
     useEffect(() => {

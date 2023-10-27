@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RootState } from "../redux/store";
 import { ContextMenuSliceState, ContextMenuState } from "../types";
+import { RootState } from "../redux/rootReducer";
 
 const initialState: ContextMenuSliceState = { contextMenu: null };
 

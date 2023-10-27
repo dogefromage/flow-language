@@ -1,16 +1,5 @@
-import { Editor, EditorConfig } from '@noodles/editor';
-import { AppEditorStorage } from '../appStorage';
+import { getConfiguratedEditor } from '../appConfig';
 
-const appStorage = new AppEditorStorage();
-
-const config: EditorConfig = {
-    storage: appStorage,
-}
-
-const MainEditor = () => {
-    return (
-        <Editor config={config} />
-    );
-}
+const MainEditor = getConfiguratedEditor();
 
 export default MainEditor;

@@ -1,12 +1,11 @@
 import * as lang from '@noodles/language';
 import React, { Fragment, PropsWithChildren } from 'react';
 import styled from 'styled-components';
-import { Bold } from '../styles/common';
+import { Bold } from '../styles/typography';
 import { flowRowTypeNames } from '../utils/flows';
 import { formatSpecifier, formatSpecifierWithGenerics } from '../utils/typeFormatting';
 import { RowComponentProps } from './FlowNodeRowComponents';
-import { ToolTipContainer, ToolTipSectionDiv } from './ToolTip';
-import { Vec2 } from '../types';
+import ToolTip from './ToolTip';
 
 const colors = {
     title:              '#ffcc5e',
@@ -21,7 +20,7 @@ export const FlowNodeRowContextToolTipContent = (props: RowComponentProps) => {
     const { context, type, row, env } = props;
     return (
         <>
-            <ToolTipSectionDiv>
+            <ToolTip.SectionDiv>
                 <p>
                     Row Type:&nbsp;
                     <Bold $color={colors.title}>
@@ -34,7 +33,7 @@ export const FlowNodeRowContextToolTipContent = (props: RowComponentProps) => {
                         {formatSpecifier(type, env)}
                     </Bold>
                 </p>
-            </ToolTipSectionDiv>
+            </ToolTip.SectionDiv>
             {
                 context?.problems.map((problem, index) =>
                     <FlowNodeRowProblemMessage
@@ -53,13 +52,13 @@ interface ProblemProps {
 
 const FlowNodeRowProblemMessage = ({ problem }: PropsWithChildren<ProblemProps>) => {
     return (<>
-        <ToolTipSectionDiv>
+        <ToolTip.SectionDiv>
             <p>
                 <Bold $color={colors.problem}>
                     {problem.message}
                 </Bold>
             </p>
-        </ToolTipSectionDiv>
+        </ToolTip.SectionDiv>
         <TypeProblemLocation problem={problem} />
     </>);
 }
@@ -106,14 +105,14 @@ const TypeProblemLocation = ({ problem }: PropsWithChildren<ProblemProps>) => {
     );
 
     return (<>
-        <ToolTipSectionDiv>
+        <ToolTip.SectionDiv>
             <PreP>
                 Type Problem Location:<br />
                 {lines.map((line, index) =>
                     <Fragment key={index}>{ line }</Fragment>
                 )}
             </PreP>
-        </ToolTipSectionDiv>
+        </ToolTip.SectionDiv>
     </>);
 }
 
@@ -125,7 +124,7 @@ interface FlowNodeHeaderToolTipProps {
 export const FlowNodeHeaderToolTipContent = ({ signature, context, env }: FlowNodeHeaderToolTipProps) => {
     return (
         <>
-            <ToolTipSectionDiv>
+            <ToolTip.SectionDiv>
                 <p>
                     Node:&nbsp;
                     <Bold $color={colors.title}>
@@ -156,7 +155,7 @@ export const FlowNodeHeaderToolTipContent = ({ signature, context, env }: FlowNo
                         )}
                     </Bold>
                 </p>
-            </ToolTipSectionDiv>
+            </ToolTip.SectionDiv>
             {
                 signature.description &&
                 <p>{ signature.description }</p>

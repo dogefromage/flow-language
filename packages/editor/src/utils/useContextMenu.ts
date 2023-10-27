@@ -1,13 +1,13 @@
 import React from "react";
 import { useAppDispatch } from "../redux/stateHooks";
 import { contextMenuOpen } from "../slices/contextMenuSlice";
-import { CommandParameterMap, Vec2 } from "../types";
+import { CustomCommandParams, Vec2 } from "../types";
 
 export default function useContextMenu(
     panelId: string,
     menuName: string,
     commandIds: string[],
-    paramMapCallback?: (e: React.MouseEvent) => CommandParameterMap,
+    paramMapCallback?: (e: React.MouseEvent) => CustomCommandParams,
 ) {
     const dispatch = useAppDispatch();
 
@@ -15,7 +15,7 @@ export default function useContextMenu(
         e.preventDefault();
         e.stopPropagation();
 
-        const position: Vec2 = {
+        const clientCursor: Vec2 = {
             x: e.clientX,
             y: e.clientY,
         };
@@ -25,15 +25,9 @@ export default function useContextMenu(
         dispatch(contextMenuOpen({ contextMenu: {
             panelId,
             name: menuName,
-            position,
+            clientCursor,
             commandIds,
-            paramMap: {
-                ...paramMap,
-                clientCursor: {
-                    x: e.clientX,
-                    y: e.clientY,
-                }
-            },
+            paramMap,
         }}));
     }
 

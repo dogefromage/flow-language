@@ -1,12 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { castDraft } from "immer";
 import { useCallback } from "react";
-import panelStateEnhancer, { selectPanelState } from "../redux/panelStateEnhancer";
-import { RootState } from "../redux/store";
+import panelStateEnhancer, { useSelectPanelState } from "../redux/panelStateEnhancer";
 import { CreatePanelStateCallback, DraggingJointContext, EditorClipboardNodeContent, FlowEditorPanelState, JointLocationKey, PlanarCamera, Vec2, ViewTypes } from "../types";
 import { clamp } from "../utils/math";
 import { getPanelState } from "../utils/panelManager";
 import { pointScreenToWorld, vectorScreenToWorld } from "../utils/planarCameraMath";
+import { RootState } from "../redux/rootReducer";
 
 export const CAMERA_MIN_ZOOM = 1e-2;
 export const CAMERA_MAX_ZOOM = 1e+2;
@@ -146,7 +146,7 @@ const flowEditorPanelsReducer = panelStateEnhancer(
 );
 
 export const selectFlowEditorPanelActionState = (panelId: string) => {
-    const panelStateSelector = selectPanelState(ViewTypes.FlowEditor, panelId);
+    const panelStateSelector = useSelectPanelState(ViewTypes.FlowEditor, panelId);
     return useCallback((state: RootState) =>
         panelStateSelector(state)?.state,
         [panelStateSelector],

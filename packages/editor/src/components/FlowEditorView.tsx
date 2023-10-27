@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { selectPanelState } from "../redux/panelStateEnhancer";
+import { useSelectPanelState } from "../redux/panelStateEnhancer";
 import { useAppDispatch, useAppSelector } from "../redux/stateHooks";
 import { selectEditor } from "../slices/editorSlice";
 import { createFlowEditorPanelState, flowEditorPanelsSetFlowId } from "../slices/panelFlowEditorSlice";

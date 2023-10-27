@@ -1,8 +1,8 @@
 import * as lang from '@noodles/language';
 import React, { PropsWithChildren, useMemo } from 'react';
 import styled from 'styled-components';
-import MaterialSymbol from '../styles/MaterialSymbol';
 import FormSelectOption from './FormSelectOption';
+import { MaterialSymbol } from '../styles/icons';
 
 const WrapperDiv = styled.div`
     width: 100%;

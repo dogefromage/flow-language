@@ -1,5 +1,5 @@
-import { combineReducers } from "@reduxjs/toolkit";
-import commandsReducer from "../slices/commandsSlice";
+import { AnyAction, Dispatch, ThunkDispatch, combineReducers } from "@reduxjs/toolkit";
+import contentReducer from "../slices/contentSlice";
 import contextMenuReducer from "../slices/contextMenuSlice";
 import contextReducer from "../slices/contextSlice";
 import editorReducer from "../slices/editorSlice";
@@ -9,16 +9,16 @@ import flowEditorPanelsReducer from "../slices/panelFlowEditorSlice";
 import flowInspectorPanelsReducer from "../slices/panelFlowInspectorSlice";
 import panelManagerReducer from "../slices/panelManagerSlice";
 import pageOutlinerPanelsReducer from "../slices/panelPageOutlinerSlice";
-import { ViewTypes } from "../types";
+import projectStorageReducer from "../slices/projectStorageSlice";
+import { EditorConfig, ViewTypes } from "../types";
 import storageEnhancer from "./storageEnhancer";
 import undoableEnhancer from "./undoableEnhancer";
-import projectStorageReducer from "../slices/projectStorageSlice";
 
 const documentReducer = combineReducers({
     flows: flowsReducer,
 });
 
-const rootReducer = combineReducers({
+const appContent = {
     document: undoableEnhancer(
         storageEnhancer(
             documentReducer
@@ -34,8 +34,20 @@ const rootReducer = combineReducers({
     projectStorage: projectStorageReducer,
     panelManager: panelManagerReducer,
     menus: menusReducer,
-    commands: commandsReducer,
+    content: contentReducer,
     contextMenu: contextMenuReducer,
-});
+};
 
-export default rootReducer;
+const nonExtendedReducer = combineReducers(appContent);
+// get typings from non-extended
+export type RootState = ReturnType<typeof nonExtendedReducer>;
+export type AppDispatch = ThunkDispatch<RootState, undefined, AnyAction> & Dispatch<AnyAction>;
+
+function createFullReducer(config: EditorConfig) {
+    return combineReducers({
+        ...appContent,
+        extensions: combineReducers(config.stateReducers),
+    });
+}
+
+export default createFullReducer;

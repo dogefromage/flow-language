@@ -22,7 +22,14 @@ export interface Rect {
     h: number;
 }
 
-export type ColorTuple = [ number, number, number ];
+export type ColorTuple = [number, number, number];
+
+export type RecursivePartial<T> = {
+    [P in keyof T]?:
+    T[P] extends (infer U)[] ? RecursivePartial<U>[] :
+    T[P] extends object | undefined ? RecursivePartial<T[P]> :
+    T[P];
+};
 
 // export type MapEvery<M extends string, T> = { [ K in M ]: T };
 

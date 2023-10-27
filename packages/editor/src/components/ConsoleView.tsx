@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { selectDocument, useAppSelector } from '../redux/stateHooks';
-import { PanelHeaderDiv, PanelHeadingH } from '../styles/common';
 import { ViewProps } from '../types';
 import { OfflineConsumer } from '../utils/OfflineConsumer';
 import ConsoleControls from './ConsoleControls';
 import PanelBody from './PanelBody';
 import { ConsumerOutput, ConsumerState, DocumentConsumer } from '@noodles/shared';
 import ConsoleLines from './ConsoleLines';
+import { PanelHeaderDiv, PanelHeadingH } from '../styles/panels';
 
 const ConsoleView = (viewProps: ViewProps) => {
     const [consumer, setConsumer] = useState<DocumentConsumer>(new OfflineConsumer());

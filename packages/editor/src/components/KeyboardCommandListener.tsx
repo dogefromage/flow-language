@@ -1,13 +1,13 @@
 import { useCallback, useRef } from 'react';
 import { useAppSelector } from '../redux/stateHooks';
-import { selectCommands } from '../slices/commandsSlice';
+import { selectContent } from '../slices/contentSlice';
 import { matchesKeyCombination } from '../utils/keyCombinations';
 import useDispatchCommand from '../utils/useDispatchCommand';
 import { useEventListener } from '../utils/useEventListener';
 
 const KeyboardCommandListener = () => {
     const dispatchCommand = useDispatchCommand();
-    const { commands } = useAppSelector(selectCommands);
+    const { commands } = useAppSelector(selectContent);
 
     const commandsRef = useRef(commands);
     commandsRef.current = commands;
@@ -23,7 +23,7 @@ const KeyboardCommandListener = () => {
 
             for (const combination of command.keyCombinations) {
                 if (matchesKeyCombination(combination, e)) {
-                    dispatchCommand(command.id, {}, 'keycombination');
+                    dispatchCommand(command.id, {});
                     e.preventDefault();
                 }
             }

@@ -1,77 +1,91 @@
-import { AnyAction, configureStore, Dispatch, Middleware, ThunkDispatch } from "@reduxjs/toolkit";
+import { configureStore, Middleware } from "@reduxjs/toolkit";
 import { CurriedGetDefaultMiddleware } from "@reduxjs/toolkit/dist/getDefaultMiddleware";
-import _ from "lodash";
-import rootReducer from "./rootReducer";
-import { validatorMiddleware } from "./validatorMiddleware";
 import { enableMapSet } from "immer";
+import _ from "lodash";
 import { createLogger } from "redux-logger";
-import { UndoAction } from "../types";
+import { EditorConfig, RecursivePartial, UndoAction } from "../types";
+import createFullReducer, { RootState } from "./rootReducer";
+import { validatorMiddleware } from "./validatorMiddleware";
 
-function generateMiddleware(getDefaultMiddleWare: CurriedGetDefaultMiddleware) {
-    const middleware: Middleware[] = getDefaultMiddleWare({
+function createMiddleware(getDefaultMiddleWare: CurriedGetDefaultMiddleware, config: EditorConfig) {
+    const middleware: Middleware[] = [];
+
+    middleware.push(...getDefaultMiddleWare({
         serializableCheck: {
             ignoredPaths: [
-                // 'document.present.context',
-                // 'document.past',
-                // 'document.future',
                 'context',
                 'panelManager',
                 'panels',
-                'commands',
+                'content',
                 'menus',
                 'projectStorage.storage'
             ],
             ignoreActions: true,
         },
-    });
+    }));
 
-    // validates document (IMPORTANT)
     middleware.push(validatorMiddleware);
 
-    // middleware.push(createLogger({
-    //     collapsed: true,
-    //     actionTransformer: (action: UndoAction) => {
-    //         if (action.payload?.undo != null) {
-    //             console.log("[Undo] " + action.payload.undo.desc);
-    //         }
-    //         return action;
-    //     }
-    // }));
+    if (config.debug?.reduxLogger) {
+        middleware.push(createLogger({
+            collapsed: true,
+            actionTransformer: (action: UndoAction) => {
+                if (action.payload?.undo != null) {
+                    console.log("[Undo] " + action.payload.undo.desc);
+                }
+                return action;
+            }
+        }));
+    }
 
     return middleware;
 }
 
-export const initStore = _.memoize(() => {
+function generatePreloadedState(config: EditorConfig): RecursivePartial<RootState> {
+    return {
+        content: {
+            commands: config.commands,
+            toolbarInlineMenuComponents: config.toolbarInlineMenuComponents,
+            toolbarWidgetComponents: config.toolbarWidgetComponents,
+            managerComponents: config.managerComponents,
+        }
+    };
+}
+
+export const initStore = _.memoize((config: EditorConfig) => {
     enableMapSet()
 
+    const reducer = createFullReducer(config);
+    const middleware = (defaultMiddleware: CurriedGetDefaultMiddleware) => 
+        createMiddleware(defaultMiddleware, config);
+    
     const store = configureStore({
-        reducer: rootReducer,
-        middleware: generateMiddleware,
+        reducer, 
+        middleware,
+        preloadedState: generatePreloadedState(config),
     });
-
-    // const yDoc = new Y.Doc();
-
-    // const provider = new HocuspocusProvider({
-    //     url: "ws://127.0.0.1:1234",
-    //     name: "example-document",
-    //     document: yDoc,
-    // });
-
-    // const provider = new WebrtcProvider('flow-typescript-test-room', yDoc, {
-    //     signaling: [ 'ws://localhost:4444' ],
-    // });
-
-    // bind(yDoc, store, 'document');
-
-    // provider.awareness.setLocalState({
-    //     name: Math.random(),
-    // })
-    // provider.awareness.on('update', () => {
-    //     console.log(provider.awareness.getStates());
-    // })
-
     return store;
 });
 
-export type RootState = ReturnType<typeof rootReducer>
-export type AppDispatch = ThunkDispatch<RootState, undefined, AnyAction> & Dispatch<AnyAction>;
+// function yjs() {
+//     const yDoc = new Y.Doc();
+
+//     const provider = new HocuspocusProvider({
+//         url: "ws://127.0.0.1:1234",
+//         name: "example-document",
+//         document: yDoc,
+//     });
+
+//     const provider = new WebrtcProvider('flow-typescript-test-room', yDoc, {
+//         signaling: ['ws://localhost:4444'],
+//     });
+
+//     bind(yDoc, store, 'document');
+
+//     provider.awareness.setLocalState({
+//         name: Math.random(),
+//     })
+//     provider.awareness.on('update', () => {
+//         console.log(provider.awareness.getStates());
+//     })
+// }

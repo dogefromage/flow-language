@@ -1,8 +1,7 @@
 import { AnyAction } from '@reduxjs/toolkit';
-import { RootState } from '../redux/store';
-import { EditorSliceState } from './editor';
-import { PanelStateMap, ViewTypes } from './panelManager';
+import { PanelState, PanelStateMap, ViewTypes } from './panelManager';
 import { Rect, Vec2 } from './utils';
+import { RootState } from '../redux/rootReducer';
 
 export interface KeyCombination {
     key: string;
@@ -13,55 +12,49 @@ export interface KeyCombination {
 }
 
 export type CommandScope = 'global' | 'view';
-export type CommandCallTypes = 'toolbar' | 'contextmenu' | 'keycombination' | 'view';
 
-export interface CommandBaseArgs {
-    callType: CommandCallTypes;
+export interface BaseCommandArgs {
     appState: RootState;
-}
-
-export interface GlobalCommandArgs extends CommandBaseArgs { }
-
-export interface ViewCommandArgs<V extends ViewTypes = ViewTypes> extends CommandBaseArgs {
-    activePanelId: string;
-    panelClientRect: Rect;
-    panelState: PanelStateMap[ V ];
-    offsetCenter: Vec2;
-    clientCenter: Vec2;
-    offsetCursor?: Vec2;
     clientCursor?: Vec2;
 }
+
+export interface ViewCommandArgs<P extends PanelState> extends BaseCommandArgs {
+    activePanelId: string;
+    clientPanelRect: Rect;
+    panelState: P;
+    offsetPanelCenter: Vec2;
+    clientPanelCenter: Vec2;
+    offsetCursor?: Vec2;
+}
+
+export type CustomCommandParams = { [key: string]: any }
+export type ActionCreatorReturnType = Promise<AnyAction[] | AnyAction | void>;
 
 interface BaseCommand {
     id: string;
     name: string;
     keyCombinations?: KeyCombination[];
 }
-
-interface BaseCommandParameters {
-    clientCursor: Vec2;
-}
-export type CommandParameterMap = 
-    Partial<BaseCommandParameters> 
-    & { [ key: string ]: any }
-
-type CommandActionCreator<A extends {}> =
-    (scopedArgs: A, parameters: CommandParameterMap) => AnyAction[] | AnyAction | void;
-
 interface GlobalCommand extends BaseCommand {
     scope: 'global',
-    actionCreator: CommandActionCreator<GlobalCommandArgs>;
+    actionCreator: (baseArgs: BaseCommandArgs, customParams: CustomCommandParams) => ActionCreatorReturnType;
 }
-
-interface ViewCommand<V extends ViewTypes> extends BaseCommand {
+interface ViewCommand<V extends ViewTypes, P extends PanelState = PanelStateMap[V]> extends BaseCommand {
     scope: 'view',
     viewType: V;
-    actionCreator: CommandActionCreator<ViewCommandArgs<V>>;
+    actionCreator: (baseArgs: ViewCommandArgs<P>, customParams: CustomCommandParams) => ActionCreatorReturnType;
 }
 
-export type Command =
+export type Command = 
     | GlobalCommand
     | { [ V in ViewTypes ]: ViewCommand<V> }[ ViewTypes ];
 
+export const makeGlobalCommand = (id: string, name: string, 
+        actionCreator: GlobalCommand['actionCreator'], 
+        keyCombinations?: KeyCombination[]): GlobalCommand =>
+    ({ id, scope: 'global', name, actionCreator, keyCombinations });
 
-export interface CommandsSliceState { commands: Record<string, Command> };
+export const makeViewCommand = <V extends ViewTypes, P extends PanelState = PanelStateMap[V]>
+    (id: string, viewType: V, name: string, actionCreator: ViewCommand<V, P>['actionCreator'], 
+        keyCombinations?: KeyCombination[]): ViewCommand<V, P> =>
+    ({ id, scope: 'view', viewType, name, actionCreator, keyCombinations });

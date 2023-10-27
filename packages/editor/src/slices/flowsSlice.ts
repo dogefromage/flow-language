@@ -3,10 +3,10 @@ import { createSlice } from "@reduxjs/toolkit";
 import { Draft } from "immer";
 import { useCallback } from "react";
 import { selectDocument } from "../redux/stateHooks";
-import { RootState } from "../redux/store";
 import { FlowsSliceState, UndoAction, Vec2, defaultFlows, flowsIdRegex, listItemRegex } from "../types";
 import { RowSignatureBlueprint } from "../types/flowInspectorView";
 import { getBasePowers } from "../utils/math";
+import { RootState } from "../redux/rootReducer";
 
 function getFlow(s: Draft<FlowsSliceState>, a: { payload: { flowId: string } }) {
     const g = s[a.payload.flowId];
@@ -95,10 +95,10 @@ export const flowsSlice = createSlice({
             const flow: lang.FlowGraph = {
                 ...a.payload.signature,
                 id,
-                imports: [ 'standard' ],
+                imports: ['standard'],
                 attributes: {},
                 nodes: {
-                    a: { id: 'a', signature: { path: `document::${id}::input`  }, position: { x: 400, y: 200 }, rowStates: {} },
+                    a: { id: 'a', signature: { path: `document::${id}::input` }, position: { x: 400, y: 200 }, rowStates: {} },
                     b: { id: 'b', signature: { path: `document::${id}::output` }, position: { x: 1000, y: 200 }, rowStates: {} },
                 },
                 idCounter: 2,
@@ -341,11 +341,10 @@ export const {
 
 export const selectFlows = (state: RootState) => selectDocument(state).flows;
 
-export const selectSingleFlow = (flowId: string) =>
-    useCallback((state: RootState) => // memoize selector IMPORTANT
-        selectFlows(state)[flowId] as lang.FlowGraph | undefined,
-        [flowId]
-    );
+const selectSingleFlow = (flowId: string) => (state: RootState) =>
+    selectFlows(state)[flowId] as lang.FlowGraph | undefined;
+export const useSelectSingleFlow = (flowId: string) =>
+    useCallback(selectSingleFlow(flowId), [flowId]);
 
 const flowsReducer = flowsSlice.reducer;
 export default flowsReducer;

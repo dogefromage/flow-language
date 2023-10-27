@@ -14,21 +14,21 @@ export const defaultCommands: Command[] = [
         id: 'global.undo',
         name: 'Undo',
         scope: 'global',
-        actionCreator: undoEnhancerUndo,
+        actionCreator: async () => undoEnhancerUndo(),
         keyCombinations: [{ key: 'z', ctrlKey: true }],
     },
     {
         id: 'global.redo',
         name: 'Redo',
         scope: 'global',
-        actionCreator: undoEnhancerRedo,
+        actionCreator: async () => undoEnhancerRedo(),
         keyCombinations: [{ key: 'y', ctrlKey: true }],
     },
     {
         id: 'global.export_document',
         name: "Export Document",
         scope: 'global',
-        actionCreator: ({ appState }) => {
+        actionCreator: async ({ appState }) => {
             const doc = selectDocument(appState);
             const jsonProject = serializeProject(doc);
             const fileName = 'document.noodles';

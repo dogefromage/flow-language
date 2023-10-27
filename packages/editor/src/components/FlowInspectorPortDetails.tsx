@@ -8,10 +8,10 @@ import {
     flowsReplaceGeneric,
     flowsReplaceInput,
     flowsReplaceOutput,
-    selectSingleFlow
+    useSelectSingleFlow
     } from '../slices/flowsSlice';
 import { selectFlowContext } from '../slices/contextSlice';
-import { selectPanelState } from '../redux/panelStateEnhancer';
+import { useSelectPanelState } from '../redux/panelStateEnhancer';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { ViewTypes } from '../types';
 
@@ -27,9 +27,9 @@ interface FlowInspectorPortDetailsProps {
 
 const FlowInspectorPortDetails = ({ panelId, flowId }: PropsWithChildren<FlowInspectorPortDetailsProps>) => {
     const dispatch = useAppDispatch();
-    const flow = useAppSelector(selectSingleFlow(flowId));
+    const flow = useAppSelector(useSelectSingleFlow(flowId));
     const flowContext = useAppSelector(selectFlowContext(flowId));
-    const panelState = useAppSelector(selectPanelState(ViewTypes.FlowInspector, panelId));
+    const panelState = useAppSelector(useSelectPanelState(ViewTypes.FlowInspector, panelId));
 
     const notSelected = <p>Nothing selected.</p>;
     if (!flow) {

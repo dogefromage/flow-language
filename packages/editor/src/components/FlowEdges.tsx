@@ -1,9 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Box2, Vector2 } from 'threejs-math';
-import { selectPanelState } from '../redux/panelStateEnhancer';
+import { useSelectPanelState } from '../redux/panelStateEnhancer';
 import { selectFlowContext } from '../slices/contextSlice';
-import { flowsRemoveConnection, selectSingleFlow } from '../slices/flowsSlice';
+import { flowsRemoveConnection, useSelectSingleFlow } from '../slices/flowsSlice';
 import { FlowEditorPanelState, ViewTypes } from '../types';
 import { EdgeColor, FlowEdge, FlowGraph, JointLocation } from '@noodles/language';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
@@ -64,9 +64,9 @@ interface Props {
 
 const FlowEdges = ({ panelId, flowId }: Props) => {
     const dispatch = useAppDispatch();
-    const flow = useAppSelector(selectSingleFlow(flowId));
+    const flow = useAppSelector(useSelectSingleFlow(flowId));
     const context = useAppSelector(selectFlowContext(flowId));
-    const panelState = useAppSelector(selectPanelState(ViewTypes.FlowEditor, panelId));
+    const panelState = useAppSelector(useSelectPanelState(ViewTypes.FlowEditor, panelId));
 
     const removeEdge = (edgeId: string) => {
         if (!context) return;

@@ -1,8 +1,8 @@
 import { PropsWithChildren } from 'react';
 import { useAppSelector } from '../redux/stateHooks';
 import { selectProjectStorage } from '../slices/projectStorageSlice';
-import MaterialSymbol from '../styles/MaterialSymbol';
-import { ToolTipAnchor, ToolTipContentComponent, ToolTipSectionDiv } from './ToolTip';
+import ToolTip from './ToolTip';
+import { MaterialSymbol } from '../styles/icons';
 
 interface ProjectStorageStatusProps {
 
@@ -25,17 +25,17 @@ const ProjectStorageStatus = ({}: PropsWithChildren<ProjectStorageStatusProps>) 
     icon ||= defaultIcons[type];
     msg ||= defaultMessages[type];
 
-    const StorageStatusTooltip: ToolTipContentComponent = () => (
-        <ToolTipSectionDiv>
+    const StorageStatusTooltip = () => (
+        <ToolTip.SectionDiv>
             <p>{ msg }</p>
-        </ToolTipSectionDiv>
+        </ToolTip.SectionDiv>
     )
 
     return (
         <div className="status">
-            <ToolTipAnchor tooltip={StorageStatusTooltip}>
+            <ToolTip.Anchor tooltip={StorageStatusTooltip}>
                 <MaterialSymbol $cursor='pointer' $spin={icon == 'sync'}>{icon}</MaterialSymbol>
-            </ToolTipAnchor>
+            </ToolTip.Anchor>
         </div>
     );
 }

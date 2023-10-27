@@ -9,7 +9,7 @@ import FlowEditorContent from './FlowEditorContent';
 import { DRAG_JOIN_DND_TAG } from './FlowJoint';
 import { FLOW_NODE_DIV_CLASS } from './FlowNodeElement';
 import _ from 'lodash';
-import { selectPanelState } from '../redux/panelStateEnhancer';
+import { useSelectPanelState } from '../redux/panelStateEnhancer';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { FLOW_NODE_ROW_HEIGHT, MouseSelectionDiv } from '../styles/flowStyles';
 import { Vector2 } from 'threejs-math';
@@ -73,7 +73,7 @@ interface Props {
 
 const FlowEditorTransform = ({ flowId, panelId }: Props) => {
     const dispatch = useAppDispatch();
-    const panelState = useAppSelector(selectPanelState(ViewTypes.FlowEditor, panelId));
+    const panelState = useAppSelector(useSelectPanelState(ViewTypes.FlowEditor, panelId));
     const panelStateRef = useRef(panelState);
     panelStateRef.current = panelState;
     const getPanelState = useCallback(() => {

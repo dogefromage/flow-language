@@ -14,8 +14,3 @@ export const PanelHeadingH = styled.h3`
     text-transform: uppercase;
     transform: translateY(-1px); // font align
 `;
-
-export const Bold = styled.span<{ $color: string }>`
-    font-weight: bold;
-    color: ${({ $color }) => $color};
-`;

@@ -2,7 +2,7 @@ import React from 'react';
 import { FlowEditorPanelState, SelectionStatus, ViewTypes } from '../types';
 import FlowEdges from './FlowEdges';
 import FlowNodeElement from './FlowNodeElement';
-import { selectPanelState } from '../redux/panelStateEnhancer';
+import { useSelectPanelState } from '../redux/panelStateEnhancer';
 import { useAppSelector } from '../redux/stateHooks';
 import { selectFlowContext } from '../slices/contextSlice';
 
@@ -14,7 +14,7 @@ interface Props {
 
 const FlowEditorContent = ({ flowId, panelId, getPanelState }: Props) => {
     const context = useAppSelector(selectFlowContext(flowId));
-    const panelState = useAppSelector(selectPanelState(ViewTypes.FlowEditor, panelId));
+    const panelState = useAppSelector(useSelectPanelState(ViewTypes.FlowEditor, panelId));
 
     if (!context || !panelState) {
         return null;

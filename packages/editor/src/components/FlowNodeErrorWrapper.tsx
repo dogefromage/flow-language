@@ -2,7 +2,7 @@ import { PropsWithChildren } from 'react';
 import styled, { css } from 'styled-components';
 import { RowComponentProps } from './FlowNodeRowComponents';
 import { FlowNodeRowContextToolTipContent } from './FlowNodeToolTips';
-import { ToolTipAnchor, ToolTipContentComponent } from './ToolTip';
+import ToolTip from './ToolTip';
 
 const ErrorUnderlineDiv = styled.div<{ $hasErrors: boolean, $debugBackColor?: string }>`
     ${({ $debugBackColor: debugBackColor }) => debugBackColor && css`
@@ -31,15 +31,15 @@ export const FlowNodeErrorWrapper = ({ children, hasErrors }: PropsWithChildren<
 export const FlowNodeRowErrorWrapper = (props: PropsWithChildren<RowComponentProps>) => {
     const { children, context } = props;
 
-    const RowTooltip: ToolTipContentComponent = () => (
+    const RowTooltip = () => (
         <FlowNodeRowContextToolTipContent {...props} />
     );
 
     return (
-        <ToolTipAnchor tooltip={RowTooltip}>
+        <ToolTip.Anchor tooltip={RowTooltip}>
             <FlowNodeErrorWrapper hasErrors={!!context?.problems.length}>
                 {children}
             </FlowNodeErrorWrapper>
-        </ToolTipAnchor>
+        </ToolTip.Anchor>
     );
 }

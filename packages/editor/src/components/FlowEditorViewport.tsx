@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { ViewTypes } from '../types';
 import FlowEditorTransform from './FlowEditorTransform';
 import FlowNodeCatalog from './FlowNodeCatalog';
-import { selectPanelState } from '../redux/panelStateEnhancer';
+import { useSelectPanelState } from '../redux/panelStateEnhancer';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import useDispatchCommand from '../utils/useDispatchCommand';
 import useContextMenu from '../utils/useContextMenu';
@@ -22,7 +22,7 @@ interface Props {
 
 const FlowEditorViewport = ({ panelId }: Props) => {
     const dispatch = useAppDispatch();
-    const panelState = useAppSelector(selectPanelState(ViewTypes.FlowEditor, panelId));
+    const panelState = useAppSelector(useSelectPanelState(ViewTypes.FlowEditor, panelId));
     const flowId = panelState?.flowStack[0];
     const dispatchCommand = useDispatchCommand();
 
@@ -43,7 +43,6 @@ const FlowEditorViewport = ({ panelId }: Props) => {
                 dispatchCommand(
                     'flowEditor.addNodeAtPosition',
                     { clientCursor: { x: e.clientX, y: e.clientY } },
-                    'view',
                 );
             }}
         >

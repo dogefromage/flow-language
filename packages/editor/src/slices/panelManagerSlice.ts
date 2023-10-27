@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { useCallback } from "react";
-import { RootState } from "../redux/store";
 import { PanelManagerSliceState, Rect } from "../types";
+import { RootState } from "../redux/rootReducer";
 
 const initialState: PanelManagerSliceState = {
     activePanelId: '',
@@ -33,7 +33,7 @@ export const {
 
 export const selectPanelManager = (state: RootState) => state.panelManager;
 
-export const selectPanelClientRect = 
+export const useSelectPanelClientRect = 
     (panelId: string) =>
         useCallback((state: RootState) => 
             state.panelManager.clientRects.get(panelId), 

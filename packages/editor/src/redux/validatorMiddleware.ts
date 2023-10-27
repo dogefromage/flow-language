@@ -1,8 +1,8 @@
 import { Middleware } from 'redux'
-import { RootState } from './store'
 import { selectDocument } from './stateHooks';
 import * as lang from '@noodles/language';
 import { validationSetResult } from '../slices/contextSlice';
+import { RootState } from './rootReducer';
 
 /**
  * Directly updates context if document has changed

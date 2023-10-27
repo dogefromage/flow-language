@@ -1,9 +1,8 @@
 import React, { PropsWithChildren, useMemo, useState } from 'react';
 import * as SORTABLE from 'react-sortablejs';
 import styled from 'styled-components';
-import MaterialSymbol from '../styles/MaterialSymbol';
 import FormRenameField, { NameValidationError } from './FormRenameField';
-import { listItemRegex } from '../types';
+import { MaterialSymbol } from '../styles/icons';
 
 const ListDiv = styled.div<{ $disabled?: boolean }>`
     width: 100%;

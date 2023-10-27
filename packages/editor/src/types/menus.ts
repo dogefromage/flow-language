@@ -1,4 +1,3 @@
-import React from "react";
 import { Vec2 } from "./utils";
 
 export type MenuElementTypes = 'expand' | 'command' | 'button' | 'search' | 'title' | 'color';
@@ -41,6 +40,8 @@ export type MenuElement =
     | TitleMenuElement
     | ColorMenuElement
 
+export type MenuShapeTypes = 'inline' | 'floating';
+
 export interface InlineMenuShape {
     type: 'inline';
     list: ExpandMenuElement[];
@@ -54,16 +55,16 @@ export interface FloatingMenuShape {
 export type MenuShape = InlineMenuShape | FloatingMenuShape
 
 export interface MenuStackNode {
-    key: string;
+    elementId: string;
     leftAnchor: Vec2;
     parentWidth: number;
 }
 
-export type MenuTypes = 'toolbar' | 'context' | 'misc';
+// export type MenuTypes = 'toolbar' | 'context' | 'misc';
 
 export interface MenuState {
     id: string;
-    type: MenuTypes;
+    // type: MenuTypes;
     nodeStack: MenuStackNode[];
     focusedPath: string;
     isClosed: boolean;

@@ -1,9 +1,9 @@
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { v4 as uuidv4 } from 'uuid';
-import MaterialSymbol from '../styles/MaterialSymbol';
-import { ButtonMenuElement, FloatingMenuShape, Vec2 } from '../types';
-import MenuRootFloating from './MenuRootFloating';
+import { MaterialSymbol } from '../styles/icons';
+import { Vec2 } from '../types';
+import Menus from './Menus';
 
 const SelectOptionDiv = styled.div<{ 
     disabled?: boolean, 
@@ -61,33 +61,6 @@ const FormSelectOption = ({ className, icon, value, onChange, options, mapName, 
     }>();
     const wrapperRef = useRef<HTMLDivElement>(null);
 
-    const menuShape: FloatingMenuShape = useMemo(() => {
-        const noOptionButton: ButtonMenuElement = {
-            type: 'button',
-            key: 'no-option',
-            name: 'No options',
-            onClick: () => {},
-        }
-        const optionButtons = options.map((option, index) => {
-            const button: ButtonMenuElement = {
-                type: 'button',
-                name: mapName?.[ option ] || option,
-                key: option,
-                tabIndex: 1 + index,
-                onClick: () => {
-                    onChange?.(option);
-                    setDropdown(undefined);
-                }
-            };
-            return button;
-        });
-
-        return {
-            type: 'floating',
-            list: optionButtons.length ? optionButtons : [ noOptionButton ],
-        }
-    }, [ options, onChange, mapName ]);
-
     return (
         <SelectOptionDiv
             className={className}
@@ -108,14 +81,22 @@ const FormSelectOption = ({ className, icon, value, onChange, options, mapName, 
             <p>{mapName?.[ value ] ?? value}</p>
             {
                 dropdown &&
-                <MenuRootFloating
-                    menuId={dropdown.menuId}
-                    menuType={'misc'}
-                    shape={menuShape}
-                    anchor={dropdown.anchor}
-                    onClose={() => setDropdown(undefined)}
-                    desiredWidth={dropdown.width}
-                />
+                <Menus.RootFloating menuId={dropdown.menuId} anchor={dropdown.anchor}
+                    onClose={() => setDropdown(undefined)} desiredWidth={dropdown.width}> {
+                        options.length ? (
+                            options.map(opt => 
+                                <Menus.Button key={opt} name={mapName?.[ opt ] || opt} 
+                                    onPush={() => {
+                                        onChange?.(opt);
+                                        setDropdown(undefined);
+                                    }}
+                                />
+                            )
+                        ) : (
+                            <Menus.Button name='No Options'/>
+                        )
+                    }
+                </Menus.RootFloating>
             }
             <MaterialSymbol $size={20}>{ icon ?? 'expand_more' }</MaterialSymbol>
         </SelectOptionDiv>

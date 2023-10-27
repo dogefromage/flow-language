@@ -1,16 +1,15 @@
 import * as lang from "@noodles/language";
 import { NamespacePath } from "@noodles/language";
-import React, { useCallback, useMemo } from "react";
-import { selectPanelState } from "../redux/panelStateEnhancer";
+import { useCallback, useMemo, useState } from "react";
+import { useSelectPanelState } from "../redux/panelStateEnhancer";
 import { useAppDispatch, useAppSelector } from "../redux/stateHooks";
-import { AppDispatch } from "../redux/store";
 import { selectFlowContext } from "../slices/contextSlice";
 import { flowsAddConnection, flowsAddNode } from "../slices/flowsSlice";
-import { selectSingleMenu } from "../slices/menusSlice";
 import { flowEditorSetStateNeutral } from "../slices/panelFlowEditorSlice";
 import { FLOW_NODE_MIN_WIDTH } from "../styles/flowStyles";
-import { EditorActionAddNodeAtPositionState, EditorActionAddNodeWithConnectionState, EditorActionState, FloatingMenuShape, MenuElement, SearchMenuElement, TitleMenuElement, Vec2, ViewTypes } from "../types";
-import MenuRootFloating from "./MenuRootFloating";
+import { EditorActionAddNodeAtPositionState, EditorActionAddNodeWithConnectionState, EditorActionState, Vec2, ViewTypes } from "../types";
+import Menus from "./Menus";
+import { AppDispatch } from "../redux/rootReducer";
 
 interface Props {
     panelId: string;
@@ -18,13 +17,12 @@ interface Props {
 
 const FlowNodeCatalog = ({ panelId }: Props) => {
     const dispatch = useAppDispatch();
-    const panelState = useAppSelector(selectPanelState(ViewTypes.FlowEditor, panelId));
+    const panelState = useAppSelector(useSelectPanelState(ViewTypes.FlowEditor, panelId));
     const flowId = panelState?.flowStack[0];
     const graphValidation = useAppSelector(selectFlowContext(flowId!));
 
-    const menuId = `template-catalog:${flowId}`;
-    const menuState = useAppSelector(selectSingleMenu(menuId));
-    const searchValue: string = menuState?.state.get(SEARCH_ELEMENT_KEY) ?? '';
+    // const menuId = ;
+    const [searchValue, setSearchValue] = useState('');
 
     const catalogState = panelState && isCatalogOpen(panelState.state) && panelState.state || undefined;
 
@@ -41,30 +39,68 @@ const FlowNodeCatalog = ({ panelId }: Props) => {
         return envContent.signatures;
     }, [graphValidation?.flowEnvironment]);
 
-    const menuShape = useMemo(() => {
-        if (!environmentSignatures) return;
-        return generateCatalogMenuShape(environmentSignatures, searchValue, addNode);
-    }, [environmentSignatures, searchValue, addNode,]);
+    function closeMenu() {
+        dispatch(flowEditorSetStateNeutral({ panelId }))
+    }
 
-    if (!menuShape || !catalogState) return null;
+    if (!catalogState) return null;
 
     return (
-        <MenuRootFloating
-            menuId={menuId}
-            menuType={'misc'}
-            shape={menuShape}
-            onClose={() => {
-                dispatch(flowEditorSetStateNeutral({ panelId }))
-            }}
-            initialFocusPath="1"
-            anchor={catalogState.location.clientPosition}
-        />
+        <Menus.RootFloating menuId={`template-catalog:${flowId}`} onClose={closeMenu}
+            anchor={catalogState.location.clientPosition} initialFocusPath="1">
+            <Menus.Title name='Add Template' color='black' />
+            <Menus.Search value={searchValue} placeholder='Search...'
+                onChange={setSearchValue} /> {
+                environmentSignatures &&
+                <CatalogContent searchValue={searchValue} signatures={environmentSignatures}
+                    addNode={addNode} />
+            }
+        </Menus.RootFloating>
     );
 }
 
 export default FlowNodeCatalog;
 
-const SEARCH_ELEMENT_KEY = 'search';
+interface CatalogContentProps {
+    searchValue: string;
+    signatures: Record<string, lang.FlowSignature>;
+    addNode: (signaturePath: lang.NamespacePath, signature: lang.FlowSignature) => void;
+}
+const CatalogContent = ({ searchValue, signatures, addNode }: CatalogContentProps) => {
+
+    if (searchValue.length > 0) {
+        // render filtered
+        const filtered = lang.utils.filterObj(signatures,
+            t => t.id.toLowerCase().includes(searchValue.toLowerCase()));
+
+        return Object.entries(filtered).map(([path, signature]) =>
+            <Menus.Button key={path} name={signature.id}
+                onPush={() => addNode({ path }, signature)} />
+        );
+    }
+
+    // render grouped
+    const groupedTemplatesMap = Object.entries(signatures)
+        .reduce((groupes, current) => {
+            const key = current![1].attributes?.category || 'Other';
+            if (groupes[key] == null) { groupes[key] = []; }
+            groupes[key]!.push(current!);
+            return groupes;
+        }, {} as Record<string, [string, lang.FlowSignature][]>);
+
+    const sortedGroupes = Object.entries(groupedTemplatesMap)
+        .sort(([a], [b]) => a.localeCompare(b));
+
+    return sortedGroupes.map(([category, tempOfGroup]) =>
+        <Menus.Expand key={category} name={category}> {
+            tempOfGroup.map(([path, signature]) =>
+                <Menus.Button key={path} name={signature.id}
+                    onPush={() => addNode({ path }, signature)} />
+            )
+        }
+        </Menus.Expand>
+    );
+}
 
 type AddNodeState = EditorActionAddNodeAtPositionState | EditorActionAddNodeWithConnectionState;
 function isCatalogOpen(
@@ -73,86 +109,8 @@ function isCatalogOpen(
     return state.type === 'add-node-at-position' || state.type === 'add-node-with-connection'
 }
 
-function generateCatalogMenuShape(
-    signatures: Record<string, lang.FlowSignature>,
-    searchValue: string,
-    addNode: (signaturePath: lang.NamespacePath, signature: lang.FlowSignature) => void,
-) {
-    const title: TitleMenuElement = {
-        type: 'title',
-        key: 'title',
-        name: 'Add Template',
-        color: 'black',
-    }
-    const searchBar: SearchMenuElement = {
-        key: SEARCH_ELEMENT_KEY,
-        type: 'search',
-        name: 'search',
-        placeholder: 'Search...',
-        autofocus: true,
-    };
-
-    if (searchValue.length > 0) {
-        // render filtered
-        const filtered = lang.utils.filterObj(signatures,
-            t => t.id.toLowerCase().includes(searchValue.toLowerCase()));
-
-        const listTemplates: MenuElement[] = Object.entries(filtered)
-            .map(([path, signature]) => ({
-                type: 'button',
-                key: signature.id,
-                name: signature.id,
-                onClick: () => addNode({ path }, signature),
-            }));
-
-        const menuShape: FloatingMenuShape = {
-            type: 'floating',
-            list: [
-                title,
-                searchBar,
-                ...listTemplates,
-            ],
-        }
-        return menuShape;
-    } else {
-        // render grouped
-        const groupedTemplatesMap = Object.entries(signatures)
-            .reduce((groupes, current) => {
-                const key = current![1].attributes?.category || 'Other';
-                if (groupes[key] == null) { groupes[key] = []; }
-                groupes[key]!.push(current!);
-                return groupes;
-            }, {} as Record<string, [ string, lang.FlowSignature ][]>);
-
-        const sortedGroupes = Object.entries(groupedTemplatesMap)
-            .sort(([a], [b]) => a.localeCompare(b));
-
-        const groupedList: MenuElement[] = sortedGroupes.map(([category, tempOfGroup]) => ({
-            type: 'expand',
-            key: category,
-            name: category,
-            sublist: {
-                type: 'floating',
-                list: tempOfGroup.map(([ path, signature ]) => ({
-                    type: 'button',
-                    key: path,
-                    name: signature.id,
-                    onClick: () => addNode({ path }, signature),
-                })),
-            }
-        }));
-        const menuShape: FloatingMenuShape = {
-            type: 'floating',
-            list: [
-                title,
-                searchBar,
-                ...groupedList,
-            ],
-        }
-        return menuShape;
-    }
-}
-function createAddFlowAction(flowId: string, signaturePath: NamespacePath, signature: lang.FlowSignature, addNodeState: AddNodeState, dispatch: AppDispatch) {
+function createAddFlowAction(flowId: string, signaturePath: NamespacePath, 
+    signature: lang.FlowSignature, addNodeState: AddNodeState, dispatch: AppDispatch) {
     let nodePosition = addNodeState.location.worldPosition;
 
     if (addNodeState.type === 'add-node-at-position') {

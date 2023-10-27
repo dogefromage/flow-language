@@ -13,6 +13,8 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "preserve",
+
+    "strict": true,
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }],

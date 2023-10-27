@@ -1,7 +1,7 @@
 import React, { PropsWithChildren } from 'react';
 import { useAppSelector } from '../redux/stateHooks';
 import { selectFlowContext } from '../slices/contextSlice';
-import { Bold } from '../styles/common';
+import { Bold } from '../styles/typography';
 import styled from 'styled-components';
 
 const LegendWrapper = styled.div`

@@ -11,6 +11,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "redux": "^4.2.1",
+    "@reduxjs/toolkit": "^1.9.7",
     "@noodles/editor": "workspace:^",
     "@noodles/language": "workspace:^",
     "@supabase/supabase-js": "^2.38.1",

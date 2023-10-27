@@ -1,8 +1,7 @@
-import React from 'react';
-import toolbarShape from '../content/menus/toolbar.json';
-import { InlineMenuShape } from '../types';
-import MenuRootInline from './MenuRootInline';
 import styled from 'styled-components';
+import { useAppSelector } from '../redux/stateHooks';
+import { selectContent } from '../slices/contentSlice';
+import Menus from './Menus';
 import ProjectSelectionDropdown from './ProjectSelectionDropdown';
 
 const ToolbarDiv = styled.div`
@@ -14,20 +13,24 @@ const ToolbarDiv = styled.div`
     padding: 0.25rem 1rem;
 `;
 
-interface Props {
-
-}
+interface Props {}
 
 const LayoutToolbar = ({}: Props) => {
+    const content = useAppSelector(selectContent);
+
     return (
         <ToolbarDiv>
-            <MenuRootInline
-                menuId='layout'
-                menuType={'toolbar'}
-                shape={toolbarShape as InlineMenuShape}
-            />
-            <ProjectSelectionDropdown />
-            <p>Not signed in.</p>
+            <Menus.RootInline menuId='layout'> {
+                content.toolbarInlineMenuComponents.map((InlineMenu, index) =>
+                    <InlineMenu key={index} />
+                )
+            }
+            </Menus.RootInline>
+            <ProjectSelectionDropdown /> {
+                content.toolbarWidgetComponents.map((Widget, index) => 
+                    <Widget key={index} />
+                )
+            }
         </ToolbarDiv>
     );
 }

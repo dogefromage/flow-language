@@ -1,9 +1,9 @@
 import React from "react";
 import styled from "styled-components";
-import { selectPanelState } from "../redux/panelStateEnhancer";
+import { useSelectPanelState } from "../redux/panelStateEnhancer";
 import { useAppDispatch, useAppSelector } from "../redux/stateHooks";
 import { selectEditor } from "../slices/editorSlice";
-import { flowsSetAttribute, selectFlows, selectSingleFlow } from "../slices/flowsSlice";
+import { flowsSetAttribute, selectFlows, useSelectSingleFlow } from "../slices/flowsSlice";
 import { ViewTypes } from "../types";
 import FlowInspectorGenericList from "./FlowInspectorGenericList";
 import FlowInspectorInputList from './FlowInspectorInputList';
@@ -33,7 +33,7 @@ interface Props {
 const FlowInspectorContent = ({ panelId }: Props) => {
     const dispatch = useAppDispatch();
     const flowId = useAppSelector(selectEditor).activeFlow;
-    const flow = useAppSelector(selectSingleFlow(flowId!));
+    const flow = useAppSelector(useSelectSingleFlow(flowId!));
     // const panelState = useAppSelector(selectPanelState(ViewTypes.FlowInspector, panelId));
 
     return (

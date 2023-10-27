@@ -1,7 +1,7 @@
 import { ConsumerInputSignal } from '@noodles/shared';
 import React, { PropsWithChildren } from 'react';
 import styled from 'styled-components';
-import MaterialSymbol from '../styles/MaterialSymbol';
+import { MaterialSymbol } from '../styles/icons';
 
 const ControlsWrapper = styled.div`
     outline: 1px solid var(--color-1);

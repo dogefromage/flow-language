@@ -1,10 +1,10 @@
 import React from 'react';
-import { PanelHeaderDiv, PanelHeadingH } from '../styles/common';
 import { ViewProps, ViewTypes } from '../types';
 import PanelBody from './PanelBody';
 import FlowInspectorContent from './FlowInspectorContent';
 import { useBindPanelState } from '../utils/panelManager';
 import { createFlowInspectorPanelState } from '../slices/panelFlowInspectorSlice';
+import { PanelHeaderDiv, PanelHeadingH } from '../styles/panels';
 
 const FlowInspectorView = (viewProps: ViewProps) => {
     useBindPanelState(

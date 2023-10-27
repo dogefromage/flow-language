@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useState } from 'react';
 import styled from 'styled-components';
 import { v4 as uuidv4 } from 'uuid';
 import { useAppDispatch } from '../redux/stateHooks';
-import { menusSetState, selectSingleMenu } from '../slices/menusSlice';
-import { FloatingMenuShape, Vec2 } from '../types';
-import MenuRootFloating from './MenuRootFloating';
+import { Vec2 } from '../types';
+import Menus from './Menus';
 
 interface ColorDivProps { color: string };
 
@@ -25,24 +23,24 @@ const ColorPickerDiv = styled.div.attrs<ColorDivProps>(({ color }) => ({
     }
 `;
 
-const COLOR_ELEMENT_KEY = 'color-input';
+// const COLOR_ELEMENT_KEY = 'color-input';
 
-const colorPickerMenuShape: FloatingMenuShape = {
-    type: 'floating',
-    list: [
-        {
-            type: 'title',
-            key: 'title',
-            name: 'Color Picker',
-            color: 'black',
-        },
-        {
-            type: 'color',
-            key: COLOR_ELEMENT_KEY,
-            name: 'Color Wheel',
-        }
-    ]
-}
+// const colorPickerMenuShape: FloatingMenuShape = {
+//     type: 'floating',
+//     list: [
+//         {
+//             type: 'title',
+//             key: 'title',
+//             name: 'Color Picker',
+//             color: 'black',
+//         },
+//         {
+//             type: 'color',
+//             key: COLOR_ELEMENT_KEY,
+//             name: 'Color Wheel',
+//         }
+//     ]
+// }
 
 interface Props {
     value: string;
@@ -50,29 +48,12 @@ interface Props {
 }
 
 const FormColorPicker = ({ value, onChange }: Props) => {
-    const dispatch = useAppDispatch();
-    const [ menu, setMenu ] = useState<{
+    // const dispatch = useAppDispatch();
+    const [menu, setMenu] = useState<{
         anchor: Vec2;
         menuId: string;
     }>();
-    const menuState = useSelector(selectSingleMenu(menu?.menuId));
 
-    useEffect(() => {
-        if (!menuState) return;
-        const colorValue = menuState.state.get(COLOR_ELEMENT_KEY);
-        if (colorValue == null) {
-            // Menustate exists, no value present, set start value
-            dispatch(menusSetState({
-                menuId: menuState.id,
-                key: COLOR_ELEMENT_KEY,
-                value,
-            }));
-            return;
-        }
-        // value or something else has been updated
-        onChange(colorValue, menuState.id);
-    }, [ menuState ]);
-    
     return (<>
         <ColorPickerDiv
             color={value}
@@ -85,14 +66,12 @@ const FormColorPicker = ({ value, onChange }: Props) => {
                 })
             }}
         /> {
-            menu && 
-            <MenuRootFloating
-                menuId={menu.menuId}
-                anchor={menu.anchor}
-                menuType='misc'
-                shape={colorPickerMenuShape}
-                onClose={() => setMenu(undefined)}
-            />
+            menu &&
+            <Menus.RootFloating menuId={menu.menuId} anchor={menu.anchor} 
+                onClose={() => setMenu(undefined)}>
+                <Menus.Title name='Color Picker' color='black' />
+                <Menus.ColorWheel value={value} onChange={v => onChange(v, uuidv4() /* needs action token */)} />
+            </Menus.RootFloating>
         }
     </>);
 }

@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../redux/stateHooks";
-import { menusAdd, menusRemove, menusSetFocusPath, selectSingleMenu } from "../slices/menusSlice";
-import { MenuTypes, MenuState } from "../types";
+import { menusAdd, menusRemove, menusSetFocusPath, useSelectSingleMenu } from "../slices/menusSlice";
+import { MenuState } from "../types";
 import useTrigger from "./useTrigger";
 
-function createMenuState(id: string, type: MenuTypes, focusedPath?: string): MenuState {
+function createMenuState(id: string, /* type: MenuTypes, */ focusedPath?: string): MenuState {
     return {
         id,
-        type,
+        // type,
         isClosed: false,
         nodeStack: [],
         state: new Map(),
@@ -15,12 +15,12 @@ function createMenuState(id: string, type: MenuTypes, focusedPath?: string): Men
     }
 }
 
-export function useBindMenuState(menuId: string, menuType: MenuTypes, initialFocusPath?: string) {
+export function useBindMenuState(menuId: string, /* menuType: MenuTypes,  */ initialFocusPath?: string) {
     const dispatch = useAppDispatch();
     const [resetTrigger, triggerReset] = useTrigger();
 
     useEffect(() => {
-        const menuState = createMenuState(menuId, menuType, initialFocusPath);
+        const menuState = createMenuState(menuId, /* menuType, */ initialFocusPath);
         dispatch(menusAdd({ menuId, menuState }));
         return () => {
             dispatch(menusRemove({ menuId }))
@@ -28,7 +28,7 @@ export function useBindMenuState(menuId: string, menuType: MenuTypes, initialFoc
     }, [menuId, resetTrigger]);
 
     return {
-        menuState: useAppSelector(selectSingleMenu(menuId)),
+        menuState: useAppSelector(useSelectSingleMenu(menuId)),
         resetMenuState: triggerReset,
     }
 }

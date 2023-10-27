@@ -1,8 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { WritableDraft } from ".pnpm/immer@9.0.21/node_modules/immer/dist/internal";
 import { useCallback } from "react";
-import { RootState } from "../redux/store";
 import { MenusSliceState, MenuStackNode, MenuState } from "../types";
+import { RootState } from "../redux/rootReducer";
 
 const initialState: MenusSliceState = {};
 
@@ -66,8 +66,8 @@ export const {
 
 export const selectMenus = (state: RootState) => state.menus;
 
-export const selectSingleMenu = (menuId: string | undefined) => 
-    useCallback((state: RootState) => 
+export const useSelectSingleMenu = (menuId: string | undefined) => 
+    useCallback((state: RootState): MenuState | undefined => 
         selectMenus(state)[menuId!],
         [ menuId ]
     );

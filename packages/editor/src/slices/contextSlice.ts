@@ -2,8 +2,8 @@ import * as lang from "@noodles/language";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { castDraft } from "immer";
 import { useCallback } from "react";
-import { RootState } from "../redux/store";
 import { ContextSliceState } from "../types";
+import { RootState } from "../redux/rootReducer";
 
 const initialState: ContextSliceState = {
     documentContext: null,
