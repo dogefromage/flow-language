@@ -1,11 +1,11 @@
 import { PropsWithChildren, useEffect } from 'react';
-import { useAppDispatch } from '../redux/stateHooks';
-import { projectStorageSetLocation, projectStorageSetStatus, projectStorageSetStorage } from '../slices/projectStorageSlice';
+import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
+import { projectStorageSetActiveFile, projectStorageSetStatus, projectStorageSetStorage, selectProjectStorage } from '../slices/projectStorageSlice';
 import { EditorStorage } from '../types/storage';
 import { useLoadDocumentData } from '../utils/project';
 
 interface EditorStorageManagerProps {
-    storage?: EditorStorage;
+    storage: EditorStorage | null;
 }
 
 const abortedStatusAction = projectStorageSetStatus({
@@ -21,20 +21,20 @@ const EditorStorageManager = ({ storage }: PropsWithChildren<EditorStorageManage
             status: { type: 'loading', msg: 'Loading initial data...' },
         }));
 
-        const res = await s.loadInitial();
+        const { data, error } = await s.loadInitial();
 
         if (as.aborted) {
             return dispatch(abortedStatusAction);
         }
 
-        if (res.error != null) {
+        if (error != null) {
             dispatch(projectStorageSetStatus({
-                status: { type: 'error', msg: `Error while loading initial: ${res.error.message}` },
+                status: { type: 'error', msg: `Error while loading initial: ${error.message}` },
             }));
             return;
         }
 
-        if (res.data == null) {
+        if (data.file == null) {
             dispatch(projectStorageSetStatus({
                 status: { type: 'okay', msg: 'Loaded default project.' },
             }));
@@ -43,10 +43,9 @@ const EditorStorageManager = ({ storage }: PropsWithChildren<EditorStorageManage
 
         // TODO: ask user about unsaved work
 
-        const { location, data } = res.data;
-        dispatch(projectStorageSetLocation({ location }));
-        loadDocumentData(data.documentJson);
-        
+        dispatch(projectStorageSetActiveFile({ file: data.file }));
+        loadDocumentData(data.file.data.documentJson);
+
         dispatch(projectStorageSetStatus({
             status: { type: 'okay', msg: 'Loaded project.' },
         }));
@@ -62,8 +61,15 @@ const EditorStorageManager = ({ storage }: PropsWithChildren<EditorStorageManage
         const ac = new AbortController();
         initStorage(storage, ac.signal);
 
-        return () => { 
+        const resetStorage = () => {
+            initStorage(storage, ac.signal);
+        }
+
+        storage.on('reset', resetStorage);
+
+        return () => {
             ac.abort();
+            storage.off('reset', resetStorage);
         }
     }, [storage]);
 

@@ -1,7 +1,7 @@
 import { PropsWithChildren, useMemo } from 'react';
 import { useAppSelector } from '../redux/stateHooks';
 import { selectProjectStorage } from '../slices/projectStorageSlice';
-import { ProjectFileLocation, ProjectFilePair } from '../types';
+import { ProjectFileLocation, ProjectFile } from '../types';
 import FormSelectOption from './FormSelectOption';
 import ProjectStorageStatus from './ProjectStorageStatus';
 import styled from 'styled-components';
@@ -18,15 +18,13 @@ const ProjectSelectionDiv = styled.div`
     }
 `;
 
-interface ProjectSelectionDropdownProps {
-    
-}
+interface ProjectSelectionDropdownProps {}
 
 const ProjectSelectionDropdown = ({}: PropsWithChildren<ProjectSelectionDropdownProps>) => {
     const projectStorage = useAppSelector(selectProjectStorage);
 
-    const locationKey = projectStorage.location ?
-        getLocationKey(projectStorage.location) : 'blank';
+    const locationKey = projectStorage.activeFile ?
+        getLocationKey(projectStorage.activeFile.location) : 'blank';
 
     const { options, names } = useMemo(() => {
         if (locationKey === 'blank') {
@@ -36,7 +34,7 @@ const ProjectSelectionDropdown = ({}: PropsWithChildren<ProjectSelectionDropdown
             };
         }
         const options = [locationKey];
-        const names = { /* [locationKey]: formatProjectFileName(projectStorage.location) */ };
+        const names = { [locationKey]: formatProjectFileName(projectStorage.activeFile) };
         return {
             options,
             names,
@@ -62,14 +60,12 @@ function getLocationKey(location: ProjectFileLocation) {
     return location.channel + ":" + location.projectId;
 }
 
-function formatProjectFileName(pair: ProjectFilePair | null) {
-    if (pair == null) {
+function formatProjectFileName(file: ProjectFile | null) {
+    if (file == null) {
         return `Unsaved Project`;
     }
-
-    const baseName = `[${pair.location.channel}] ${pair.data.name}`;
-
-    if (pair.data.readonly) {
+    const baseName = `[${file.location.channel}] ${file.data.name}`;
+    if (file.data.readonly) {
         return baseName + ' (readonly)';
     }
     return baseName;

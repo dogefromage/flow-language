@@ -9,39 +9,39 @@ export interface ProjectFileData {
     readonly: boolean;
     documentJson: string;
 }
-export interface ProjectFilePair {
+export interface ProjectFile {
     location: ProjectFileLocation;
     data: ProjectFileData;
 }
 
-export type EditorStorageResponse<D = boolean> = {
-    data?: D;
+export type EditorStorageResponse<D> = {
+    data: D;
     error?: { message: string };
 }
 
 export abstract class EditorStorage extends Emittery<{
-    // open: ProjectFilePair;
+    reset: never;
 }> {
     abstract loadInitial():
-        Promise<EditorStorageResponse<ProjectFilePair | null>>;
+        Promise<EditorStorageResponse<{ file: ProjectFile | null }>>;
 
     /**
      *  Returns data at file path if existent (eg. for opening last opened project), can return error message
      */
     abstract load(path: ProjectFileLocation):
-        Promise<EditorStorageResponse<ProjectFilePair | null>>;
+        Promise<EditorStorageResponse<{ file: ProjectFile | null }>>;
 
     /**
      *  returns new file path if successful otherwise null and error msg
      */
     abstract saveNewLocation(data: ProjectFileData): 
-        Promise<EditorStorageResponse<ProjectFilePair | null>>;
+        Promise<EditorStorageResponse<{ file: ProjectFile | null }>>;
 
     /**
      *  saves, can return error message
      */
     abstract save(path: ProjectFileLocation, data: ProjectFileData): 
-        Promise<EditorStorageResponse>;
+        Promise<EditorStorageResponse<{ success: boolean }>>;
 }
 
 export type ProjectStorageStatus = 
@@ -50,7 +50,7 @@ export type ProjectStorageStatus =
     | { type: 'error',   icon?: string, msg?: string }
 
 export interface ProjectStorageSliceState {
-    status: ProjectStorageStatus;
     storage: EditorStorage | null;
-    location: ProjectFileLocation | null;
+    activeFile: ProjectFile | null;
+    status: ProjectStorageStatus;
 }

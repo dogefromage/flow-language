@@ -64,7 +64,7 @@ type Props = {
     name?: string;
 }
 
-const FormSlideableInput = ({
+const FormSlidableInput = ({
     value,
     onChange,
     name,
@@ -172,4 +172,4 @@ const FormSlideableInput = ({
     )
 }
 
-export default FormSlideableInput
+export default FormSlidableInput

@@ -1,6 +1,6 @@
 import { Reducer } from "@reduxjs/toolkit";
 import React from 'react';
-import { Command } from ".";
+import { Command, EditorStorage } from ".";
 import { RootState } from "../redux/rootReducer";
 import { assertDef } from "@noodles/language";
 
@@ -13,6 +13,7 @@ export interface EditorConfig {
     toolbarInlineMenuComponents: React.FC[];
     toolbarWidgetComponents: React.FC[];
     managerComponents: React.FC[];
+    storage: EditorStorage | null;
 }
 
 export type EditorExtension = (config: EditorConfig) => void;

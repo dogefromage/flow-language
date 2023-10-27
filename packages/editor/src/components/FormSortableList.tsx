@@ -51,7 +51,7 @@ interface Item {
     label?: string;
 }
 
-type FormSortableListProps = {
+export interface FormSortableListProps {
     order: Item[];
     selected?: string;
     onOrder?: (newOrder: Item[]) => void;
@@ -64,7 +64,7 @@ type FormSortableListProps = {
     disableAdd?: boolean;
 }
 
-export const FormSortableList = ({ order, selected, onOrder, onSelect, onRename, 
+const FormSortableList = ({ order, selected, onOrder, onSelect, onRename, 
     onRemove, onAdd, addMessage, disableAdd, onValidateNewName }: PropsWithChildren<FormSortableListProps>) => {
     const mutableOrder = useMemo(() => structuredClone(order), [order]);
     const [ additional, setAdditional ] = useState(false);
@@ -132,3 +132,5 @@ export const FormSortableList = ({ order, selected, onOrder, onSelect, onRename,
         </ListDiv>
     );
 }
+
+export default FormSortableList;

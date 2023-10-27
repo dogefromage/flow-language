@@ -7,7 +7,7 @@ export * from './types/index.public';
 export { 
     ProjectFileLocation,
     ProjectFileData,
-    ProjectFilePair,
+    ProjectFile as ProjectFilePair,
     EditorStorageResponse,
     EditorStorage,
 } from './types';

@@ -19,3 +19,10 @@ export async function wait(millis: number) {
         }, millis);
     });
 }
+
+export function takeSingle<X>(items: X[] | X): X {
+    if (Array.isArray(items)) {
+        return items[0];
+    }
+    return items;
+}

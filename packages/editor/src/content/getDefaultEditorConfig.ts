@@ -18,5 +18,6 @@ export function getDefaultEditorConfig(): EditorConfig {
         ],
         toolbarWidgetComponents: [],
         managerComponents: [],
+        storage: null,
     };
 }

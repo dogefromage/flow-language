@@ -1,11 +1,13 @@
 import { EditorStorage, EditorStorageResponse, ProjectFileData, ProjectFileLocation, ProjectFilePair } from '@noodles/editor';
-import { supabase } from './supabase';
-import { assertNonNull } from './utils';
+import { ProjectFile } from '@noodles/editor/lib/types';
 import { assertTruthy } from '@noodles/language';
+import { supabase } from './supabase';
+import { takeSingle } from './utils';
+import { selectProjectById } from './queries';
 
 export class AppEditorStorage extends EditorStorage {
 
-    private projectIdFromUrl: string;
+    private projectIdFromUrl: string | null;
 
     constructor() {
         super();
@@ -14,42 +16,47 @@ export class AppEditorStorage extends EditorStorage {
             .get('projectId');
     }
 
-    async loadInitial(): Promise<EditorStorageResponse<ProjectFilePair | null>> {
+    async loadInitial() {
         // load if has url arg
         if (this.projectIdFromUrl == null) {
-            return { data: null };
+            return {
+                data: { file: null },
+            };
         }
         return this.load({ channel: 'cloud', projectId: this.projectIdFromUrl });
     }
-    
-    async load(path: ProjectFileLocation): Promise<EditorStorageResponse<ProjectFilePair>> {
+
+    async load(path: ProjectFileLocation) {
         assertTruthy(path.channel === 'cloud', 'Can only fetch from cloud.');
 
-        const pair = await this.loadFromDatabase(path.projectId);
-        if (!pair) {
-            return { error: { message: `Error fetching project (projectId=${this.projectIdFromUrl}) from database.` }};
+        const file = await this.loadFromDatabase(path.projectId);
+        if (!file) {
+            return {
+                data: { file: null },
+                error: {
+                    message: `Error fetching project (projectId=${this.projectIdFromUrl}) from database.`
+                }
+            };
         }
-        return { data: pair };
+        return {
+            data: { file }
+        };
     }
 
-    async saveNewLocation(data: ProjectFileData): Promise<EditorStorageResponse<ProjectFilePair>> {
+    saveNewLocation(data: ProjectFileData): Promise<EditorStorageResponse<{ file: ProjectFilePair | null; }>> {
         throw new Error('Method not implemented.');
     }
-    async save(path: ProjectFileLocation, data: ProjectFileData): Promise<EditorStorageResponse<boolean>> {
+    save(path: ProjectFileLocation, data: ProjectFileData): Promise<EditorStorageResponse<{ success: boolean; }>> {
         throw new Error('Method not implemented.');
     }
 
     async loadFromDatabase(projectId: string) {
-        const { data, error } = await supabase
-            .from('projects')
-            .select(`
-                id, 
-                title,
-                author:users (id, username), 
-                project_data
-            `)
-            .eq('id', projectId)
-            .single();
+
+        const [{ data, error }, session] =
+            await Promise.all([
+                selectProjectById(projectId),
+                supabase.auth.getSession(),
+            ]);
 
         if (error) {
             console.error(error);
@@ -58,18 +65,20 @@ export class AppEditorStorage extends EditorStorage {
             return null;
         }
 
-        const username = assertNonNull((data.author as any).username);
-        const projectName = assertNonNull(data.title);
+        const author = takeSingle(data.author);
+        const username = author.username || '[Deleted]';
 
-        const filePair: ProjectFilePair = {
+        const isReadonly = session.data.session?.user.id !== author.id;
+
+        const filePair: ProjectFile = {
             location: {
-                channel: 'cloud',
+                channel: `cloud@${username}`,
                 projectId: data.id,
             },
             data: {
-                name: `${username}/${projectName}`,
+                name: data.title!,
                 documentJson: data.project_data,
-                readonly: true,
+                readonly: isReadonly,
             }
         };
         return filePair;

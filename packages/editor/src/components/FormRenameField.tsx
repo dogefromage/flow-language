@@ -52,7 +52,7 @@ export interface NameValidationError {
     message: string;
 }
 
-interface Props {
+export interface FormRenameFieldProps {
     value: string;
     onChange?: (newValue: string) => void;
     onBlur?: () => void;
@@ -61,7 +61,7 @@ interface Props {
     autofocus?: boolean;
 }
 
-const FormRenameField = ({ value: initialValue, onChange, onValidate, disabled, autofocus, onBlur }: Props) => {
+const FormRenameField = ({ value: initialValue, onChange, onValidate, disabled, autofocus, onBlur }: FormRenameFieldProps) => {
 
     const inputRef = useRef<HTMLInputElement>(null);
 

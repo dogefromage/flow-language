@@ -27,13 +27,13 @@ const ExpandedRegion = styled.div`
     gap: 0.5rem;
 `;
 
-interface Props {
+export interface FormExpandableRegionProps {
     name: string;
     children: ReactNode;
     defaultValue?: boolean;
 }
 
-const FormExpandableRegion = ({ name, children, defaultValue }: Props) => {
+const FormExpandableRegion = ({ name, children, defaultValue }: FormExpandableRegionProps) => {
     const [ expanded, setExpanded ] = useState(defaultValue || false);
     const icon = expanded ? 'expand_more' : 'chevron_right';
     return (<>

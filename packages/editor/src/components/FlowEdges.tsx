@@ -157,9 +157,10 @@ function generateVectorData(edges: Record<string, FlowEdge>, flow: FlowGraph, pa
     const handleQuadruples = handleEndPoints.map(endPoints => {
         const { key, A, D, edge } = endPoints;
         const dist = A.distanceTo(D);
-        const threshold = 200;
+        const threshold = 300;
         let offset = 0.5 * threshold * Math.atan(dist / threshold);
         // offset = 0; // no squiggly
+
         const B = new Vector2(+offset, 0).add(A);
         const C = new Vector2(-offset, 0).add(D);
         return {

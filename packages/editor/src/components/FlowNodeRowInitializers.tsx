@@ -8,7 +8,7 @@ import { formatFlowLabel } from '../utils/flows';
 import { RowComponentProps } from './FlowNodeRowComponents';
 import FormCheckBox from './FormCheckBox';
 import FormSelectOption from './FormSelectOption';
-import FormSlideableInput from './FormSlideableInput';
+import FormSlidableInput from './FormSlidableInput';
 import FormTextInput from './FormTextInput';
 import FlowJoint from './FlowJoint';
 import { FlowNodeRowErrorWrapper } from './FlowNodeErrorWrapper';
@@ -123,7 +123,7 @@ const NumberInitializer = (props: RowComponentProps<lang.InputRowSignature>) => 
     }
 
     return (
-        <FormSlideableInput
+        <FormSlidableInput
             name={formatFlowLabel(row.id)}
             value={value}
             onChange={(newValue, actionToken) => {

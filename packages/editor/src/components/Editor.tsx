@@ -9,6 +9,7 @@ import ContextMenu from './ContextMenu';
 import KeyboardCommandListener from './KeyboardCommandListener';
 import LayoutRoot from './LayoutRoot';
 import ManagerManager from './ManagerManager';
+import EditorStorageManager from './EditorStorageManager';
 
 export function createEditor(config: EditorConfig) {
 
@@ -34,6 +35,7 @@ export function createEditor(config: EditorConfig) {
                     <div id="tool-tip-portal-mount" />
                 </ThemeProvider>
                 <ManagerManager />
+                <EditorStorageManager storage={config.storage} />
             </Provider>
         </>);
     }

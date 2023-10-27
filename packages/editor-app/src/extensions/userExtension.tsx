@@ -1,9 +1,9 @@
-import { EditorExtension, Menus, createExtensionSelector, makeGlobalCommand, useAppDispatch, useAppSelector } from "@noodles/editor";
+import { EditorExtension, Menus, ToolTip, createExtensionSelector, makeGlobalCommand, useAppDispatch, useAppSelector } from "@noodles/editor";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { supabaseSignIn } from "../auth";
+import { useLayoutEffect } from "react";
+import { supabaseSignIn } from "../appAuth";
 import { supabase } from "../supabase";
 import { AppUser } from "../types";
-import { useEffect } from "react";
 
 interface UserExtensionState {
     user: AppUser | null;
@@ -37,6 +37,7 @@ export const userExtension: EditorExtension = config => {
         signinCommand, 'Sign in',
         async () => {
             const user = await supabaseSignIn(true);
+            config.storage?.emit('reset');
             return userSliceSetUser({ user: user || null });
         },
     );
@@ -46,6 +47,7 @@ export const userExtension: EditorExtension = config => {
         signoutCommand, 'Sign Out',
         async () => {
             await supabase.auth.signOut();
+            config.storage?.emit('reset');
             return userSliceSetUser({ user: null });
         },
     );
@@ -59,7 +61,7 @@ export const userExtension: EditorExtension = config => {
             dispatch(userSliceSetUser({ user: user || null }))
         }
 
-        useEffect(() => {
+        useLayoutEffect(() => {
             loadToken();
         }, []);
 
@@ -85,19 +87,32 @@ export const userExtension: EditorExtension = config => {
     }
     config.toolbarInlineMenuComponents.push(UserToolbarMenu);
 
+    const WidgetToolTip = () => {
+        const { user } = useAppSelector(selectUser);
+
+        if (user) {
+            return (
+                <ToolTip.SectionDiv>
+                    <p>Logged in as user {user.username}.</p>
+                </ToolTip.SectionDiv>
+            )
+        } else {
+            return (
+                <ToolTip.SectionDiv>
+                    <p>You are not logged in.</p>
+                </ToolTip.SectionDiv>
+            )
+        }
+    }
 
     const UserToolbarWidget = () => {
         const { user } = useAppSelector(selectUser);
+        const name = user ? user.username : 'Guest';
 
         return (
-            <div> {
-                user ? (
-                    <p>{user.username}</p>
-                ) : (
-                    <p>Unauthenticated</p>
-                )
-            }
-            </div>
+            <ToolTip.Anchor tooltip={WidgetToolTip}>
+                <p>{ name }</p>
+            </ToolTip.Anchor>
         );
     }
     config.toolbarWidgetComponents.push(UserToolbarWidget);

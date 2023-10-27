@@ -3,7 +3,7 @@ import { useSelectPanelState } from '../redux/panelStateEnhancer';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { flowInspectorPanelsSelectItem } from '../slices/panelFlowInspectorSlice';
 import { ViewTypes, listItemRegex } from '../types';
-import { FormSortableList } from './FormSortableList';
+import FormSortableList from './FormSortableList';
 import { flowsAddListItem, flowsRemoveListItem, flowsReorderList, flowsUpdateInput, useSelectSingleFlow } from '../slices/flowsSlice';
 
 interface FlowInspectorGenericListProps {

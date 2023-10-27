@@ -1,10 +1,10 @@
-import React, { PropsWithChildren, useMemo } from 'react';
+import { PropsWithChildren, useMemo } from 'react';
 import { useSelectPanelState } from '../redux/panelStateEnhancer';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { flowsUpdateInput, flowsUpdateOutput, useSelectSingleFlow } from '../slices/flowsSlice';
-import { ViewTypes, listItemRegex } from '../types';
-import { FormSortableList } from './FormSortableList';
+import { flowsUpdateOutput, useSelectSingleFlow } from '../slices/flowsSlice';
 import { flowInspectorPanelsSelectItem } from '../slices/panelFlowInspectorSlice';
+import { ViewTypes, listItemRegex } from '../types';
+import FormSortableList from './FormSortableList';
 
 interface FlowInspectorOutputProps {
     panelId: string;

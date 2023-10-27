@@ -20,7 +20,7 @@ export class OfflineConsumer extends DocumentConsumer {
     }
 
     init(): void {
-        this.emit('output', { data: '>> Noodlescript Offline Console\n' });
+        this.emit('output', { data: '>> NoodleScript Offline Console\n' });
     }
 
     setDocument(document: lang.FlowDocument): void {

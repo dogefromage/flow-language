@@ -1,19 +1,19 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { EditorStorage, ProjectFileLocation, ProjectStorageSliceState, ProjectStorageStatus } from "../types/storage";
+import { EditorStorage, ProjectFileLocation, ProjectFile, ProjectStorageSliceState, ProjectStorageStatus } from "../types/storage";
 import { RootState } from "../redux/rootReducer";
 
 const initialState: ProjectStorageSliceState = {
     status: { type: 'okay' },
     storage: null,
-    location: null,
+    activeFile: null,
 };
 
 export const projectStorageSlice = createSlice({
     name: 'projectStorage',
     initialState,
     reducers: {
-        setLocation: (s, a: PayloadAction<{ location: ProjectFileLocation | null }>) => {
-            s.location = a.payload.location;
+        setActiveFile: (s, a: PayloadAction<{ file: ProjectFile | null }>) => {
+            s.activeFile = a.payload.file;
         },
         setStorage: (s, a: PayloadAction<{ storage: EditorStorage | null }>) => {
             s.storage = a.payload.storage;
@@ -25,7 +25,7 @@ export const projectStorageSlice = createSlice({
 });
 
 export const {
-    setLocation: projectStorageSetLocation,
+    setActiveFile: projectStorageSetActiveFile,
     setStorage: projectStorageSetStorage,
     setStatus: projectStorageSetStatus,
 } = projectStorageSlice.actions;

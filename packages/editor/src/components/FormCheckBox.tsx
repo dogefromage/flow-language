@@ -23,13 +23,13 @@ const CheckBoxDiv = styled.div<{ $checked: boolean, $disabled: boolean }>`
     }
 `;
 
-interface Props {
+export interface FormCheckBoxProps {
     checked: boolean;
     setChecked: (newValue: boolean) => void;
     disabled?: boolean;
 }
 
-const FormCheckBox = ({ checked, setChecked, disabled }: Props) => {
+const FormCheckBox = ({ checked, setChecked, disabled }: FormCheckBoxProps) => {
     return (
         <CheckBoxDiv
             onClick={e => {

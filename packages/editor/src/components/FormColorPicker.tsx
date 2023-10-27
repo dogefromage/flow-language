@@ -42,12 +42,12 @@ const ColorPickerDiv = styled.div.attrs<ColorDivProps>(({ color }) => ({
 //     ]
 // }
 
-interface Props {
+export interface FormColorPickerProps {
     value: string;
     onChange: (newColor: string, actionToken: string) => void;
 }
 
-const FormColorPicker = ({ value, onChange }: Props) => {
+const FormColorPicker = ({ value, onChange }: FormColorPickerProps) => {
     // const dispatch = useAppDispatch();
     const [menu, setMenu] = useState<{
         anchor: Vec2;

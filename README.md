@@ -14,7 +14,7 @@ Noodle follows similar semantics to Haskell, where each expression is only run w
 Noodle is also highly customizable. A custom editor can be built on top of the language package, or the existing editor can be added into any react application. Custom modules and compilers can be built to create any type of language while keeping the core functionality.
 
 ## Getting Started
-To get started by using Noodle, try out the [online demo](www.noodlescript.io).
+To get started by using Noodle, try out the [online demo](https://desidename).
 
 ## Contribution and Usage
 This pnpm mono-repo contains:

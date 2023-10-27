@@ -1,3 +1,4 @@
+import { selectUserById } from "./queries";
 import { supabase } from "./supabase";
 import { AppUser } from "./types";
 import { assertDef } from "./utils";
@@ -53,14 +54,7 @@ export async function supabaseSignIn(makeRequest: boolean): Promise<AppUser | un
     }
 
     // get user from session
-    const { data, error } = await supabase
-        .from('users')
-        .select(`
-            id, 
-            username
-        `)
-        .eq('id', res.data.session.user.id)
-        .single();
+    const { data, error } = await selectUserById(res.data.session.user.id)
     if (error) { console.error(error); }
 
     if (data?.username == null) {
