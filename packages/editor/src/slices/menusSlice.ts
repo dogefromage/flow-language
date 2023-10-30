@@ -1,15 +1,15 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { WritableDraft } from ".pnpm/immer@9.0.21/node_modules/immer/dist/internal";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { useCallback } from "react";
-import { MenusSliceState, MenuStackNode, MenuState } from "../types";
 import { RootState } from "../redux/rootReducer";
+import { except, MenusSliceState, MenuStackNode, MenuState } from "../types";
 
 const initialState: MenusSliceState = {};
 
 function getMenu(s: WritableDraft<MenusSliceState>, a: PayloadAction<{ menuId: string }>) {
     const menu = s[a.payload.menuId]
     if (menu == null) {
-        console.error(`Menu with id ${a.payload.menuId} not found`);
+        except(`Menu with id ${a.payload.menuId} not found`);
     }
     return menu;
 }
@@ -20,7 +20,7 @@ export const menusSlice = createSlice({
     reducers: {
         add: (s, a: PayloadAction<{ menuId: string, menuState: MenuState }>) => {
             if (s[a.payload.menuId] != null) {
-                throw new Error(`Menu state with id=${a.payload.menuId} already exists`);
+                except(`Menu state with id=${a.payload.menuId} already exists`);
             }
             s[a.payload.menuId] = a.payload.menuState;
         },
@@ -29,13 +29,10 @@ export const menusSlice = createSlice({
         },
         setClosed: (s, a: PayloadAction<{ menuId: string, closed?: boolean }>) => {
             const menu = getMenu(s, a);
-            if (menu) {
-                menu.isClosed = a.payload.closed ?? true;
-            }
+            menu.isClosed = a.payload.closed ?? true;
         },
         setNode: (s, a: PayloadAction<{ menuId: string, depth: number, node: MenuStackNode }>) => {
             const menu = getMenu(s, a);
-            if (!menu) return;
             const before = menu.nodeStack.slice(0, a.payload.depth);
             const newEl = a.payload.node;
             menu.nodeStack = [ ...before, newEl ];
@@ -43,13 +40,10 @@ export const menusSlice = createSlice({
         },
         setState: (s, a: PayloadAction<{ menuId: string, key: string, value: any }>) => {
             const menu = getMenu(s, a);
-            if (!menu) return;
             menu.state.set(a.payload.key, a.payload.value);
         },
         setFocusPath: (s, a: PayloadAction<{ menuId: string, focusPath: string }>) => {
             const menu = getMenu(s, a);
-            if (!menu) return;
-            // console.log(menu.focusedPath, a.payload.focusPath);
             menu.focusedPath = a.payload.focusPath;
         },
     }

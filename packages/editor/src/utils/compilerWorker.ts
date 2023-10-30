@@ -21,12 +21,12 @@ function validateCompileInterpret(document: lang.FlowDocument, config: bc.ByteCo
         // OUTPUT
         const res = sm.dpop();
         return {
-            data: res.toString() + '\n',
+            text: res.toString() + '\n',
         };
     } catch (e: any) {
         console.error(e);
         return {
-            data: e.toString() + '\n',
+            text: e.toString() + '\n',
             accent: 'error',
         };
     }

@@ -2,21 +2,21 @@ import * as lang from "@noodles/language";
 import { createSlice } from "@reduxjs/toolkit";
 import { Draft } from "immer";
 import { useCallback } from "react";
+import { RootState } from "../redux/rootReducer";
 import { selectDocument } from "../redux/stateHooks";
-import { FlowsSliceState, UndoAction, Vec2, defaultFlows, flowsIdRegex, listItemRegex } from "../types";
+import { FlowsSliceState, UndoAction, Vec2, defaultFlows, except, flowsIdRegex, listItemRegex } from "../types";
 import { RowSignatureBlueprint } from "../types/flowInspectorView";
 import { getBasePowers } from "../utils/math";
-import { RootState } from "../redux/rootReducer";
 
 function getFlow(s: Draft<FlowsSliceState>, a: { payload: { flowId: string } }) {
     const g = s[a.payload.flowId];
-    if (!g) return console.error(`Flow with id ${a.payload.flowId} not found`);
+    if (!g) except(`Flow with id ${a.payload.flowId} not found`);
     return g as any as lang.FlowGraph;
 }
 
 function getNode(s: Draft<FlowsSliceState>, a: { payload: { flowId: string, nodeId: string } }) {
     const n = getFlow(s, a)?.nodes[a.payload.nodeId];
-    if (!n) return console.error(`Node with id ${a.payload.nodeId} not found`);
+    if (!n) except(`Node with id ${a.payload.nodeId} not found`);
     return n;
 }
 
@@ -86,10 +86,10 @@ export const flowsSlice = createSlice({
         }>) => {
             let id = a.payload.flowId;
             if (!flowsIdRegex.test(id)) {
-                return console.error(`Invalid characters in id '${id}'`);
+                except(`Invalid characters in id '${id}'`);
             }
             if (s[id] != null) {
-                return console.error(`Flow with id '${id}' already exists!`);
+                except(`Flow with id '${id}' already exists!`);
             }
 
             const flow: lang.FlowGraph = {
@@ -110,12 +110,10 @@ export const flowsSlice = createSlice({
         },
         rename: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, name: string }>) => {
             const g = getFlow(s, a);
-            if (!g) return;
             // g.name = a.payload.name;
         },
         setAttribute: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, key: string, value?: string }>) => {
             const g = getFlow(s, a);
-            if (!g) return;
 
             if (a.payload.value != null) {
                 g.attributes[a.payload.key] = a.payload.value;
@@ -125,7 +123,6 @@ export const flowsSlice = createSlice({
         },
         addNode: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, signature: lang.NamespacePath, position: Vec2, rowStates?: lang.FlowNode['rowStates'] }>) => {
             const g = getFlow(s, a);
-            if (!g) return;
             const node: lang.FlowNode = {
                 id: generateAlphabeticalId(g.idCounter++),
                 signature: a.payload.signature,
@@ -136,7 +133,6 @@ export const flowsSlice = createSlice({
         },
         removeNodes: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, selection: string[] }>) => {
             const g = getFlow(s, a);
-            if (!g) return;
             const targets = a.payload.selection;
             if (targets.length > 0) {
                 for (const id of targets) {
@@ -147,12 +143,10 @@ export const flowsSlice = createSlice({
         },
         positionNode: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, nodeId: string, position: Vec2 }>) => {
             const n = getNode(s, a);
-            if (!n) return;
             n.position = { ...a.payload.position };
         },
         moveSelection: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, selection: string[], delta: Vec2 }>) => {
             const g = getFlow(s, a);
-            if (!g) return;
             for (const id of a.payload.selection) {
                 const node = g.nodes[id];
                 if (!node) continue;
@@ -161,23 +155,17 @@ export const flowsSlice = createSlice({
             }
         },
         setRowValue: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, nodeId: string, rowId: string, rowValue: lang.InitializerValue }>) => {
-            const g = getFlow(s, a);
-            if (!g) return;
-            const node = g.nodes[a.payload.nodeId];
-            if (!node) {
-                return console.error(`Could not find node ${a.payload.nodeId}`);
-            }
+            const n = getNode(s, a);
             // init default
-            node.rowStates[a.payload.rowId] ||= { connections: {}, value: null, /* initializer: 'first' */ };
+            n.rowStates[a.payload.rowId] ||= { connections: {}, value: null };
             // set value
-            node.rowStates[a.payload.rowId].value = a.payload.rowValue;
+            n.rowStates[a.payload.rowId].value = a.payload.rowValue;
         },
         addConnection: (s: Draft<FlowsSliceState>, a: UndoAction<{
             flowId: string,
             locations: [lang.JointLocation, lang.JointLocation],
         }>) => {
             const g = getFlow(s, a);
-            if (!g) return;
 
             let resolvedLocations = a.payload.locations.map(location => {
                 if (location.nodeId === '*') {
@@ -205,7 +193,7 @@ export const flowsSlice = createSlice({
                 }
             });
             if (!inputNode) {
-                return console.error(`Couldn't find input node.`);
+                except(`Couldn't find input node.`);
             }
             const newConn: lang.FlowConnection = {
                 nodeId: outputLocation.nodeId,
@@ -221,7 +209,6 @@ export const flowsSlice = createSlice({
         removeConnection: (s: Draft<FlowsSliceState>,
             a: UndoAction<{ flowId: string, input: lang.InputJointLocation }>) => {
             const g = getFlow(s, a);
-            if (!g) return;
             const { nodeId, rowId, accessor } = a.payload.input;
             const nodeState = g.nodes[nodeId]?.rowStates[rowId];
             if (!nodeState) return;
@@ -229,20 +216,14 @@ export const flowsSlice = createSlice({
         },
         addListItem: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, itemId: string, prop: 'inputs' | 'generics' }>) => {
             const g = getFlow(s, a);
-            if (!g) return;
-
             const list: ListedState[] = g[a.payload.prop];
             const itemId = a.payload.itemId;
             if (!listItemRegex.test(itemId)) {
-                console.error(`Invalid item name.`);
-                return;
+                except(`Invalid item name.`);
             }
             if (list.find(el => el.id === itemId)) {
-                console.error(`Item with id='${itemId}' already in list.`);
-                return;
+                except(`Item with id='${itemId}' already in list.`);
             }
-            // const itemId = findUniquePortId(list);
-
             if (a.payload.prop === 'inputs') {
                 const defaultInput: RowSignatureBlueprint = { rowType: 'input-simple', specifier: lang.createAnyType() };
                 const port = createRowSignature(itemId, 'New Input', defaultInput);
@@ -254,7 +235,6 @@ export const flowsSlice = createSlice({
         },
         removeListItem: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, portId: string, prop: 'inputs' | 'generics' }>) => {
             const g = getFlow(s, a);
-            if (!g) return;
             const list: ListedState[] = g[a.payload.prop];
             const index = list.findIndex(i => i.id === a.payload.portId);
             if (index >= 0) {
@@ -263,51 +243,44 @@ export const flowsSlice = createSlice({
         },
         reorderList: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, newOrder: string[], prop: 'inputs' | 'generics' }>) => {
             const g = getFlow(s, a);
-            if (!g) return;
             const list: ListedState[] = g[a.payload.prop];
             const newRows = a.payload.newOrder
                 .map(rowId => list.find(row => row.id === rowId));
             if (!newRows.every(row => row != null)) {
-                console.error('Invalid row ids passed');
-                return;
+                except('Invalid row ids passed');
             }
             g[a.payload.prop] = newRows as any[];
         },
         replaceInput: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, rowId: string, blueprint: RowSignatureBlueprint }>) => {
             const g = getFlow(s, a);
-            if (!g) return;
             const index = g.inputs.findIndex(i => i.id === a.payload.rowId);
             const port = g.inputs[index];
             if (port == null) {
-                return console.error(`Row not found.`);
+                except(`Row not found.`);
             }
             const newPort = createRowSignature(port.id, port.id, a.payload.blueprint);
             g.inputs.splice(index, 1, newPort as lang.InputRowSignature);
         },
         updateInput: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, portId: string, newState: Partial<RowSignature> }>) => {
             const g = getFlow(s, a);
-            if (!g) return;
             const port = g.inputs.find(p => p.id === a.payload.portId);
             if (port == null) {
-                return console.error(`Row not found`);
+                except(`Row not found`);
             }
             Object.assign(port, a.payload.newState);
         },
         replaceOutput: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, blueprint: RowSignatureBlueprint }>) => {
             const g = getFlow(s, a);
-            if (!g) return;
             g.output = createRowSignature(g.output.id, g.output.id, a.payload.blueprint) as lang.OutputRowSignature;
         },
         updateOutput: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, newState: Partial<RowSignature> }>) => {
             const g = getFlow(s, a);
-            if (!g) return;
             Object.assign(g.output, a.payload.newState);
         },
         replaceGeneric: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, genericId: string, constraint: lang.TemplateParameter['constraint'] }>) => {
             const g = getFlow(s, a);
-            if (!g) return;
             const generic = g.generics.find(gen => gen.id === a.payload.genericId);
-            if (!generic) return console.error(`Could not find generic`);
+            if (!generic) except(`Could not find generic`);
             generic.constraint = a.payload.constraint;
         },
     }

@@ -1,29 +1,97 @@
-import { EditorExtension, Menus, ToolTip, createExtensionSelector, makeGlobalCommand, useAppDispatch, useAppSelector } from "@noodles/editor";
-import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { EditorExtension, Menus, ToolTip, createExtensionSelector, except, makeGlobalCommand, useAppDispatch, useAppSelector } from "@noodles/editor";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { useLayoutEffect } from "react";
-import { supabaseSignIn } from "../appAuth";
+import { startOAuthSignIn } from "../appAuth";
+import { selectUserById } from "../queries";
 import { supabase } from "../supabase";
 import { AppUser } from "../types";
 
 interface UserExtensionState {
     user: AppUser | null;
+    userStatus: 'idle' | 'pending' | 'failed';
 }
 
 const initialState: UserExtensionState = {
     user: null,
+    userStatus: 'idle',
 };
+
+const userSignIn = createAsyncThunk(
+    'user/signin',
+    async (args: { onlyCheckToken?: boolean }) => {
+        let res = await supabase.auth.getSession();
+        if (res.error) { console.error(res.error); }
+    
+        if (!args.onlyCheckToken && res.data.session == null) {
+            await startOAuthSignIn();
+            res = await supabase.auth.getSession();
+            if (res.error) { console.error(res.error); }
+        }
+    
+        if (res.data.session == null) {
+            return; // login didn't work
+        }
+    
+        // get user from session
+        const { data, error } = await selectUserById(res.data.session.user.id)
+        if (error) { console.error(error); }
+    
+        if (data?.username == null) {
+            console.error(`User does not have public user profile created.`);
+            return;
+        }
+    
+        if (typeof data.id !== 'string' || typeof data.username !== 'string') {
+            console.error(`Invalid data.`);
+            return;
+        }
+    
+        return {
+            user: {
+                id: data.id,
+                username: data.username,
+            }
+        };
+    },
+)
+
+const userSignOut = createAsyncThunk(
+    'user/signout',
+    async () => {
+        await supabase.auth.signOut();
+    }
+)
 
 const userSlice = createSlice({
     name: 'user',
     initialState,
     reducers: {
-        setUser: (s, a: PayloadAction<{ user: AppUser | null }>) => {
-            s.user = a.payload.user;
-        },
+        // setUser: (s, a: PayloadAction<{ user: AppUser | null }>) => {
+        //     s.user = a.payload.user;
+        // },
+    },
+    extraReducers(builder) {
+        builder.addCase(userSignIn.pending, s => {
+            s.userStatus = 'pending';
+        });
+        builder.addCase(userSignIn.rejected, (s, a) => {
+            s.userStatus = 'failed';
+        });
+        builder.addCase(userSignIn.fulfilled, (s, a) => {
+            s.userStatus = 'idle';
+            s.user = a.payload?.user || null;
+        });
+        
+        // signout status not really needed
+        builder.addCase(userSignOut.fulfilled, (s, a) => {
+            s.userStatus = 'idle';
+            s.user = null
+        });
     },
 });
+
 const {
-    setUser: userSliceSetUser,
+    // setUser: userSliceSetUser,
 } = userSlice.actions;
 
 export const userExtension: EditorExtension = config => {
@@ -35,20 +103,19 @@ export const userExtension: EditorExtension = config => {
     const signinCommand = `${extensionId}.signin`;
     config.commands[signinCommand] = makeGlobalCommand(
         signinCommand, 'Sign in',
-        async () => {
-            const user = await supabaseSignIn(true);
-            config.storage?.emit('reset');
-            return userSliceSetUser({ user: user || null });
+        () => {
+            // config.storage?.emit('reset');
+            return userSignIn({ onlyCheckToken: false });
         },
     );
 
     const signoutCommand = `${extensionId}.signout`;
     config.commands[signoutCommand] = makeGlobalCommand(
-        signoutCommand, 'Sign Out',
-        async () => {
-            await supabase.auth.signOut();
-            config.storage?.emit('reset');
-            return userSliceSetUser({ user: null });
+        signoutCommand, 
+        'Sign Out',
+        () => {
+            // config.storage?.emit('reset');
+            return userSignOut();
         },
     );
 
@@ -56,9 +123,8 @@ export const userExtension: EditorExtension = config => {
         const dispatch = useAppDispatch();
 
         // tries load user from token
-        async function loadToken() {
-            const user = await supabaseSignIn(false);
-            dispatch(userSliceSetUser({ user: user || null }))
+        function loadToken() {
+            dispatch(userSignIn({ onlyCheckToken: true }));
         }
 
         useLayoutEffect(() => {
@@ -111,7 +177,7 @@ export const userExtension: EditorExtension = config => {
 
         return (
             <ToolTip.Anchor tooltip={WidgetToolTip}>
-                <p>{ name }</p>
+                <p>{name}</p>
             </ToolTip.Anchor>
         );
     }

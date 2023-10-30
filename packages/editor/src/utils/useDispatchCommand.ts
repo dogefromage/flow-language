@@ -3,7 +3,7 @@ import { RootState } from "../redux/rootReducer";
 import { selectPanels, useAppDispatch, useAppStore } from "../redux/stateHooks";
 import { selectContent } from "../slices/contentSlice";
 import { selectPanelManager } from "../slices/panelManagerSlice";
-import { ActionCreatorReturnType, BaseCommandArgs, CustomCommandParams, PanelState, PanelStateMap, Vec2, ViewCommandArgs, ViewTypes } from "../types";
+import { AppAction, BaseCommandArgs, CustomCommandParams, PanelState, PanelStateMap, Vec2, ViewCommandArgs, ViewTypes } from "../types";
 import { clientToOffsetPos, offsetToClientPos } from "./panelManager";
 
 export default function useDispatchCommand() {
@@ -25,10 +25,10 @@ export default function useDispatchCommand() {
             appState,
             clientCursor,
         };
-        let actionPromise: ActionCreatorReturnType;
+        const returnedActions: (void | AppAction | AppAction[])[] = [];
 
         if (command.scope === 'global') {
-            actionPromise = command.actionCreator(baseArgs, customParams);
+            returnedActions.push(command.actionCreator(baseArgs, customParams));
         } else {
             const panelManager = selectPanelManager(appState);
             const activePanelId = panelManager.activePanelId;
@@ -65,23 +65,18 @@ export default function useDispatchCommand() {
                 offsetCursor,
             };
             // @ts-ignore
-            actionPromise = command.actionCreator(viewArgs, customParams);
+            const retAction = command.actionCreator(viewArgs, customParams);
+            returnedActions.push(retAction);
         }
         
-        actionPromise.then(resolvedReturn => {
-            if (resolvedReturn == null) {
-                return;
-            }
-            dispatch(d => {
-                if (Array.isArray(resolvedReturn)) {
-                    for (const action of resolvedReturn) {
-                        d(action);
-                    }
-                } else {
-                    d(resolvedReturn);
-                }
-            });
-        });
+        function filterVoid<T>(t: T | void): t is Exclude<typeof t, void> {
+            return t != null;
+        }
+        
+        returnedActions
+            .filter(filterVoid)
+            .flat()
+            .forEach(action => dispatch(action));
         
     }, [ dispatch, store ]);
 }

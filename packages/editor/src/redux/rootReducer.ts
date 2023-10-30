@@ -1,4 +1,5 @@
 import { AnyAction, Dispatch, ThunkDispatch, combineReducers } from "@reduxjs/toolkit";
+import consoleReducer from "../slices/consoleSlice";
 import contentReducer from "../slices/contentSlice";
 import contextMenuReducer from "../slices/contextMenuSlice";
 import contextReducer from "../slices/contextSlice";
@@ -13,6 +14,7 @@ import projectStorageReducer from "../slices/projectStorageSlice";
 import { EditorConfig, ViewTypes } from "../types";
 import storageEnhancer from "./storageEnhancer";
 import undoableEnhancer from "./undoableEnhancer";
+import catchExceptionEnhancer from "./catchExceptionEnhancer";
 
 const documentReducer = combineReducers({
     flows: flowsReducer,
@@ -36,6 +38,7 @@ const appContent = {
     menus: menusReducer,
     content: contentReducer,
     contextMenu: contextMenuReducer,
+    console: consoleReducer,
 };
 
 const nonExtendedReducer = combineReducers(appContent);
@@ -44,10 +47,12 @@ export type RootState = ReturnType<typeof nonExtendedReducer>;
 export type AppDispatch = ThunkDispatch<RootState, undefined, AnyAction> & Dispatch<AnyAction>;
 
 function createFullReducer(config: EditorConfig) {
-    return combineReducers({
-        ...appContent,
-        extensions: combineReducers(config.stateReducers),
-    });
+    return catchExceptionEnhancer(
+        combineReducers({
+            ...appContent,
+            extensions: combineReducers(config.stateReducers),
+        })
+    );
 }
 
 export default createFullReducer;

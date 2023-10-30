@@ -23,8 +23,8 @@ export type ConsumerState =
 export type ConsumerInputSignal = 'run' | 'force-run' | 'debug' | 'restart-debug' | 'abort'; // add more
 
 export interface ConsumerOutput {
-    data: string;
-    accent?: 'error' | 'warn';
+    text: string;
+    accent?: 'error' | 'warning';
 }
 
 export abstract class DocumentConsumer extends Emittery<{

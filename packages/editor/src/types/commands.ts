@@ -1,7 +1,7 @@
-import { AnyAction } from '@reduxjs/toolkit';
+import { AnyAction, AsyncThunkAction } from '@reduxjs/toolkit';
 import { PanelState, PanelStateMap, ViewTypes } from './panelManager';
 import { Rect, Vec2 } from './utils';
-import { RootState } from '../redux/rootReducer';
+import { AppDispatch, RootState } from '../redux/rootReducer';
 
 export interface KeyCombination {
     key: string;
@@ -28,7 +28,8 @@ export interface ViewCommandArgs<P extends PanelState> extends BaseCommandArgs {
 }
 
 export type CustomCommandParams = { [key: string]: any }
-export type ActionCreatorReturnType = Promise<AnyAction[] | AnyAction | void>;
+
+export type AppAction = Parameters<AppDispatch>[0];
 
 interface BaseCommand {
     id: string;
@@ -37,12 +38,12 @@ interface BaseCommand {
 }
 interface GlobalCommand extends BaseCommand {
     scope: 'global',
-    actionCreator: (baseArgs: BaseCommandArgs, customParams: CustomCommandParams) => ActionCreatorReturnType;
+    actionCreator: (baseArgs: BaseCommandArgs, customParams: CustomCommandParams) => AppAction[] | AppAction | void;
 }
 interface ViewCommand<V extends ViewTypes, P extends PanelState = PanelStateMap[V]> extends BaseCommand {
     scope: 'view',
     viewType: V;
-    actionCreator: (baseArgs: ViewCommandArgs<P>, customParams: CustomCommandParams) => ActionCreatorReturnType;
+    actionCreator: (baseArgs: ViewCommandArgs<P>, customParams: CustomCommandParams) => AppAction[] | AppAction | void;
 }
 
 export type Command = 

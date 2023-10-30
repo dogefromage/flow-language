@@ -8,7 +8,7 @@ export const flowEditorCommands: Command[] = [
         'flowEditor.addNodeAtPosition', 
         ViewTypes.FlowEditor, 
         'Add Node',
-        async ({ activePanelId, clientCursor, offsetCursor, offsetPanelCenter, clientPanelCenter }, params) => {
+        ({ activePanelId, clientCursor, offsetCursor, offsetPanelCenter, clientPanelCenter }, params) => {
             return flowEditorSetStateAddNodeAtPosition({
                 panelId: activePanelId,
                 clientPosition: clientCursor || clientPanelCenter,
@@ -22,7 +22,7 @@ export const flowEditorCommands: Command[] = [
         viewType: ViewTypes.FlowEditor,
         id: 'flowEditor.deleteSelected',
         name: 'Delete Selected',
-        async actionCreator({ panelState: { flowStack, selection } }, params) {
+        actionCreator({ panelState: { flowStack, selection } }, params) {
             const flowId = flowStack[0];
             if (flowId == null) return;
             return flowsRemoveNodes({
@@ -38,7 +38,7 @@ export const flowEditorCommands: Command[] = [
         viewType: ViewTypes.FlowEditor,
         id: 'flowEditor.copySelection',
         name: 'Copy Selected',
-        async actionCreator({ appState, activePanelId, panelState: { flowStack, selection } }, params) {
+        actionCreator({ appState, activePanelId, panelState: { flowStack, selection } }, params) {
             const flow = selectFlows(appState)[flowStack[0]];
             if (!flow) return console.error(`Could not find flow.`);
             const selectedNodes = selection
@@ -55,7 +55,7 @@ export const flowEditorCommands: Command[] = [
         viewType: ViewTypes.FlowEditor,
         id: 'flowEditor.paste',
         name: 'Paste',
-        async actionCreator({ appState, panelState: { clipboard } }, params) {
+        actionCreator({ appState, panelState: { clipboard } }, params) {
             console.log('TODO paste', clipboard);
         },
         keyCombinations: [{ key: 'v', ctrlKey: true }],

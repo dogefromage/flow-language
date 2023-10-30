@@ -1,17 +1,42 @@
-import { selectUserById } from "./queries";
+import { except } from '@noodles/editor';
 import { supabase } from "./supabase";
-import { AppUser } from "./types";
-import { assertDef } from "./utils";
 
-async function popupAuthenticate(popupUrl: string, redirectUrl: string) {
+export async function startOAuthSignIn() {
+    const redirectUrl = import.meta.env.VITE_SUPABASE_AUTH_POPUP_URL;
+    const oauthRequestRes = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+            skipBrowserRedirect: true,
+            redirectTo: redirectUrl,
+        }
+    });
+    if (oauthRequestRes.error) {
+        except('Could not get github OAuth url.');
+    }
+
+    const tokens = await getOAuthTokensPopup(oauthRequestRes.data.url, redirectUrl);
+    await supabase.auth.setSession(tokens);
+}
+
+async function getOAuthTokensPopup(popupUrl: string, redirectUrl: string) {
     const popup = window.open(popupUrl, 'popup', 'popup=true');
-    assertDef(popup, 'Cannot open popup.');
+    if (!popup) {
+        except('Could not open popup.');
+    }
 
+    try {
+        return readTokensFromPopupWindow(popup, redirectUrl);        
+    } catch (e: any) {
+        except(e.message);
+    }
+}
+
+function readTokensFromPopupWindow(popup: Window, targetUrl: string) {
     type Tokens = Parameters<typeof supabase.auth.setSession>[0];
 
-    const tokens = await new Promise<Tokens | undefined>((res, rej) => {
+    return new Promise<Tokens>((res, rej) => {
         const checkPopup = setInterval(() => {
-            if (popup?.window.location.href.includes(redirectUrl)) {
+            if (popup?.window.location.href.includes(targetUrl)) {
                 // popup has redirected,
                 // transfer tokens in hash
                 const params = new URLSearchParams(popup.window.location.hash.replace('#', ''));
@@ -19,74 +44,19 @@ async function popupAuthenticate(popupUrl: string, redirectUrl: string) {
                 const access_token = params.get('access_token');
                 const refresh_token = params.get('refresh_token');
 
-                if (access_token != null && refresh_token != null) {
-                    res({ access_token, refresh_token });
-                } else {
-                    console.error(`Could not get tokens from hash.`);
-                    res(undefined);
-                }
                 popup.close();
+
+                if (typeof access_token === 'string' &&
+                    typeof refresh_token === 'string') {
+                    res({ access_token, refresh_token });
+                }
             }
 
             if (popup.closed) {
                 clearInterval(checkPopup);
+                rej('OAuth did not return any credentials.');
             }
+
         }, 1000);
     });
-
-    if (tokens != null) {
-        await supabase.auth.setSession(tokens);
-    }
-}
-
-export async function supabaseSignIn(makeRequest: boolean): Promise<AppUser | undefined> {
-    let res = await supabase.auth.getSession();
-    if (res.error) { console.error(res.error); }
-
-    if (makeRequest && res.data.session == null) {
-        await supabaseExecuteNewSignIn();
-        res = await supabase.auth.getSession();
-        if (res.error) { console.error(res.error); }
-    }
-
-    if (res.data.session == null) {
-        return; // login didn't work
-    }
-
-    // get user from session
-    const { data, error } = await selectUserById(res.data.session.user.id)
-    if (error) { console.error(error); }
-
-    if (data?.username == null) {
-        console.error(`User does not have public user profile created.`);
-        return;
-    }
-
-    if (typeof data.id !== 'string' || typeof data.username !== 'string') {
-        console.error(`Invalid data.`);
-        return;
-    }
-
-    return {
-        id: data.id,
-        username: data.username,
-    };
-}
-
-async function supabaseExecuteNewSignIn() {
-    const redirectUrl = import.meta.env.VITE_SUPABASE_AUTH_POPUP_URL;
-
-    const res = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-            skipBrowserRedirect: true,
-            redirectTo: redirectUrl,
-        }
-    });
-    if (res.error) {
-        console.error(res.error);
-        return;
-    }
-
-    await popupAuthenticate(res.data.url, redirectUrl);
 }

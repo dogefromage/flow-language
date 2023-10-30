@@ -7,7 +7,7 @@ export const pageOutlinerCommands: Command[] = [
         viewType: ViewTypes.PageOutliner,
         id: 'pageOutliner.deleteFlowEntry',
         name: 'Delete Flow',
-        async actionCreator({}, params) {
+        actionCreator({}, params) {
             const flowId = params.flowId || '';
             return flowsRemove({
                 flowId,

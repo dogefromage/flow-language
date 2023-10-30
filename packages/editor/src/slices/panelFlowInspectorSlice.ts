@@ -17,7 +17,6 @@ export const flowInspectorPanelsSlice = createSlice({
     reducers: {
         selectItem: (s, a: PayloadAction<{ panelId: string, type: FlowInspectorSelectionItem, id: string }>) => {
             const ps = getPanelState(s, a);
-            if (!ps) return;
             ps.selectedItem = { 
                 type: a.payload.type, 
                 id: a.payload.id, 

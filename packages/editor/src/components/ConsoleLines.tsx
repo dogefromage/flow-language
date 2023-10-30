@@ -1,6 +1,6 @@
-import { ConsumerOutput } from '@noodles/shared';
-import React, { PropsWithChildren, useEffect, useRef } from 'react';
+import { PropsWithChildren, useEffect, useRef } from 'react';
 import styled from 'styled-components';
+import { ConsoleLine } from '../types';
 
 const ConsoleDiv = styled.div`
     width: 100%;
@@ -15,7 +15,7 @@ const ConsoleDiv = styled.div`
     background-color: var(--color-4);
 `;
 
-const ConsolePre = styled.pre<{ $accent?: ConsumerOutput['accent'] }>`
+const ConsolePre = styled.pre<{ $accent?: ConsoleLine['accent'] }>`
     display: inline;
     font-size: 18px;
     font-family: monospace;
@@ -29,7 +29,7 @@ const ConsolePre = styled.pre<{ $accent?: ConsumerOutput['accent'] }>`
 `;
 
 interface ConsoleLinesProps {
-    lines: ConsumerOutput[];
+    lines: ConsoleLine[];
 }
 
 const ConsoleLines = ({ lines }: PropsWithChildren<ConsoleLinesProps>) => {
@@ -46,9 +46,9 @@ const ConsoleLines = ({ lines }: PropsWithChildren<ConsoleLinesProps>) => {
         <ConsoleDiv ref={scrollRef}>
             {lines.map((l, index) =>
                 <ConsolePre 
-                    key={index + '.' + l.data} 
+                    key={index + '.' + l.text} 
                     $accent={l.accent}>
-                        {l.data}
+                        {l.text}
                 </ConsolePre>
             )}
         </ConsoleDiv>

@@ -3,7 +3,7 @@ import { PayloadAction } from "@reduxjs/toolkit";
 import { useEffect } from "react";
 import { panelStateBind, panelStateRemove } from "../redux/panelStateEnhancer";
 import { useAppDispatch } from "../redux/stateHooks";
-import { CreatePanelStateCallback, ViewTypes, PanelState, Rect, Vec2 } from "../types";
+import { CreatePanelStateCallback, ViewTypes, PanelState, Rect, Vec2, except } from "../types";
 
 export function useBindPanelState(panelId: string, createPanelState: CreatePanelStateCallback, viewType: ViewTypes) {
     const dispatch = useAppDispatch();
@@ -16,9 +16,12 @@ export function useBindPanelState(panelId: string, createPanelState: CreatePanel
     }, [ panelId ]);
 }
 
+/**
+ * Use inside a panel reducer.
+ */
 export function getPanelState<T extends PanelState>(s: Obj<T>, a: PayloadAction<{ panelId: string }>) {
     const ps = s[ a.payload.panelId ];
-    if (!ps) return console.error(`Panel state not found panelId=${a.payload.panelId}`);
+    if (!ps) except(`Panel state not found paneldId=${a.payload.panelId}`);
     return ps;
 }
 

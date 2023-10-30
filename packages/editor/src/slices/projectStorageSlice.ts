@@ -1,6 +1,6 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { EditorStorage, ProjectFileLocation, ProjectFile, ProjectStorageSliceState, ProjectStorageStatus } from "../types/storage";
 import { RootState } from "../redux/rootReducer";
+import { EditorStorage, ProjectFile, ProjectStorageSliceState, ProjectStorageStatus } from "../types/storage";
 
 const initialState: ProjectStorageSliceState = {
     status: { type: 'okay' },

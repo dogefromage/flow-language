@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { selectDocument, useAppSelector } from '../redux/stateHooks';
+import { selectDocument, useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { ViewProps } from '../types';
 import { OfflineConsumer } from '../utils/OfflineConsumer';
 import ConsoleControls from './ConsoleControls';
@@ -7,11 +7,16 @@ import PanelBody from './PanelBody';
 import { ConsumerOutput, ConsumerState, DocumentConsumer } from '@noodles/shared';
 import ConsoleLines from './ConsoleLines';
 import { PanelHeaderDiv, PanelHeadingH } from '../styles/panels';
+import { consolePushLine, selectConsole } from '../slices/consoleSlice';
 
 const ConsoleView = (viewProps: ViewProps) => {
+    const dispatch = useAppDispatch();
+    const console = useAppSelector(selectConsole);
+    // const [lines, setLines] = useState<ConsumerOutput[]>([]);
+    
     const [consumer, setConsumer] = useState<DocumentConsumer>(new OfflineConsumer());
-    const [lines, setLines] = useState<ConsumerOutput[]>([]);
     const [displayState, setDisplayState] = useState<string>('Loading');
+
 
     useEffect(() => {
         const handleStateChange = (nextState: ConsumerState) => {
@@ -31,9 +36,10 @@ const ConsoleView = (viewProps: ViewProps) => {
             }
         }
 
-        const handleOutput = (output: ConsumerOutput) => {
-            setLines(last => [...last, output]);
+        function handleOutput(output: ConsumerOutput) {
+            dispatch(consolePushLine({ line: output }));
         }
+
 
         consumer.on('state-changed', handleStateChange);
         consumer.on('output', handleOutput);
@@ -62,7 +68,7 @@ const ConsoleView = (viewProps: ViewProps) => {
                     state={displayState}
                 />
             </PanelHeaderDiv>
-            <ConsoleLines lines={lines} />
+            <ConsoleLines lines={console.lines} />
         </PanelBody>
     );
 }

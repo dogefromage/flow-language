@@ -6,6 +6,7 @@ import { createLogger } from "redux-logger";
 import { EditorConfig, RecursivePartial, UndoAction } from "../types";
 import createFullReducer, { RootState } from "./rootReducer";
 import { validatorMiddleware } from "./validatorMiddleware";
+import { catchRejectedMiddleware } from "./catchRejectedMiddleware";
 
 function createMiddleware(getDefaultMiddleWare: CurriedGetDefaultMiddleware, config: EditorConfig) {
     const middleware: Middleware[] = [];
@@ -23,6 +24,8 @@ function createMiddleware(getDefaultMiddleWare: CurriedGetDefaultMiddleware, con
             ignoreActions: true,
         },
     }));
+
+    middleware.push(catchRejectedMiddleware);
 
     middleware.push(validatorMiddleware);
 

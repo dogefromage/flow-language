@@ -17,7 +17,7 @@ declare module 'styled-components' {
                 defaultTitle: string;
             }
             console: {
-                accents: Record<ConsumerOutput['accent'], string>;
+                accents: Record<ConsoleAccents, string>;
             }
             selectionStatus: {
                 [ S in SelectionStatus ]?: string;

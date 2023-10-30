@@ -20,7 +20,7 @@ export class OfflineConsumer extends DocumentConsumer {
     }
 
     init(): void {
-        this.emit('output', { data: '>> NoodleScript Offline Console\n' });
+        this.emit('output', { text: 'Clientside Interpreter loaded.\n' });
     }
 
     setDocument(document: lang.FlowDocument): void {
@@ -50,25 +50,6 @@ export class OfflineConsumer extends DocumentConsumer {
         if (this.state.type != 'idle') {
             return;
         }
-        // const worker = new Worker(
-        //     new URL('./interpreterWorker.js', import.meta.url),
-        //     { type: 'module' }
-        // );
-        // this.updateState({ type: 'running', worker });
-
-        // const { validateAndInterpret } = wrap<import('./interpreterWorker').InterpreterWorker>(worker);
-        // try {
-        //     const result = await validateAndInterpret(this.document, { 
-        //         skipValidation: forceRun, 
-        //         args: [],
-        //     });
-        //     this.emit('output', result);
-        // }
-        // finally {
-        //     this.updateState({ type: 'idle' });
-        // }
-
-
 
         const worker = new Worker(
             new URL('./compilerWorker.js', import.meta.url),
@@ -94,7 +75,7 @@ export class OfflineConsumer extends DocumentConsumer {
             return;
         }
         worker?.terminate();
-        this.emit('output', { data: 'Program aborted.\n' });
+        this.emit('output', { text: 'Program aborted.\n' });
         this.updateState({ type: 'idle' });
     }
 }

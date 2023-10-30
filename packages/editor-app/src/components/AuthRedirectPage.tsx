@@ -1,7 +1,7 @@
 
 const AuthRedirectPage = () => {
     return (
-        <h1>You will be redirected...</h1>
+        <h1>This window will close automatically.</h1>
     );
 }
 
