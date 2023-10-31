@@ -66,7 +66,7 @@ export interface MenuState {
     id: string;
     // type: MenuTypes;
     nodeStack: MenuStackNode[];
-    focusedPath: string;
+    focusedPath: number[];
     isClosed: boolean;
     state: Map<string, any>;
 }

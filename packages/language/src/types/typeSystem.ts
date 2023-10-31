@@ -55,3 +55,8 @@ export interface TemplatedTypeSpecifier<T extends TypeSpecifier = TypeSpecifier>
 }
 
 export type InitializerValue = any;
+
+// export interface TypeNode {
+//     name: string;
+//     arguments: TypeNode[];
+// }

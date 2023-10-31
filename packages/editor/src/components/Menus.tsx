@@ -1,24 +1,45 @@
+import { HsvaColor, Wheel, hexToHsva, hsvaToHex } from '@uiw/react-color';
 import React, { MutableRefObject, PropsWithChildren, useEffect, useRef, useState } from 'react';
+import ReactDOM from 'react-dom';
+import styled from 'styled-components';
 import { v4 as uuidv4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { selectContent } from '../slices/contentSlice';
 import { menusSetClosed, menusSetNode, useSelectSingleMenu } from '../slices/menusSlice';
 import { MaterialSymbol } from '../styles/icons';
-import { FLOATING_MENU_WIDTH, MENU_COLOR_WHEEL_INNER_HEIGHT, MenuColorSliderWrapperDiv, MenuColorValueSliderInput, MenuColorWheelDiv, MenuCommandDiv, MenuElementDiv, MenuExpandDiv, MenuFloatingDiv, MenuInlineDiv, MenuInlineExpandDiv, MenuSearchDiv, MenuTitleDiv, MenuDividerDiv } from '../styles/menus';
+import { FLOATING_MENU_WIDTH, MENU_COLOR_WHEEL_INNER_HEIGHT, MenuColorSliderWrapperDiv, MenuColorValueSliderInput, MenuColorWheelDiv, MenuCommandDiv, MenuDividerDiv, MenuElementDiv, MenuExpandDiv, MenuFloatingDiv, MenuInlineDiv, MenuInlineExpandDiv, MenuSearchDiv, MenuTitleDiv } from '../styles/menus';
 import { MenuStackNode, Vec2 } from '../types';
 import { formatKeyCombination } from '../utils/keyCombinations';
-import { useBindMenuState } from '../utils/menus';
+import { useBindMenuState, useFocusMoveHandlers, useFocusNavigation } from '../utils/menus';
 import useAdjustedAnchor from '../utils/useAdjustedAnchor';
 import useClickedOutside from '../utils/useClickedOutside';
 import useComposeRef from '../utils/useComposeRef';
 import useDispatchCommand from '../utils/useDispatchCommand';
-import styled from 'styled-components';
-import ReactDOM from 'react-dom';
 import useStopMouseEvents from '../utils/useStopMouseEvents';
-import { HsvaColor, Wheel, hexToHsva, hsvaToHex } from '@uiw/react-color';
 
 const menuElementIds = new WeakMap<HTMLElement, string>();
+const menuFocusElements = new WeakSet<HTMLElement>();
 const menuRootIds = new WeakMap<HTMLElement, string>();
+
+function findFocusIndexAndSibs(el: HTMLElement) {
+    let curr: ChildNode = el;
+    while (curr.previousSibling) {
+        curr = curr.previousSibling;
+    }
+
+    let index = -1;
+    let totalSiblings = 0;
+    while (curr != null) {
+        if (menuFocusElements.has(curr as HTMLElement)) {
+            if (curr == el) {
+                index = totalSiblings;
+            }
+            totalSiblings++;
+        }
+        curr = curr.nextSibling!;
+    }
+    return { index, totalSiblings };
+}
 
 function useMenuRoot(ref: MutableRefObject<HTMLElement | null>, rootId: string) {
     const [rootSet, setRootSet] = useState(false);
@@ -33,12 +54,16 @@ function useMenuRoot(ref: MutableRefObject<HTMLElement | null>, rootId: string) 
     return rootSet;
 }
 
-function useMenuPath(ref: MutableRefObject<HTMLElement | null>) {
+function useMenuPath(ref: MutableRefObject<HTMLElement | null>, focusable: boolean) {
+    type Focus = {
+        path: number[];
+        totalSiblings: number;
+    };
     const [menuPath, setMenuPath] = useState<{
         menuId: string;
         elementId: string;
-        path: string[];
         depth: number;
+        focus?: Focus;
     }>();
 
     useEffect(() => {
@@ -51,22 +76,45 @@ function useMenuPath(ref: MutableRefObject<HTMLElement | null>) {
         if (!topElementId) {
             menuElementIds.set(topElement, (topElementId = uuidv4()));
         }
+        if (focusable) {
+            menuFocusElements.add(topElement);
+        } else {
+            menuFocusElements.delete(topElement);
+        }
 
-        const path: string[] = [];
+        let depth = -1;
+        const focusPath: number[] = [];
         let curr: HTMLElement | null = topElement;
+
         while (curr != null) {
             const elementId = menuElementIds.get(curr);
             if (elementId != null) {
-                path.push(elementId);
+                depth++;
             }
+
+            if (menuFocusElements.has(curr)) {
+                const { index } = findFocusIndexAndSibs(curr);
+                focusPath.unshift(index);
+            }
+
 
             const menuId = menuRootIds.get(curr);
             if (menuId != null) {
+                let focus: Focus | undefined = undefined;
+                if (menuFocusElements.has(topElement)) {
+                    const { totalSiblings } = findFocusIndexAndSibs(topElement);
+                    focus = {
+                        path: focusPath,
+                        totalSiblings,
+                    };
+                }
+
                 setMenuPath({
                     menuId,
                     elementId: topElementId,
-                    path,
-                    depth: path.length - 1,
+                    // path,
+                    depth,
+                    focus,
                 });
                 return;
             }
@@ -77,6 +125,14 @@ function useMenuPath(ref: MutableRefObject<HTMLElement | null>) {
     }, [ref.current]);
 
     return menuPath;
+}
+
+function comparePath(X: number[], Y: number[]) {
+    if (X.length != Y.length) return false;
+    for (let i = 0; i < X.length; i++) {
+        if (X[i] !== Y[i]) return false;
+    }
+    return true;
 }
 
 
@@ -126,27 +182,30 @@ function createMenuExpand(expandType: 'inline' | 'normal') {
     return React.forwardRef<HTMLDivElement, PropsWithChildren<MenuExpandProps>>((
         { name, children, childWidth }, ref) => {
         const divRef = useComposeRef(ref);
-        const menuPath = useMenuPath(divRef);
+        const menuPath = useMenuPath(divRef, true);
         const menuId = menuPath?.menuId;
 
         const dispatch = useAppDispatch();
         const menu = useAppSelector(useSelectSingleMenu(menuId));
 
-        // const joinedPath = focusPath.join('.');
-        // useEffect(() => {
-        //     if (menu.focusedPath == joinedPath) {
-        //         divRef.current?.focus();
-        //     }
-        // }, [ menu.focusedPath ]);
+        const focus = menuPath?.focus;
 
-        // const handlers = useFocusNavigation(menuId, joinedPath, {
-        //     // out: () => focusPath.slice(0, -1).join('.'),
-        //     in: () => {
-        //         expand();
-        //         return [ ...focusPath, 0 ].join('.');
-        //     },
-        //     ...useFocusMoveHandlers(focusPath, neightbourCount),
-        // });
+        useEffect(() => {
+            if (menu && focus && comparePath(menu.focusedPath, focus.path)) {
+                setTimeout(() => divRef.current?.focus(), 20);
+            }
+        }, [menu?.focusedPath, focus?.path]);
+
+        const handlers = useFocusNavigation(menuId, focus?.path,
+            focus ? {
+                out: () => focus.path.slice(0, -1),
+                in: () => {
+                    expand();
+                    return [...focus.path, 0];
+                },
+                ...useFocusMoveHandlers(focus.path, focus.totalSiblings),
+            } : undefined
+        );
 
         const expand = () => {
             if (!menuPath || !divRef.current) return;
@@ -169,7 +228,7 @@ function createMenuExpand(expandType: 'inline' | 'normal') {
                 ref={divRef}
                 onMouseEnter={expand}
                 tabIndex={-1}
-            // {...handlers}
+                {...handlers}
             >
                 <p>{name}</p> {
                     expandType === 'normal' &&
@@ -194,32 +253,34 @@ const MenuCommand = React.forwardRef<HTMLDivElement, PropsWithChildren<MenuComma
     { commandId }, ref) => {
     const dispatch = useAppDispatch();
     const divRef = useComposeRef(ref);
-    const menuPath = useMenuPath(divRef);
+    const menuPath = useMenuPath(divRef, true);
     const menu = useAppSelector(useSelectSingleMenu(menuPath?.menuId));
     const { commands } = useAppSelector(selectContent);
     const dispatchCommand = useDispatchCommand();
 
     const command = commands[commandId];
 
-    function invokeCommand(e: React.MouseEvent) {
-        e.stopPropagation();
+    function invokeCommand() {
         if (!command || !menu) return;
         dispatch(menusSetClosed({ menuId: menu.id }));
         dispatchCommand(command.id, {});
     }
 
-    // const joinedPath = focusPath.join('.');
-    // useEffect(() => {
-    //     if (menu.focusedPath == joinedPath) {
-    //         divRef.current?.focus();
-    //     }
-    // }, [ menu.focusedPath ]);
+    const focus = menuPath?.focus;
 
-    // const handlers = useFocusNavigation(menuId, joinedPath, {
-    //     out: () => focusPath.slice(0, -1).join('.'),
-    //     submit: invoke,
-    //     ...useFocusMoveHandlers(focusPath, neightbourCount),
-    // });
+    useEffect(() => {
+        if (menu && focus && comparePath(menu.focusedPath, focus.path)) {
+            setTimeout(() => divRef.current?.focus(), 20);
+        }
+    }, [menu?.focusedPath, focus?.path]);
+
+    const handlers = useFocusNavigation(menu?.id, focus?.path,
+        focus ? {
+            out: () => focus.path.slice(0, -1),
+            submit: invokeCommand,
+            ...useFocusMoveHandlers(focus.path, focus.totalSiblings),
+        } : undefined
+    );
 
     let display = { text: commandId, info: '' };
     if (command != null) {
@@ -233,9 +294,12 @@ const MenuCommand = React.forwardRef<HTMLDivElement, PropsWithChildren<MenuComma
     return (
         <MenuCommandDiv
             ref={divRef}
-            onClick={invokeCommand}
+            onClick={e => {
+                e.stopPropagation();
+                invokeCommand();
+            }}
             tabIndex={-1}
-        // {...handlers}
+            {...handlers}
         >
             <p>{display.text}</p> {
                 display.info &&
@@ -276,7 +340,7 @@ interface MenuRootProps {
 }
 
 const MenuRootInline = ({ menuId, children }: PropsWithChildren<MenuRootProps>) => {
-    const { menuState, resetMenuState } = useBindMenuState(menuId, 'misc');
+    const { menuState, resetMenuState } = useBindMenuState(menuId);
     const divRef = useRef<HTMLDivElement>(null);
     const dispatch = useAppDispatch();
 
@@ -321,23 +385,25 @@ const MenuButton = React.forwardRef<HTMLDivElement, PropsWithChildren<MenuButton
     { name, onPush }, ref) => {
     const dispatch = useAppDispatch();
     const divRef = useComposeRef(ref);
-    const menuPath = useMenuPath(divRef);
+    const menuPath = useMenuPath(divRef, true);
     const menuId = menuPath?.menuId;
 
-    // const menu = useAppSelector(selectSingleMenu(menuPath?.menuId));
+    const menu = useAppSelector(useSelectSingleMenu(menuPath?.menuId));
+    const focus = menuPath?.focus;
 
-    // const joinedPath = focusPath.join('.');
-    // useEffect(() => {
-    //     if (menu.focusedPath == joinedPath) {
-    //         divRef.current?.focus();
-    //     }
-    // }, [menu.focusedPath]);
+    useEffect(() => {
+        if (menu && focus && comparePath(menu.focusedPath, focus.path)) {
+            setTimeout(() => divRef.current?.focus(), 20);
+        }
+    }, [menu?.focusedPath, focus?.path]);
 
-    // const handlers = useFocusNavigation(menuId, joinedPath, {
-    //     out: () => focusPath.slice(0, -1).join('.'),
-    //     submit,
-    //     ...useFocusMoveHandlers(focusPath, neightbourCount),
-    // });
+    const handlers = useFocusNavigation(menu?.id, focus?.path,
+        focus ? {
+            out: () => focus.path.slice(0, -1),
+            submit,
+            ...useFocusMoveHandlers(focus.path, focus.totalSiblings),
+        } : undefined
+    );
 
     function submit() {
         if (menuId == null) return;
@@ -353,7 +419,7 @@ const MenuButton = React.forwardRef<HTMLDivElement, PropsWithChildren<MenuButton
                 e.stopPropagation();
                 submit();
             }}
-        // {...handlers}
+            {...handlers}
         > {
                 <p>{name}</p>
             }
@@ -370,25 +436,24 @@ interface MenuSearchProps {
 const MenuSearch = React.forwardRef<HTMLDivElement, PropsWithChildren<MenuSearchProps>>((
     { value, onChange, placeholder }, ref) => {
     const divRef = useComposeRef(ref);
-    const menuPath = useMenuPath(divRef);
-    // const dispatch = useAppDispatch();
-    // const menuId = menuPath?.menuId;
-    // const menu = useAppSelector(selectSingleMenu(menuId));
-    // const inputRef = useRef<HTMLInputElement>(null);
+    const menuPath = useMenuPath(divRef, true);
+    const menu = useAppSelector(useSelectSingleMenu(menuPath?.menuId));
+    const inputRef = useRef<HTMLInputElement>(null);
 
-    // const joinedPath = focusPath.join('.');
-    // useEffect(() => {
-    //     if (menu.focusedPath == joinedPath) {
-    //         inputRef.current?.focus();
-    //         setTimeout(() => inputRef.current?.select(), 5);
-    //     }
-    // }, [ menu.focusedPath ]);
+    const focus = menuPath?.focus;
 
-    // const handlers = useFocusNavigation(menuId, joinedPath, {
-    //     ...useFocusMoveHandlers(focusPath, neightbourCount),
-    // });
+    useEffect(() => {
+        if (menu && focus && comparePath(menu.focusedPath, focus.path)) {
+            setTimeout(() => inputRef.current?.focus(), 20);
+            // setTimeout(() => inputRef.current?.select(), 5);
+        }
+    }, [menu?.focusedPath, focus?.path]);
 
-    // const searchValue = menu?.state.get(element.key) ?? '';
+    const handlers = useFocusNavigation(menu?.id, focus?.path,
+        focus ? {
+            ...useFocusMoveHandlers(focus.path, focus.totalSiblings),
+        } : undefined
+    );
 
     return (
         <MenuSearchDiv ref={divRef}>
@@ -400,21 +465,16 @@ const MenuSearch = React.forwardRef<HTMLDivElement, PropsWithChildren<MenuSearch
                 <input
                     type='text'
                     value={value}
-                    // ref={inputRef}
                     onChange={e => {
                         const target = e.currentTarget as HTMLInputElement;
                         onChange(target.value);
-                        // dispatch(menusSetState({
-                        //     menuId,
-                        //     key: element.key,
-                        //     value: target.value,
-                        // }))
                     }}
                     placeholder={placeholder}
                     autoComplete='off'
                     autoCorrect='off'
                     autoSave='off'
-                // {...handlers}
+                    {...handlers}
+                    ref={inputRef}
                 />
             </form>
         </MenuSearchDiv>
@@ -478,8 +538,7 @@ const FloatingMenuFixedDiv = styled.div`
 
 interface MenuRootFloatingProps {
     menuId: string;
-    // menuType: MenuTypes;
-    initialFocusPath?: string;
+    initialFocusPath?: number[];
     onClose: () => void;
     anchor: Vec2;
     desiredWidth?: number;
@@ -529,11 +588,33 @@ interface MenuHyperLinkProps {
 const MenuHyperLink = React.forwardRef<HTMLDivElement, PropsWithChildren<MenuHyperLinkProps>>((
     { name, href }, ref) => {
     const divRef = useComposeRef(ref);
-    const menuPath = useMenuPath(divRef);
+    const menuPath = useMenuPath(divRef, true);
+    const menu = useAppSelector(useSelectSingleMenu(menuPath?.menuId));
+
+    const focus = menuPath?.focus;
+
+    useEffect(() => {
+        if (menu && focus && comparePath(menu.focusedPath, focus.path)) {
+            setTimeout(() => divRef.current?.focus(), 20);
+        }
+    }, [menu?.focusedPath, focus?.path]);
+
+    const handlers = useFocusNavigation(menu?.id, focus?.path,
+        focus ? {
+            out: () => focus.path.slice(0, -1),
+            submit,
+            ...useFocusMoveHandlers(focus.path, focus.totalSiblings),
+        } : undefined
+    );
+
+
+    function submit() {
+        window.open(href, '_blank');
+    }
 
     return (
-        <MenuCommandDiv ref={divRef}>
-            <a href={href} target='_blank'>{ name }</a>
+        <MenuCommandDiv ref={divRef} {...handlers}>
+            <a href={href} target='_blank'>{name}</a>
             <MaterialSymbol>link</MaterialSymbol>
         </MenuCommandDiv>
     );

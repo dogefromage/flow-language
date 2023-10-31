@@ -8,7 +8,9 @@ export const catchRejectedMiddleware: Middleware<{}, RootState, AppDispatch> = s
         alert('implement reject with value here');
     } 
     else if (isRejected(action)) {
-        console.error(action.error);
+        // log error object
+        console.error(Object.assign(new Error(), action.error));
+
         next(consolePushLine({
             line: {
                 text: `[${action.type}] Thunk error: ${action.error?.message || 'Unknown error.'}\n`,

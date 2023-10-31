@@ -42,7 +42,7 @@ export const menusSlice = createSlice({
             const menu = getMenu(s, a);
             menu.state.set(a.payload.key, a.payload.value);
         },
-        setFocusPath: (s, a: PayloadAction<{ menuId: string, focusPath: string }>) => {
+        setFocusPath: (s, a: PayloadAction<{ menuId: string, focusPath: number[] }>) => {
             const menu = getMenu(s, a);
             menu.focusedPath = a.payload.focusPath;
         },

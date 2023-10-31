@@ -5,6 +5,7 @@ import { startOAuthSignIn } from "../appAuth";
 import { selectUserById } from "../queries";
 import { supabase } from "../supabase";
 import { AppUser } from "../types";
+import { assertDef } from "../utils";
 
 interface UserExtensionState {
     user: AppUser | null;
@@ -20,31 +21,23 @@ const userSignIn = createAsyncThunk(
     'user/signin',
     async (args: { onlyCheckToken?: boolean }) => {
         let res = await supabase.auth.getSession();
-        if (res.error) { console.error(res.error); }
+        if (res.error) except('Could not retrieve session.');
     
         if (!args.onlyCheckToken && res.data.session == null) {
             await startOAuthSignIn();
             res = await supabase.auth.getSession();
-            if (res.error) { console.error(res.error); }
+            if (res.error) except('Could not retrieve session after authenticating.');
         }
-    
-        if (res.data.session == null) {
-            return; // login didn't work
+
+        if (!res.data.session) {
+            return null;
         }
     
         // get user from session
         const { data, error } = await selectUserById(res.data.session.user.id)
-        if (error) { console.error(error); }
-    
-        if (data?.username == null) {
-            console.error(`User does not have public user profile created.`);
-            return;
-        }
-    
-        if (typeof data.id !== 'string' || typeof data.username !== 'string') {
-            console.error(`Invalid data.`);
-            return;
-        }
+        if (error) except('Could not find user profile. Did you create a username for your profile?');
+
+        assertDef(typeof data.id !== 'string' || typeof data.username !== 'string');
     
         return {
             user: {

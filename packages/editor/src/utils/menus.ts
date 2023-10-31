@@ -4,23 +4,23 @@ import { menusAdd, menusRemove, menusSetFocusPath, useSelectSingleMenu } from ".
 import { MenuState } from "../types";
 import useTrigger from "./useTrigger";
 
-function createMenuState(id: string, /* type: MenuTypes, */ focusedPath?: string): MenuState {
+function createMenuState(id: string, focusedPath?: number[]): MenuState {
     return {
         id,
         // type,
         isClosed: false,
         nodeStack: [],
         state: new Map(),
-        focusedPath: focusedPath || '',
+        focusedPath: focusedPath || [],
     }
 }
 
-export function useBindMenuState(menuId: string, /* menuType: MenuTypes,  */ initialFocusPath?: string) {
+export function useBindMenuState(menuId: string, initialFocusPath?: number[]) {
     const dispatch = useAppDispatch();
     const [resetTrigger, triggerReset] = useTrigger();
 
     useEffect(() => {
-        const menuState = createMenuState(menuId, /* menuType, */ initialFocusPath);
+        const menuState = createMenuState(menuId, initialFocusPath);
         dispatch(menusAdd({ menuId, menuState }));
         return () => {
             dispatch(menusRemove({ menuId }))
@@ -44,15 +44,15 @@ const dirKeys: Record<string, FocusControls> = {
 }
 
 export function useFocusNavigation(
-    menuId: string, 
-    elementPath: string, 
-    onDirection: Partial<Record<FocusControls, () => string | undefined | void>>
+    menuId?: string, 
+    elementPath?: number[], 
+    onDirection?: Partial<Record<FocusControls, () => number[] | undefined | void>>
 ) {
     const dispatch = useAppDispatch();
     return {
         onKeyDown: (e: React.KeyboardEvent) => {
-            const cb = onDirection[dirKeys[e.key]];
-            if (cb != null) {
+            const cb = onDirection?.[dirKeys[e.key]];
+            if (cb != null && menuId) {
                 const newPath = cb();
                 if (newPath != null) {
                     dispatch(menusSetFocusPath({
@@ -64,6 +64,7 @@ export function useFocusNavigation(
             }
         },
         onFocus: (e: React.FocusEvent) => {
+            if (!menuId || !elementPath) return;
             dispatch(menusSetFocusPath({
                 menuId,
                 focusPath: elementPath,
@@ -75,8 +76,8 @@ export function useFocusNavigation(
 
 export function useFocusMoveHandlers(path: number[], neightborCount: number) {
     return {
-        up:   () => [ ...path.slice(0, -1), mod(path.at(-1)! - 1, neightborCount) ].join('.'),
-        down: () => [ ...path.slice(0, -1), mod(path.at(-1)! + 1, neightborCount) ].join('.'),
+        up:   () => [ ...path.slice(0, -1), mod(path.at(-1)! - 1, neightborCount) ],
+        down: () => [ ...path.slice(0, -1), mod(path.at(-1)! + 1, neightborCount) ],
     }
 }
 

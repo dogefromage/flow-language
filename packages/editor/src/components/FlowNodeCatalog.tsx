@@ -21,7 +21,6 @@ const FlowNodeCatalog = ({ panelId }: Props) => {
     const flowId = panelState?.flowStack[0];
     const graphValidation = useAppSelector(selectFlowContext(flowId!));
 
-    // const menuId = ;
     const [searchValue, setSearchValue] = useState('');
 
     const catalogState = panelState && isCatalogOpen(panelState.state) && panelState.state || undefined;
@@ -40,14 +39,15 @@ const FlowNodeCatalog = ({ panelId }: Props) => {
     }, [graphValidation?.flowEnvironment]);
 
     function closeMenu() {
-        dispatch(flowEditorSetStateNeutral({ panelId }))
+        dispatch(flowEditorSetStateNeutral({ panelId }));
+        setSearchValue('');
     }
 
     if (!catalogState) return null;
 
     return (
         <Menus.RootFloating menuId={`template-catalog:${flowId}`} onClose={closeMenu}
-            anchor={catalogState.location.clientPosition} initialFocusPath="1">
+            anchor={catalogState.location.clientPosition} initialFocusPath={[0]}>
             <Menus.Title name='Add Template' color='black' />
             <Menus.Search value={searchValue} placeholder='Search...'
                 onChange={setSearchValue} /> {
