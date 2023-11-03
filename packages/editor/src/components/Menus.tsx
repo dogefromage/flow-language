@@ -4,11 +4,11 @@ import ReactDOM from 'react-dom';
 import styled from 'styled-components';
 import { v4 as uuidv4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { selectContent } from '../slices/contentSlice';
+import { selectConfig } from '../slices/configSlice';
 import { menusSetClosed, menusSetNode, useSelectSingleMenu } from '../slices/menusSlice';
 import { MaterialSymbol } from '../styles/icons';
 import { FLOATING_MENU_WIDTH, MENU_COLOR_WHEEL_INNER_HEIGHT, MenuColorSliderWrapperDiv, MenuColorValueSliderInput, MenuColorWheelDiv, MenuCommandDiv, MenuDividerDiv, MenuElementDiv, MenuExpandDiv, MenuFloatingDiv, MenuInlineDiv, MenuInlineExpandDiv, MenuSearchDiv, MenuTitleDiv } from '../styles/menus';
-import { MenuStackNode, Vec2 } from '../types';
+import { CustomCommandParams, MenuStackNode, Vec2 } from '../types';
 import { formatKeyCombination } from '../utils/keyCombinations';
 import { useBindMenuState, useFocusMoveHandlers, useFocusNavigation } from '../utils/menus';
 import useAdjustedAnchor from '../utils/useAdjustedAnchor';
@@ -247,23 +247,24 @@ function createMenuExpand(expandType: 'inline' | 'normal') {
 
 interface MenuCommandProps {
     commandId: string;
+    params?: CustomCommandParams;
 }
 
 const MenuCommand = React.forwardRef<HTMLDivElement, PropsWithChildren<MenuCommandProps>>((
-    { commandId }, ref) => {
+    { commandId, params }, ref) => {
     const dispatch = useAppDispatch();
     const divRef = useComposeRef(ref);
     const menuPath = useMenuPath(divRef, true);
     const menu = useAppSelector(useSelectSingleMenu(menuPath?.menuId));
-    const { commands } = useAppSelector(selectContent);
+    const { commands } = useAppSelector(selectConfig);
     const dispatchCommand = useDispatchCommand();
 
-    const command = commands[commandId];
+    const command = commands?.[commandId];
 
     function invokeCommand() {
         if (!command || !menu) return;
         dispatch(menusSetClosed({ menuId: menu.id }));
-        dispatchCommand(command.id, {});
+        dispatchCommand(command.id, params);
     }
 
     const focus = menuPath?.focus;
@@ -377,12 +378,24 @@ const MenuTitle = ({ name, color }: PropsWithChildren<MenuTitleProps>) => {
     );
 }
 
+interface MenuTextProps {
+    text: string;
+}
+const MenuText = ({ text }: PropsWithChildren<MenuTextProps>) => {
+    return (
+        <MenuElementDiv>
+            <p>{text}</p>
+        </MenuElementDiv>
+    );
+}
+
 interface MenuButtonProps {
     name: string;
     onPush?: () => void;
+    unactive?: boolean;
 }
 const MenuButton = React.forwardRef<HTMLDivElement, PropsWithChildren<MenuButtonProps>>((
-    { name, onPush }, ref) => {
+    { name, onPush, unactive }, ref) => {
     const dispatch = useAppDispatch();
     const divRef = useComposeRef(ref);
     const menuPath = useMenuPath(divRef, true);
@@ -419,6 +432,7 @@ const MenuButton = React.forwardRef<HTMLDivElement, PropsWithChildren<MenuButton
                 e.stopPropagation();
                 submit();
             }}
+            $unactive={unactive}
             {...handlers}
         > {
                 <p>{name}</p>
@@ -622,6 +636,7 @@ const MenuHyperLink = React.forwardRef<HTMLDivElement, PropsWithChildren<MenuHyp
 
 const Menus = {
     Title: MenuTitle,
+    Text: MenuText,
     Command: MenuCommand,
     Button: MenuButton,
     Search: MenuSearch,

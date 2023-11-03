@@ -34,7 +34,6 @@ export type ReservedNodeIds = (typeof reserverNodeIds)[number];
 
 export interface FlowSignature extends AnonymousFlowSignature {
     id: string;
-    description: string | null;
     attributes: Record<string, string>;
 }
 

@@ -1,30 +1,29 @@
-import { PropsWithChildren, useMemo } from 'react';
-import { useAppSelector } from '../redux/stateHooks';
-import { selectProjectStorage } from '../slices/projectStorageSlice';
-import { ProjectFileLocation, ProjectFile } from '../types';
-import FormSelectOption from './FormSelectOption';
-import ProjectStorageStatus from './ProjectStorageStatus';
-import styled from 'styled-components';
+import { useAppSelector } from "@noodles/editor";
+import FormSelectOption from "@noodles/editor/lib/components/FormSelectOption";
+import { PropsWithChildren, useMemo } from "react";
+import styled from "styled-components";
+import { selectStorage } from "../extensions/storageExtension";
+import { ProjectFileLocation, ProjectFile } from "../types/storage";
+import ProjectStorageStatusIcon from "./ProjectStorageStatusIcon";
 
 const ProjectSelectionDiv = styled.div`
-    width: 50%;
     display: flex;
     align-items: center;
     gap: 1rem;
     justify-content: center;
 
-    .status {
+    /* .status {
         height: 24px;
-    }
+    } */
 `;
 
 interface ProjectSelectionDropdownProps {}
 
 const ProjectSelectionDropdown = ({}: PropsWithChildren<ProjectSelectionDropdownProps>) => {
-    const projectStorage = useAppSelector(selectProjectStorage);
+    const projectStorage = useAppSelector(selectStorage);
 
-    const locationKey = projectStorage.activeFile ?
-        getLocationKey(projectStorage.activeFile.location) : 'blank';
+    const locationKey = projectStorage.activeFile.data ?
+        getLocationKey(projectStorage.activeFile.data.location) : 'blank';
 
     const { options, names } = useMemo(() => {
         if (locationKey === 'blank') {
@@ -34,7 +33,7 @@ const ProjectSelectionDropdown = ({}: PropsWithChildren<ProjectSelectionDropdown
             };
         }
         const options = [locationKey];
-        const names = { [locationKey]: formatProjectFileName(projectStorage.activeFile) };
+        const names = { [locationKey]: formatProjectFileName(projectStorage.activeFile.data) };
         return {
             options,
             names,
@@ -49,7 +48,7 @@ const ProjectSelectionDropdown = ({}: PropsWithChildren<ProjectSelectionDropdown
                 options={options}
                 mapName={names}
             />
-            <ProjectStorageStatus />
+            <ProjectStorageStatusIcon />
         </ProjectSelectionDiv>
     );
 }
@@ -64,7 +63,7 @@ function formatProjectFileName(file: ProjectFile | null) {
     if (file == null) {
         return `Unsaved Project`;
     }
-    const baseName = `[${file.location.channel}] ${file.data.name}`;
+    const baseName = `[${file.location.channel}] ${file.data.title}`;
     if (file.data.readonly) {
         return baseName + ' (readonly)';
     }

@@ -1,36 +1,37 @@
-import { useCallback, useRef } from 'react';
-import { useAppSelector } from '../redux/stateHooks';
-import { selectContent } from '../slices/contentSlice';
+import { useEffect } from 'react';
+import { useAppStore } from '../redux/stateHooks';
+import { selectConfig } from '../slices/configSlice';
 import { matchesKeyCombination } from '../utils/keyCombinations';
 import useDispatchCommand from '../utils/useDispatchCommand';
-import { useEventListener } from '../utils/useEventListener';
 
 const KeyboardCommandListener = () => {
     const dispatchCommand = useDispatchCommand();
-    const { commands } = useAppSelector(selectContent);
+    const store = useAppStore();
 
-    const commandsRef = useRef(commands);
-    commandsRef.current = commands;
+    useEffect(() => {
 
-    const handler = useCallback((e: KeyboardEvent) => {
-        if (document.activeElement instanceof HTMLInputElement)
-            return;
+        function onKey(e: KeyboardEvent) {
+            if (document.activeElement instanceof HTMLInputElement) {
+                return;
+            }
 
-        for (const _command of Object.values(commands)) {
-            const command = _command!; // is def.
+            const commands = selectConfig(store.getState());
 
-            if (!command.keyCombinations) continue;
-
-            for (const combination of command.keyCombinations) {
-                if (matchesKeyCombination(combination, e)) {
-                    dispatchCommand(command.id, {});
-                    e.preventDefault();
+            for (const command of Object.values(commands.commands || {})) {
+                for (const combination of command.keyCombinations || []) {
+                    if (matchesKeyCombination(combination, e)) {
+                        e.preventDefault();
+                        dispatchCommand(command.id, {});
+                        return;
+                    }
                 }
             }
         }
-    }, [ dispatchCommand ]);
 
-    useEventListener('keydown', handler, document);
+        document.addEventListener('keydown', onKey);
+        return () => document.removeEventListener('keydown', onKey);
+
+    }, []);
 
     return null;
 }

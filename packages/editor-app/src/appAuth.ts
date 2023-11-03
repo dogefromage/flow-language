@@ -2,55 +2,29 @@ import { except } from '@noodles/editor';
 import { supabase } from "./supabase";
 
 export async function startOAuthSignIn() {
-    const redirectUrl = import.meta.env.VITE_SUPABASE_AUTH_POPUP_URL;
-    const oauthRequestRes = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-            skipBrowserRedirect: true,
-            redirectTo: redirectUrl,
-        }
-    });
-    if (oauthRequestRes.error) {
-        except('Could not get github OAuth url.');
-    }
+    const targetOrigin = import.meta.env.VITE_FRONT_PAGE_URL;
+    const authSlug = import.meta.env.VITE_FRONT_PAGE_AUTH_SLUG;
+    const popupUrl = `${targetOrigin}${authSlug}`;
 
-    const tokens = await getOAuthTokensPopup(oauthRequestRes.data.url, redirectUrl);
-    await supabase.auth.setSession(tokens);
-}
-
-async function getOAuthTokensPopup(popupUrl: string, redirectUrl: string) {
-    const popup = window.open(popupUrl, 'popup', 'popup=true');
+    const popup = window.open(popupUrl, 'popup', /* 'popup=true' */);
     if (!popup) {
         except('Could not open popup.');
     }
 
     try {
-        return readTokensFromPopupWindow(popup, redirectUrl);        
+        const tokens = await getTokensFromPopup(popup, targetOrigin);
+        await supabase.auth.setSession(tokens);
     } catch (e: any) {
         except(e.message);
     }
 }
 
-function readTokensFromPopupWindow(popup: Window, targetUrl: string) {
+function getTokensFromPopup(popup: Window, targetOrigin: string) {
     type Tokens = Parameters<typeof supabase.auth.setSession>[0];
 
     return new Promise<Tokens>((res, rej) => {
         const checkPopup = setInterval(() => {
-            if (popup?.window.location.href.includes(targetUrl)) {
-                // popup has redirected,
-                // transfer tokens in hash
-                const params = new URLSearchParams(popup.window.location.hash.replace('#', ''));
-
-                const access_token = params.get('access_token');
-                const refresh_token = params.get('refresh_token');
-
-                popup.close();
-
-                if (typeof access_token === 'string' &&
-                    typeof refresh_token === 'string') {
-                    res({ access_token, refresh_token });
-                }
-            }
+            popup.postMessage('oauth_tokens', targetOrigin);
 
             if (popup.closed) {
                 clearInterval(checkPopup);
@@ -58,5 +32,17 @@ function readTokensFromPopupWindow(popup: Window, targetUrl: string) {
             }
 
         }, 1000);
+
+        window.addEventListener('message', e => {
+            const tokens: Tokens = e.data;
+            popup.close();
+            if (typeof tokens !== 'object' ||
+                typeof tokens.access_token !== 'string' ||
+                typeof tokens.refresh_token !== 'string') {
+                rej('OAuth returned incorrect credentials.');
+            } else {
+                res(tokens);
+            }
+        })
     });
 }

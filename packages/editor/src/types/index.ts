@@ -10,6 +10,5 @@ export * from './pageOutlinerView';
 export * from './menus';
 export * from './commands';
 export * from './contextMenu';
-export * from './storage';
 export * from './config';
 export * from './exceptions';

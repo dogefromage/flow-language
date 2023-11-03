@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { Vec2 } from '../types';
 
 export const FLOATING_MENU_WIDTH = 240;
@@ -32,6 +32,8 @@ export const MenuFloatingDiv = styled.div.attrs<MenuFloatingDivProps>(({
     };
 }) <MenuFloatingDivProps>`
     position: fixed;
+
+    min-width: ${FLOATING_MENU_WIDTH}px;
 
     padding: 0.25rem 4px;
     display: flex;
@@ -79,6 +81,7 @@ export const MenuFloatingDiv = styled.div.attrs<MenuFloatingDivProps>(({
 export interface MenuElementDivProps {
     tabIndex?: number;
     $outlinedRed?: boolean;
+    $unactive?: boolean;
 }
 
 export const MenuElementDiv = styled.div.attrs<MenuElementDivProps>(({ tabIndex }) => ({
@@ -117,6 +120,9 @@ export const MenuElementDiv = styled.div.attrs<MenuElementDivProps>(({ tabIndex 
         text-overflow: ellipsis;
     }
 
+    /* ${({ $unactive }) => $unactive && css`
+        outline: none;
+    ` } */
 `;
 
 export const MenuDividerDiv = styled.div`

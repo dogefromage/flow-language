@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { RootState } from "../redux/rootReducer";
 import { selectPanels, useAppDispatch, useAppStore } from "../redux/stateHooks";
-import { selectContent } from "../slices/contentSlice";
+import { selectConfig } from "../slices/configSlice";
 import { selectPanelManager } from "../slices/panelManagerSlice";
 import { AppAction, BaseCommandArgs, CustomCommandParams, PanelState, PanelStateMap, Vec2, ViewCommandArgs, ViewTypes } from "../types";
 import { clientToOffsetPos, offsetToClientPos } from "./panelManager";
@@ -10,11 +10,11 @@ export default function useDispatchCommand() {
     const dispatch = useAppDispatch();
     const store = useAppStore();
 
-    return useCallback((commandId: string, customParams: CustomCommandParams) => {
+    return useCallback((commandId: string, customParams: CustomCommandParams = {}) => {
         const appState = store.getState();
-        const appContent = selectContent(appState);
+        const appContent = selectConfig(appState);
 
-        const command = appContent.commands[commandId];
+        const command = appContent.commands?.[commandId];
         if (!command) {
             return console.error(`Command with id "${commandId}" not found`);
         }

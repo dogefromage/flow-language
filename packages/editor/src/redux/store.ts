@@ -5,8 +5,9 @@ import _ from "lodash";
 import { createLogger } from "redux-logger";
 import { EditorConfig, RecursivePartial, UndoAction } from "../types";
 import createFullReducer, { RootState } from "./rootReducer";
-import { validatorMiddleware } from "./validatorMiddleware";
+import { createValidatorMiddleware } from "./validatorMiddleware";
 import { catchRejectedMiddleware } from "./catchRejectedMiddleware";
+
 
 function createMiddleware(getDefaultMiddleWare: CurriedGetDefaultMiddleware, config: EditorConfig) {
     const middleware: Middleware[] = [];
@@ -17,7 +18,7 @@ function createMiddleware(getDefaultMiddleWare: CurriedGetDefaultMiddleware, con
                 'context',
                 'panelManager',
                 'panels',
-                'content',
+                'config',
                 'menus',
                 'projectStorage.storage'
             ],
@@ -27,7 +28,7 @@ function createMiddleware(getDefaultMiddleWare: CurriedGetDefaultMiddleware, con
 
     middleware.push(catchRejectedMiddleware);
 
-    middleware.push(validatorMiddleware);
+    middleware.push(createValidatorMiddleware(config));
 
     if (config.debug?.reduxLogger) {
         middleware.push(createLogger({
@@ -46,12 +47,7 @@ function createMiddleware(getDefaultMiddleWare: CurriedGetDefaultMiddleware, con
 
 function generatePreloadedState(config: EditorConfig): RecursivePartial<RootState> {
     return {
-        content: {
-            commands: config.commands,
-            toolbarInlineMenuComponents: config.toolbarInlineMenuComponents,
-            toolbarWidgetComponents: config.toolbarWidgetComponents,
-            managerComponents: config.managerComponents,
-        }
+        config,
     };
 }
 

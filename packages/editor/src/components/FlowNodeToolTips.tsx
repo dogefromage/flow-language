@@ -3,16 +3,16 @@ import React, { Fragment, PropsWithChildren } from 'react';
 import styled from 'styled-components';
 import { Bold } from '../styles/typography';
 import { flowRowTypeNames } from '../utils/flows';
-import { formatSpecifier, formatSpecifierWithGenerics } from '../utils/typeFormatting';
+import { formatSpecifier, formatSpecifierWithGenerics, formatValue } from '../utils/typeFormatting';
 import { RowComponentProps } from './FlowNodeRowComponents';
 import ToolTip from './ToolTip';
 
 const colors = {
-    title:              '#ffcc5e',
-    specifier:          '#5effe7',
-    type:               '#5effe7',
-    alias:              '#b7ff00',
-    problem:            '#ff3463',
+    title: '#ffcc5e',
+    specifier: '#5effe7',
+    type: '#5effe7',
+    alias: '#b7ff00',
+    problem: '#ff3463',
     typeProblemMessage: '#ff3463',
 }
 
@@ -33,7 +33,17 @@ export const FlowNodeRowContextToolTipContent = (props: RowComponentProps) => {
                         {formatSpecifier(type, env)}
                     </Bold>
                 </p>
-            </ToolTip.SectionDiv>
+            </ToolTip.SectionDiv> {
+                context?.value != null &&
+                <ToolTip.SectionDiv>
+                    <p>
+                        Row value:&nbsp;
+                        <Bold $color={colors.type}>
+                            {formatValue(context.value)}
+                        </Bold>
+                    </p>
+                </ToolTip.SectionDiv>
+            }
             {
                 context?.problems.map((problem, index) =>
                     <FlowNodeRowProblemMessage
@@ -77,7 +87,7 @@ const TypeProblemLocation = ({ problem }: PropsWithChildren<ProblemProps>) => {
     ) return null;
 
     if (problem.typeProblem == null) return null;
-    
+
     const lines: React.ReactNode[] = [];
     let indent = '';
     for (const node of problem.typeProblem.path.nodes) {
@@ -89,19 +99,19 @@ const TypeProblemLocation = ({ problem }: PropsWithChildren<ProblemProps>) => {
             }
         } else {
             if (lines.length) {
-                lines.push(<br/>)
+                lines.push(<br />)
             }
             lines.push(
-                <Col $color={colors[node.formatting]}>{ indent + node.key }</Col>
+                <Col $color={colors[node.formatting]}>{indent + node.key}</Col>
             );
             indent += '  ';
         }
     }
     if (lines.length) {
-        lines.push(<br/>)
+        lines.push(<br />)
     }
     lines.push(
-        <Col $color={colors.typeProblemMessage}>{ indent + problem.typeProblem.message }</Col>
+        <Col $color={colors.typeProblemMessage}>{indent + problem.typeProblem.message}</Col>
     );
 
     return (<>
@@ -109,7 +119,7 @@ const TypeProblemLocation = ({ problem }: PropsWithChildren<ProblemProps>) => {
             <PreP>
                 Type Problem Location:<br />
                 {lines.map((line, index) =>
-                    <Fragment key={index}>{ line }</Fragment>
+                    <Fragment key={index}>{line}</Fragment>
                 )}
             </PreP>
         </ToolTip.SectionDiv>
@@ -141,8 +151,8 @@ export const FlowNodeHeaderToolTipContent = ({ signature, context, env }: FlowNo
                     Type Signature:&nbsp;
                     <Bold $color={colors.specifier}>
                         {formatSpecifierWithGenerics(
-                            lang.getTemplatedSignatureType(signature), 
-                            env, 
+                            lang.getTemplatedSignatureType(signature),
+                            env,
                         )}
                     </Bold>
                 </p>
@@ -155,10 +165,11 @@ export const FlowNodeHeaderToolTipContent = ({ signature, context, env }: FlowNo
                         )}
                     </Bold>
                 </p>
-            </ToolTip.SectionDiv>
-            {
-                signature.description &&
-                <p>{ signature.description }</p>
+            </ToolTip.SectionDiv> {
+                signature.attributes.description &&
+                <ToolTip.SectionDiv>
+                    <p>{ signature.attributes.description }</p>
+                </ToolTip.SectionDiv>
             }
         </>
     );

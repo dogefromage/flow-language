@@ -1,16 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../redux/rootReducer";
-import { ContentSliceState } from "../types/content";
+import { EditorConfig } from "../types";
+import { getDefaultEditorConfig } from "../content/getDefaultEditorConfig";
 
-const initialState: ContentSliceState = {
-    commands: {},
-    toolbarInlineMenuComponents: [],
-    toolbarWidgetComponents: [],
-    managerComponents: [],
-};
+const initialState: EditorConfig = getDefaultEditorConfig();
 
 export const contentSlice = createSlice({
-    name: 'content',
+    name: 'config',
     initialState,
     reducers: {}
 });
@@ -18,7 +14,7 @@ export const contentSlice = createSlice({
 // export const {
 // } = contentSlice.actions;
 
-export const selectContent = (state: RootState) => state.content;
+export const selectConfig = (state: RootState) => state.config;
 
 const contentReducer = contentSlice.reducer;
 

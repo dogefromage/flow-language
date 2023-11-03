@@ -1,4 +1,4 @@
-import { pushContent } from "../core/environment";
+import { pushContent } from "./environment";
 import { createAnyType, createMapType, createReducedTemplateType, memoizeTemplatedType } from "../typeSystem";
 import { FlowEnvironment, FlowGraph, FlowSignature, InputRowSignature, TemplatedTypeSpecifier, pathTail } from "../types";
 import { EdgeColor, FlowEdge, FlowGraphContext } from "../types/context";
@@ -198,7 +198,6 @@ const _getFlowSignature = mem((
             category: 'Flows',
             ...attributes,
         },
-        description: null,
         generics,
         inputs,
         output,
@@ -252,8 +251,10 @@ function pushFlowEnvironmentContentInitial(
 ): FlowEnvironment {
     const input: FlowSignature = {
         id: 'input',
-        description: null,
-        attributes: { category: 'In/Out' },
+        attributes: { 
+            category: 'In/Out',
+            description: 'The Input provides the arguments passed into the flow. It can also be placed multiple times.',
+        },
         generics,
         inputs: [],
         output: {
@@ -277,8 +278,10 @@ function pushFlowEnvironmentContentInitial(
     }
     const output: FlowSignature = {
         id: 'output',
-        description: null,
-        attributes: { category: 'In/Out' },
+        attributes: { 
+            category: 'In/Out',
+            description: 'Only one Output should ever be placed in a flow. Values which enter the Output will be returned by a node which is an instance of this flow.'
+        },
         generics,
         inputs: outputInputs,
         output: {

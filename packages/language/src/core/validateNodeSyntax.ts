@@ -1,4 +1,4 @@
-import { findEnvironmentSignature } from "../core/environment";
+import { findEnvironmentSignature } from "./environment";
 import { createAnyType, createFunctionType, createMapType, createReducedTemplateType, createTemplatedType, createTupleType, findAllGenericLiterals, getTemplatedSignatureType, memoizeTemplatedType } from "../typeSystem";
 import { assertSubsetType } from "../typeSystem/comparison";
 import { TypeSystemException, TypeSystemExceptionData, TypeTreePath } from "../typeSystem/exceptionHandling";

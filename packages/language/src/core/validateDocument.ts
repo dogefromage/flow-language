@@ -1,22 +1,13 @@
-import { standardModule } from "../content/standardModule";
-import { createEnvironment } from "../core/environment";
 import { FlowDocument, FlowSignature } from "../types";
+import { LanguageConfiguration } from "../types/configuration";
 import { DocumentProblem, FlowDocumentContext, FlowEnvironmentNamespace, FlowGraphContext } from "../types/context";
-import { FlowModule } from "../types/module";
 import { Obj } from "../types/utilTypes";
 import { ListCache } from "../utils/ListCache";
 import { mem } from '../utils/mem';
+import { createEnvironment } from "./environment";
 import { getFlowSignature, validateFlowGraph } from "./validateFlowGraph";
 
-/**
- * update with some module collection system
- * dont forget to memoize this
- */
-const availableModules: FlowModule[] = [
-    standardModule,
-];
-
-export const validateDocument = mem((document: FlowDocument) => {
+export const validateDocument = mem((document: FlowDocument, configuration: LanguageConfiguration) => {
     const { flows: rawFlowMap } = document;
     
     const flowContexts: Obj<FlowGraphContext> = {};
@@ -32,7 +23,7 @@ export const validateDocument = mem((document: FlowDocument) => {
     let baseEnvironment = createEnvironment(documentNamespace);
 
     for (const flow of flowsSorted) {
-        const flowContext = validateFlowGraph(flow, baseEnvironment, availableModules);
+        const flowContext = validateFlowGraph(flow, baseEnvironment, configuration.modules);
         flowContexts[flow.id] = flowContext;
         criticalSubProblems += flowContext.problems.length + flowContext.criticalSubProblems;
     }

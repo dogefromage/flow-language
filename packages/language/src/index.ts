@@ -1,8 +1,11 @@
 
 export * from './types';
+
+export * as content from './content/index.public';
+
 export {
-    validateDocument
-} from './validation/validateDocument';
+    createLanguageValidator,
+} from './core/utilities';
 
 export {
     collectTotalEnvironmentContent,

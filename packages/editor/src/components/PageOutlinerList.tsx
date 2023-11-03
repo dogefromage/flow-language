@@ -47,9 +47,7 @@ const PageOutlinerEntry = ({ panelId, flowId }: PropsWithChildren<PageOutlinerEn
     const contextHandler = useContextMenu(
         panelId,
         'Flow',
-        [
-            'pageOutliner.deleteFlowEntry',
-        ],
+        [ 'pageOutliner.deleteFlowEntry' ],
         () => ({ flowId }),
     );
 

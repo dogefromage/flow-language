@@ -142,3 +142,6 @@ export type RowProblem =
     | IncompatibleArgumentType
     | InvalidValue
     | InvalidConnection
+
+
+export type LanguageValidator = (document: FlowDocument) => FlowDocumentContext;

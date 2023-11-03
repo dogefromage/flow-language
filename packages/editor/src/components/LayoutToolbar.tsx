@@ -1,8 +1,8 @@
 import styled from 'styled-components';
 import { useAppSelector } from '../redux/stateHooks';
-import { selectContent } from '../slices/contentSlice';
+import { selectConfig } from '../slices/configSlice';
+import { interlace } from '../utils/functional';
 import Menus from './Menus';
-import ProjectSelectionDropdown from './ProjectSelectionDropdown';
 
 const ToolbarDiv = styled.div`
     display: flex;
@@ -11,26 +11,51 @@ const ToolbarDiv = styled.div`
     gap: 2rem;
 
     padding: 0.25rem 1rem;
+
+    .third {}
 `;
 
 interface Props {}
 
 const LayoutToolbar = ({}: Props) => {
-    const content = useAppSelector(selectContent);
+    const content = useAppSelector(selectConfig);
+
+    const inlineMenus = content.toolbar?.inlineMenus
+        ?.reduce<Record<string, React.FC[]>>((acc, [name, Comp]) => {
+            acc[name] ||= [];
+            acc[name].push(Comp);
+            return acc;
+        }, {});
 
     return (
         <ToolbarDiv>
-            <Menus.RootInline menuId='layout'> {
-                content.toolbarInlineMenuComponents.map((InlineMenu, index) =>
-                    <InlineMenu key={index} />
-                )
+            <div className="third"> {
+                inlineMenus &&
+                <Menus.RootInline menuId='layout'> {
+                    Object.entries(inlineMenus).map(([name, sections]) =>
+                        <Menus.ExpandInline key={name} name={name}> {
+                            interlace(sections, Menus.Divider).map((Item, index) =>
+                                <Item key={index} />
+                            )
+                        }
+                        </Menus.ExpandInline>
+                    )
+                }
+                </Menus.RootInline>
             }
-            </Menus.RootInline>
-            <ProjectSelectionDropdown /> {
-                content.toolbarWidgetComponents.map((Widget, index) => 
+            </div>
+            <div className="third"> {
+                content.toolbar?.widgetsCenter?.map((Widget, index) => 
                     <Widget key={index} />
                 )
             }
+            </div>
+            <div className="third"> {
+                content.toolbar?.widgetsRight?.map((Widget, index) => 
+                    <Widget key={index} />
+                )
+            }
+            </div>
         </ToolbarDiv>
     );
 }

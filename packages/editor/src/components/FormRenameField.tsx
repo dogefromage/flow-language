@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { FormEvent, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 const RelativeWrapper = styled.div`
@@ -67,7 +67,11 @@ const FormRenameField = ({ value: initialValue, onChange, onValidate, disabled, 
 
     const [localValue, setLocalValue] = useState('');
     const [validationError, setValidationError] = useState<NameValidationError>();
-    const [ active, setActive ] = useState(false);
+    const [active, setActive] = useState(false);
+
+    if (typeof initialValue !== 'string') {
+        console.warn(`initialValue is not of type string.`);
+    }
 
     // initial or external change in value
     useEffect(() => {
@@ -80,22 +84,29 @@ const FormRenameField = ({ value: initialValue, onChange, onValidate, disabled, 
         setValidationError(onValidate?.(newVal));
     }
 
-    const submit = () => {
-        if (validationError != null) {
-            return;
-        }
-        onChange?.(localValue);
-        handleBlur();
-    }
-
     const handleFocus = () => {
         setActive(true);
     }
+
+    const handleSubmit = (e: FormEvent) => {
+        e.preventDefault();
+        if (validationError == null) {
+            inputRef.current?.blur(); // will cause handleBlur to be called
+        } else {
+            // do nothing since input invalid
+        }
+    }
+
     const handleBlur = () => {
+        if (validationError == null) {
+            onChange?.(localValue);
+        } else {
+            // if input invalid then just simply reject any changes
+            setLocalValue(initialValue);
+        }
+
         onBlur?.();
-        inputRef.current?.blur();
         setActive(false);
-        setLocalValue(initialValue);
     }
 
     useEffect(() => {
@@ -114,10 +125,7 @@ const FormRenameField = ({ value: initialValue, onChange, onValidate, disabled, 
                     inputRef.current?.select();
                 }}
             >
-                <form onSubmit={e => {
-                    e.preventDefault();
-                    submit();
-                }}>
+                <form onSubmit={handleSubmit}>
                     <input
                         type='text'
                         value={localValue}

@@ -24,6 +24,7 @@ const GlobalStyle = createGlobalStyle`
 
     body {
         background-color: #330033;
+        overflow: hidden;
     }
 
     * {

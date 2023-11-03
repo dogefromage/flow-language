@@ -14,7 +14,7 @@ const ContextMenu = () => {
         <Menus.RootFloating menuId={CONTEXT_MENU_ID} anchor={contextMenu.clientCursor}
             onClose={() => dispatch(contextMenuClose())}> {
                 contextMenu.commandIds.map(commandId =>
-                    <Menus.Command key={commandId} commandId={commandId} />
+                    <Menus.Command key={commandId} commandId={commandId} params={contextMenu.paramMap} />
                 )
             }
         </Menus.RootFloating>

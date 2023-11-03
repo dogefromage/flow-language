@@ -118,7 +118,7 @@ const ToolTipAnchor = ({ tooltip: ToolTipContent, children, hoverMillis }: Props
 }
 
 const ToolTipSectionDiv = styled.div`
-    :not(:first-child) {
+    &:not(:first-child) {
         border-top: 1px solid var(--color-1);
     }
     padding: 0.25rem 0;

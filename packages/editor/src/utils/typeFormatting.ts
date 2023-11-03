@@ -38,3 +38,14 @@ export function formatSpecifierWithGenerics(T: lang.TemplatedTypeSpecifier, env:
     }
     return baseSpec;
 }
+
+export function formatValue(v: any) {
+    switch (typeof v) {
+        case 'string':
+            return `"${v}"`;
+        case 'number':
+        case 'boolean':
+        default:
+            return v.toString();
+    }
+}

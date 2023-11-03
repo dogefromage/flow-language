@@ -6,15 +6,20 @@ import { selectUserById } from "../queries";
 import { supabase } from "../supabase";
 import { AppUser } from "../types";
 import { assertDef } from "../utils";
+import { LoadingStatus } from "../types/utils";
 
 interface UserExtensionState {
-    user: AppUser | null;
-    userStatus: 'idle' | 'pending' | 'failed';
+    user: {
+        data: AppUser | null;
+        status: LoadingStatus;
+    }
 }
 
 const initialState: UserExtensionState = {
-    user: null,
-    userStatus: 'idle',
+    user: {
+        data: null,
+        status: 'idle',
+    }
 };
 
 const userSignIn = createAsyncThunk(
@@ -22,7 +27,7 @@ const userSignIn = createAsyncThunk(
     async (args: { onlyCheckToken?: boolean }) => {
         let res = await supabase.auth.getSession();
         if (res.error) except('Could not retrieve session.');
-    
+
         if (!args.onlyCheckToken && res.data.session == null) {
             await startOAuthSignIn();
             res = await supabase.auth.getSession();
@@ -32,13 +37,13 @@ const userSignIn = createAsyncThunk(
         if (!res.data.session) {
             return null;
         }
-    
+
         // get user from session
         const { data, error } = await selectUserById(res.data.session.user.id)
         if (error) except('Could not find user profile. Did you create a username for your profile?');
 
         assertDef(typeof data.id !== 'string' || typeof data.username !== 'string');
-    
+
         return {
             user: {
                 id: data.id,
@@ -65,20 +70,24 @@ const userSlice = createSlice({
     },
     extraReducers(builder) {
         builder.addCase(userSignIn.pending, s => {
-            s.userStatus = 'pending';
+            s.user.status = 'pending';
         });
         builder.addCase(userSignIn.rejected, (s, a) => {
-            s.userStatus = 'failed';
+            s.user.status = 'failed';
         });
         builder.addCase(userSignIn.fulfilled, (s, a) => {
-            s.userStatus = 'idle';
-            s.user = a.payload?.user || null;
+            s.user = {
+                status: 'idle',
+                data: a.payload?.user || null
+            }
         });
-        
+
         // signout status not really needed
         builder.addCase(userSignOut.fulfilled, (s, a) => {
-            s.userStatus = 'idle';
-            s.user = null
+            s.user = {
+                status: 'idle',
+                data: null,
+            }
         });
     },
 });
@@ -87,11 +96,12 @@ const {
     // setUser: userSliceSetUser,
 } = userSlice.actions;
 
+const extensionId = 'user';
+export const selectUser = createExtensionSelector<UserExtensionState>(extensionId);
+
 export const userExtension: EditorExtension = config => {
-    const extensionId = 'user';
     // add user state
     config.stateReducers[extensionId] = userSlice.reducer;
-    const selectUser = createExtensionSelector<UserExtensionState>(extensionId);
 
     const signinCommand = `${extensionId}.signin`;
     config.commands[signinCommand] = makeGlobalCommand(
@@ -104,7 +114,7 @@ export const userExtension: EditorExtension = config => {
 
     const signoutCommand = `${extensionId}.signout`;
     config.commands[signoutCommand] = makeGlobalCommand(
-        signoutCommand, 
+        signoutCommand,
         'Sign Out',
         () => {
             // config.storage?.emit('reset');
@@ -130,29 +140,27 @@ export const userExtension: EditorExtension = config => {
 
     const UserToolbarMenu = () => {
         const { user } = useAppSelector(selectUser);
-
         return (
-            <Menus.ExpandInline name='Profile'> {
-                user ? (
+            <> {
+                user.data ? (
                     <Menus.Command commandId={signoutCommand} />
                 ) : (
                     <Menus.Command commandId={signinCommand} />
                 )
             }
-                <Menus.Divider />
                 <Menus.HyperLink name='Go To NoodleStudio' href={import.meta.env.VITE_FRONT_PAGE_URL} />
-            </Menus.ExpandInline>
+            </>
         );
     }
-    config.toolbarInlineMenuComponents.push(UserToolbarMenu);
+    config.toolbar.inlineMenus.push([ 'Profile', UserToolbarMenu ]);
 
     const WidgetToolTip = () => {
         const { user } = useAppSelector(selectUser);
 
-        if (user) {
+        if (user.data) {
             return (
                 <ToolTip.SectionDiv>
-                    <p>Logged in as user {user.username}.</p>
+                    <p>Logged in as user {user.data.username}.</p>
                 </ToolTip.SectionDiv>
             )
         } else {
@@ -166,7 +174,7 @@ export const userExtension: EditorExtension = config => {
 
     const UserToolbarWidget = () => {
         const { user } = useAppSelector(selectUser);
-        const name = user ? user.username : 'Guest';
+        const name = user.data ? user.data.username : 'Guest';
 
         return (
             <ToolTip.Anchor tooltip={WidgetToolTip}>
@@ -174,5 +182,5 @@ export const userExtension: EditorExtension = config => {
             </ToolTip.Anchor>
         );
     }
-    config.toolbarWidgetComponents.push(UserToolbarWidget);
+    config.toolbar.widgetsRight.push(UserToolbarWidget);
 }

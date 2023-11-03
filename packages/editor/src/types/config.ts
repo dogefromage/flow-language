@@ -1,19 +1,25 @@
 import { Reducer } from "@reduxjs/toolkit";
 import React from 'react';
-import { Command, EditorStorage } from ".";
+import { Command } from ".";
 import { RootState } from "../redux/rootReducer";
 import { assertDef } from "@noodles/language";
+import * as lang from '@noodles/language';
 
 export interface EditorConfig {
-    debug?: {
-        reduxLogger?: boolean;
+    debug: {
+        reduxLogger: boolean;
     }
     stateReducers: Record<string, Reducer>;
     commands: Record<string, Command>;
-    toolbarInlineMenuComponents: React.FC[];
-    toolbarWidgetComponents: React.FC[];
+    toolbar: {
+        inlineMenus: [string, React.FC][];
+        widgetsCenter: React.FC[];
+        widgetsRight: React.FC[];
+    }
     managerComponents: React.FC[];
-    storage: EditorStorage | null;
+    language: {
+        validator: lang.LanguageValidator;
+    }
 }
 
 export type EditorExtension = (config: EditorConfig) => void;

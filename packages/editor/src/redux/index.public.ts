@@ -1,3 +1,8 @@
 
+export { AppDispatch, RootState } from './rootReducer';
 export * from './stateHooks';
-export { RootState, AppDispatch } from './rootReducer';
+
+export {
+    EditorDocumentState,
+    editorDocumentReplace as documentReplace
+} from './documentReducer';

@@ -1,4 +1,4 @@
-import { findEnvironmentSignature } from "../core/environment";
+import { findEnvironmentSignature } from "./environment";
 import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, OutputRowSignature, TemplatedTypeSpecifier } from "../types";
 import { FlowNodeContext, RowContext, RowDisplay } from "../types/context";
 import { Obj } from "../types/utilTypes";
