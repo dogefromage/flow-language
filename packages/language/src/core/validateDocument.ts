@@ -1,7 +1,7 @@
 import { FlowDocument, FlowSignature } from "../types";
 import { LanguageConfiguration } from "../types/configuration";
 import { DocumentProblem, FlowDocumentContext, FlowEnvironmentNamespace, FlowGraphContext } from "../types/context";
-import { Obj } from "../types/utilTypes";
+import { Obj } from "../types/internal";
 import { ListCache } from "../utils/ListCache";
 import { mem } from '../utils/mem';
 import { createEnvironment } from "./environment";

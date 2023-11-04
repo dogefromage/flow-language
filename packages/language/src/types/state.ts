@@ -1,6 +1,6 @@
 import { InputRowSignature, NamespacePath, OutputRowSignature } from "./signatures";
 import { TemplateParameter, InitializerValue } from "./typeSystem";
-import { Obj, Vec2 } from "./utilTypes";
+import { Obj, Vec2 } from "./internal";
 
 export interface InputJointLocation {
     direction: 'input';

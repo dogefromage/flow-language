@@ -10,11 +10,11 @@ const LayoutViewRoot = () => {
         <ReflexContainer orientation='vertical' style={{
             overflow: 'hidden',
         }}>
-            <ReflexElement minSize={200} size={250}>
+            <ReflexElement minSize={200} flex={1}>
                 <PageOutlinerView panelId={'outliner'} />
             </ReflexElement>
             <ReflexSplitter />
-            <ReflexElement>
+            <ReflexElement flex={5}>
                 <ReflexContainer orientation='horizontal'>
                     <ReflexElement>
                         <FlowEditorView panelId={'editor'} />
@@ -26,7 +26,7 @@ const LayoutViewRoot = () => {
                 </ReflexContainer>
             </ReflexElement>
             <ReflexSplitter />
-            <ReflexElement minSize={200} size={350}>
+            <ReflexElement minSize={200}  flex={2}>
                 <FlowInspectorView panelId={'inspector'} />
             </ReflexElement>
         </ReflexContainer>

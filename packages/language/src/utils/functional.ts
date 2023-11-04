@@ -1,5 +1,5 @@
 import { assertTruthy } from '.';
-import { Obj } from '../types/utilTypes';
+import { Obj } from '../types/internal';
 import { mem } from './mem';
 
 export const always = <T>(v: T) => () => v;

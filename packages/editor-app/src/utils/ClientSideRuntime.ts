@@ -1,13 +1,9 @@
 import * as lang from '@noodles/language';
-import { ConsumerInputSignal, ConsumerState, DocumentConsumer } from '@noodles/shared';
 import { wrap } from 'comlink';
+import { DocumentRuntime } from '../types/runtime';
 
-type State = ConsumerState
-    | { type: 'running', worker: Worker };
+export class ClientSideRuntime extends DocumentRuntime {
 
-export class OfflineConsumer extends DocumentConsumer {
-
-    private _state: State = { type: 'idle' };
     private document: lang.FlowDocument | null = null;
 
     get state(): State {
@@ -20,7 +16,7 @@ export class OfflineConsumer extends DocumentConsumer {
     }
 
     init(): void {
-        this.emit('output', { text: 'Clientside Interpreter loaded.\n' });
+        // this.emit('output', { text: 'ClientSideRuntime:\n' });
     }
 
     setDocument(document: lang.FlowDocument): void {
@@ -57,7 +53,7 @@ export class OfflineConsumer extends DocumentConsumer {
         );
         this.updateState({ type: 'running', worker });
 
-        const { validateCompileInterpret } = wrap<import('./compilerWorker').CompilerWorker>(worker);
+        const { validateCompileInterpret } = wrap<import('@noodles/editor/src/utils/compilerWorker').CompilerWorker>(worker);
         try {
             const result = await validateCompileInterpret(this.document, {
                 skipValidation: forceRun,

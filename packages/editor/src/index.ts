@@ -5,3 +5,4 @@ export * from './components/index.public';
 export * from './types/index.public';
 export * from './utils/index.public';
 export * from './styles/index.public';
+export * from './slices/index.public';

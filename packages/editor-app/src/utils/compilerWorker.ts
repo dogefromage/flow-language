@@ -1,10 +1,12 @@
 import * as lang from '@noodles/language';
 import * as bc from '@noodles/bytecode';
-import { ConsumerOutput } from '@noodles/shared';
 import { expose } from 'comlink';
+import { languageValidator } from '../config/languageConfig';
+import { ConsoleLine } from '@noodles/editor';
 
-function validateCompileInterpret(document: lang.FlowDocument, config: bc.ByteCompilerConfig): ConsumerOutput {
-    const context = lang.validateDocument(document);
+function validateCompileInterpret(document: lang.FlowDocument, config: bc.ByteCompilerConfig): ConsoleLine {
+    
+    const context = languageValidator(document);
     try {
         // COMPILE
         const program = bc.compileDocument(context, config);

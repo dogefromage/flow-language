@@ -1,7 +1,7 @@
 import { findEnvironmentSignature } from "./environment";
 import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, OutputRowSignature, TemplatedTypeSpecifier } from "../types";
 import { FlowNodeContext, RowContext, RowDisplay } from "../types/context";
-import { Obj } from "../types/utilTypes";
+import { Obj } from "../types/internal";
 import { assertTruthy } from "../utils";
 import { memoList } from "../utils/functional";
 import { mem } from '../utils/mem';

@@ -1,7 +1,7 @@
 import { createAnyType, createFunctionType, createGenericType, createListType, createMapType, createReducedTemplateType, createTemplatedType, createTupleType } from ".";
 import { FlowEnvironment } from "../types/context";
 import { FunctionTypeSpecifier, InstantiationConstraints, ListTypeSpecifier, MapTypeSpecifier, TemplateParameter, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
-import { Obj } from "../types/utilTypes";
+import { Obj } from "../types/internal";
 import { assertNever, assertTruthy } from "../utils";
 import { mapObj, zipInner } from "../utils/functional";
 import { isSubsetType } from "./comparison";

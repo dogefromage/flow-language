@@ -80,20 +80,25 @@ export const validateFlowGraph = mem((
 
     const usedNodeIds = new Set<string>();
     // output and outputs dependencies
-    let outputIndex = -1;
+    const outputIndices: number[] = [];
     for (let i = 0; i < nodeEntries.length; i++) {
         const node = nodeEntries[i][1];
         if (pathTail(node.signature) === 'output') {
-            outputIndex = i;
-            break;
+            outputIndices.push(i);
         }
     }
-    if (outputIndex < 0) {
+    if (outputIndices.length == 0) {
         result.problems.push({
             type: 'output-missing',
             message: 'Flow does not contain an output.',
         });
+    } else if (outputIndices.length > 1) {
+        result.problems.push({
+            type: 'output-missing',
+            message: 'Flow contains multiple outputs.',
+        });
     } else {
+        const outputIndex = outputIndices[0];
         // mark nodes redundant
         const numberedOutputDeps = findDependencies(numberedAdjacency, outputIndex);
         for (const numberedDep of numberedOutputDeps) {
@@ -280,7 +285,7 @@ function pushFlowEnvironmentContentInitial(
         id: 'output',
         attributes: { 
             category: 'In/Out',
-            description: 'Only one Output should ever be placed in a flow. Values which enter the Output will be returned by a node which is an instance of this flow.'
+            description: 'Symbolizes the output value of this flow. Only one output should ever be placed at once.',
         },
         generics,
         inputs: outputInputs,

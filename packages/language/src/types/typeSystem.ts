@@ -1,4 +1,4 @@
-import { Obj } from "./utilTypes";
+import { Obj } from "./internal";
 
 export interface AnyTypeSpecifier {
     type: 'any';

@@ -11,16 +11,19 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "redux": "^4.2.1",
-    "@reduxjs/toolkit": "^1.9.7",
+    "@noodles/bytecode": "workspace:^",
     "@noodles/editor": "workspace:^",
     "@noodles/language": "workspace:^",
+    "@reduxjs/toolkit": "^1.9.7",
     "@supabase/supabase-js": "^2.38.1",
+    "comlink": "^4.4.1",
+    "emittery": "^1.0.1",
+    "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.17.0",
+    "redux": "^4.2.1",
     "sass": "^1.62.1",
-    "lodash": "^4.17.21",
     "styled-components": "6.0.0-rc.3"
   },
   "devDependencies": {

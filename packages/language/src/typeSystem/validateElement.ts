@@ -1,5 +1,5 @@
 import { FlowEnvironment, InitializerValue, TypeSpecifier } from "../types";
-import { Obj } from "../types/utilTypes";
+import { Obj } from "../types/internal";
 import { TypeTreePath, TypeSystemException } from "./exceptionHandling";
 import { resolveTypeAlias } from "./resolution";
 

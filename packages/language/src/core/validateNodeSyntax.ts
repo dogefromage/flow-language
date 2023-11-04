@@ -7,7 +7,7 @@ import { closeTemplatedSpecifier, disjoinTemplateLiterals, instantiateTemplatedT
 import { tryResolveTypeAlias } from "../typeSystem/resolution";
 import { checkElementOfType } from "../typeSystem/validateElement";
 import { FlowConnection, FlowEnvironment, FlowSignature, FunctionTypeSpecifier, InputRowSignature, NamespacePath, RowContext, RowProblem, RowState, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types";
-import { Obj } from "../types/utilTypes";
+import { Obj } from "../types/internal";
 import { assertDef, assertTruthy } from "../utils";
 import { mapObj, objToArr, zipInner } from "../utils/functional";
 import { mem } from '../utils/mem';

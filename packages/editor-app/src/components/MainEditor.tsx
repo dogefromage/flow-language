@@ -1,4 +1,4 @@
-import { getConfiguratedEditor } from '../appConfig';
+import { getConfiguratedEditor } from '../config/editorConfig';
 
 const MainEditor = getConfiguratedEditor();
 

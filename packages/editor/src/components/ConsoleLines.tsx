@@ -1,6 +1,8 @@
 import { PropsWithChildren, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { ConsoleLine } from '../types';
+import { useAppSelector } from '../redux/stateHooks';
+import { selectConsole } from '../slices/consoleSlice';
 
 const ConsoleDiv = styled.div`
     width: 100%;
@@ -28,11 +30,11 @@ const ConsolePre = styled.pre<{ $accent?: ConsoleLine['accent'] }>`
     ` }
 `;
 
-interface ConsoleLinesProps {
-    lines: ConsoleLine[];
-}
+interface ConsoleLinesProps {}
 
-const ConsoleLines = ({ lines }: PropsWithChildren<ConsoleLinesProps>) => {
+const ConsoleLines = ({}: PropsWithChildren<ConsoleLinesProps>) => {
+    const { lines } = useAppSelector(selectConsole);
+
     const scrollRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         setTimeout(() => {

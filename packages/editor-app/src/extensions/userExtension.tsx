@@ -1,11 +1,11 @@
 import { EditorExtension, Menus, ToolTip, createExtensionSelector, except, makeGlobalCommand, useAppDispatch, useAppSelector } from "@noodles/editor";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { useLayoutEffect } from "react";
-import { startOAuthSignIn } from "../appAuth";
+import { startOAuthSignIn } from "../config/appAuth";
 import { selectUserById } from "../queries";
-import { supabase } from "../supabase";
+import { supabase } from "../config/supabase";
 import { AppUser } from "../types";
-import { assertDef } from "../utils";
+import { assertDef } from "../utils/utils";
 import { LoadingStatus } from "../types/utils";
 
 interface UserExtensionState {

@@ -9,7 +9,7 @@ import {
     RowState
 } from './state';
 import { FunctionTypeSpecifier, InitializerValue, TemplatedTypeSpecifier, TypeSpecifier } from './typeSystem';
-import { Obj } from './utilTypes';
+import { Obj } from './internal';
 
 export type FlowEnvironment = {
     parent: FlowEnvironment | null;

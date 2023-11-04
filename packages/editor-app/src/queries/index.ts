@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { supabase } from './supabase';
+import { supabase } from '../config/supabase';
 import { except } from '@noodles/editor';
 
 // Use _.memoize in future but implement expiration somehow. 
@@ -35,7 +35,7 @@ export const updateProjectTitleDescriptionData = async (
 ) => {
     return supabase
         .from('projects')
-        .update(props)
+        .update(props, { count: 'exact' })
         .eq('id', projectId);
 };
 

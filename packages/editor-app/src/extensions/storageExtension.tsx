@@ -2,11 +2,11 @@ import { EditorExtension, Menus, createExtensionSelector, documentReplace, excep
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { useEffect } from "react";
 import ProjectSelectionDropdown from "../components/ProjectSelectionDropdown";
-import { getSessionStrict, selectProjectById, selectUsersProjects, updateProjectTitleDescriptionData } from "../queries";
+import { selectProjectById, selectUsersProjects, updateProjectTitleDescriptionData } from "../queries";
+import { supabase } from "../config/supabase";
 import { MinimalProject, ProjectFile, ProjectFileLocation, StorageSliceState } from "../types/storage";
-import { takeSingle } from "../utils";
+import { takeSingle } from "../utils/utils";
 import { documentStateToFileData, fileDataToDocumentState } from "../utils/serialization";
-import { supabase } from "../supabase";
 import { selectUser } from "./userExtension";
 
 const initialState: StorageSliceState = {
@@ -36,7 +36,7 @@ const storageLoadFile = createAsyncThunk(
     'storage/loadFile',
     async (args: { location: ProjectFileLocation }) => {
         const { location } = args;
-        const session = await getSessionStrict();
+        const session = await supabase.auth.getSession();
 
         const projectByIdRes = await selectProjectById(location.projectId);
         if (projectByIdRes.error) {
@@ -46,7 +46,7 @@ const storageLoadFile = createAsyncThunk(
         const project = projectByIdRes.data;
 
         const creator = takeSingle(project.creator);
-        const writePermission = session.user.id === creator.id;
+        const writePermission = session.data.session?.user.id === creator.id;
 
         const file: ProjectFile = {
             location: getCloudProjectLocation(project),
@@ -76,8 +76,7 @@ const storageSaveActiveFile = createAsyncThunk(
         };
 
         const res = await updateProjectTitleDescriptionData(projectId, props);
-        if (res.error) {
-            console.error(res.error);
+        if (res.count == 0) {
             except('Unable to save active project.');
         }
 
@@ -161,8 +160,7 @@ export const storageExtension: EditorExtension = config => {
         'Save Project',
         ({ appState }) => {
             const storage = selectStorage(appState);
-            if (storage.activeFile.status != 'idle') {
-                console.log('cannot save bc not idle');
+            if (storage.activeFile.status == 'pending') {
                 return;
             }
             const activeFile = storage.activeFile.data;
@@ -258,7 +256,7 @@ const InitialLoader = () => {
         }
         const location = { channel: 'cloud', projectId: projectIdFromUrl };
         dispatch(storageLoadFile({ location }));
-    }, [ userId ]); // change in authentication should reload file
+    }, [userId]); // change in authentication should reload file
 
     useEffect(() => {
         if (storage.activeFile.data != null) {

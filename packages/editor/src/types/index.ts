@@ -11,4 +11,4 @@ export * from './menus';
 export * from './commands';
 export * from './contextMenu';
 export * from './config';
-export * from './exceptions';
+export * from './console';

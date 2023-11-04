@@ -1,5 +1,5 @@
 
 
 export * from './config';
-export * from './exceptions';
+export * from './console';
 export * from './commands';
