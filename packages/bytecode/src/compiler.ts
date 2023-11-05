@@ -2,7 +2,7 @@ import * as lang from "@noodles/language";
 import _ from 'lodash';
 import { shorthands } from "./shorthands";
 import { DocumentSource, StandardSource } from "./sources";
-import { ByteCompilerConfig, ByteInstructionStream, ByteOperation, ByteProgram, ByteSource, CallableChunk, MACHINE_ENTRY_LABEL } from "./types";
+import { ByteCompilerArgs, ByteInstructionStream, ByteOperation, ByteProgram, ByteSource, CallableChunk, MACHINE_ENTRY_LABEL } from "./types";
 import { ByteCodeOptimizer } from "./ByteCodeOptimizer";
 
 const { op, data } = shorthands;
@@ -253,7 +253,7 @@ class Compiler {
     }
 }
 
-export function compileDocument(doc: lang.FlowDocumentContext, config: ByteCompilerConfig) {
+export function compileDocument(doc: lang.FlowDocumentContext, config: ByteCompilerArgs) {
     if (!config.skipValidation) {
         assertValidDocument(doc);
     }

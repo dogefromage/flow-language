@@ -1,15 +1,9 @@
 import * as lang from "@noodles/language";
 import { shorthands } from "./shorthands";
-import { ByteInstruction, ByteOperation, ByteProgram, CallFrame, CallableChunk, MACHINE_ENTRY_LABEL, StackValue, ThunkValue, operationNameTags } from "./types";
+import { ByteInstruction, ByteOperation, ByteProgram, CallFrame, CallableChunk, MACHINE_ENTRY_LABEL, StackMachineArgs, StackValue, ThunkValue, operationNameTags } from "./types";
 import { instructionToString } from "./utils";
 
 const { op, thunk } = shorthands;
-
-interface StackMachineArgs {
-    trace?: boolean;
-    countExecutedInstructions?: boolean;
-    recordMaximumStackHeights?: boolean;
-}
 
 export class StackMachine {
     stack: StackValue[] = [];

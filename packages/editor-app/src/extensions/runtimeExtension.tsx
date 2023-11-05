@@ -1,7 +1,10 @@
-import { EditorExtension, createExtensionSelector, except, makeGlobalCommand, useAppDispatch, useAppSelector } from "@noodles/editor";
+import { EditorExtension, createExtensionSelector, makeGlobalCommand, selectDocument, useAppDispatch, useAppSelector } from "@noodles/editor";
+import { FlowDocument } from "@noodles/language";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { RuntimeInputSignal, RuntimeSliceState } from "../types/runtime";
-import { ClientSideRuntime } from "../utils/ClientSideRuntime";
+import { Remote, wrap } from "comlink";
+import { RuntimeProcess, RuntimeSliceState } from "../types/runtime";
+import * as bc from '@noodles/bytecode';
+import { useEffect } from "react";
 
 const extensionId = 'runtime';
 export const runtimeRunCommand = `${extensionId}.run`;
@@ -12,28 +15,43 @@ export const runtimeExtension: EditorExtension = config => {
     config.commands[runtimeRunCommand] = makeGlobalCommand(
         runtimeRunCommand,
         'Run Document',
-        ({  }, params) => {
-            return runtimeEmitSignal({ signal: 'run' });
+        ({ appState }, params) => {
+            const document = selectDocument(appState);
+            return runtimeRunDocument({ document });
         },
         [ { ctrlKey: true, key: 'Enter' }],
     );
-
 
     config.managerComponents.push(RuntimeManager);
 }
 
 const initialState: RuntimeSliceState = {
-    activeRuntime: new ClientSideRuntime(),
+    process: null,
 }
+
 const runtimeSlice = createSlice({
     name: extensionId,
     initialState,
     reducers: {
-        emitSignal: (s, a: PayloadAction<{ signal: RuntimeInputSignal }>) => {
-            if (s.activeRuntime == null) {
-                except(`No runtime found.`);
+        runDocument: (s, a: PayloadAction<{ document: FlowDocument }>) => {
+            if (s.process != null) {
+                console.warn(`Did not create process, already there`);
+                return;
             }
-            s.activeRuntime.signalInput(a.payload.signal);
+
+            const compilerArgs: bc.ByteCompilerArgs = {
+                // skipValidation: true,
+            }
+            const runtimeArgs: bc.StackMachineArgs = {
+                countExecutedInstructions: true,
+                // recordMaximumStackHeights: true,
+                // trace: true,
+            }
+
+            const process = createNewRuntimeProcess();
+            
+            process.init(a.payload.document, compilerArgs, runtimeArgs);
+            s.process = process;
         },
     },
     // extraReducers(builder) {
@@ -41,8 +59,13 @@ const runtimeSlice = createSlice({
     // },
 });
 
+function createNewRuntimeProcess() {
+    const worker = new Worker(new URL('../utils/runtimeWorker.js', import.meta.url), { type: 'module' });
+    return wrap<RuntimeProcess>(worker);
+}
+
 export const {
-    emitSignal: runtimeEmitSignal,
+    runDocument: runtimeRunDocument,
 } = runtimeSlice.actions;
 
 export const selectRuntime = createExtensionSelector<RuntimeSliceState>(extensionId);

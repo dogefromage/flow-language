@@ -89,8 +89,14 @@ export interface ByteProgram {
     chunks: Map<string, CallableChunk>;
 }
 
-export interface ByteCompilerConfig {
+export interface ByteCompilerArgs {
     skipValidation?: boolean;
+}
+
+export interface StackMachineArgs {
+    trace?: boolean;
+    countExecutedInstructions?: boolean;
+    recordMaximumStackHeights?: boolean;
 }
 
 export class ByteInstructionStream {
