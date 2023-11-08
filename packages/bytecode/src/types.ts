@@ -127,5 +127,7 @@ export abstract class ByteSource {
     public abstract useRoutine(bs: ByteInstructionStream, path: NamespacePath): boolean
 }
 
+export type MachineIOResponse = string;
+    // | { type: 'print', text: string };
 
-
+export type StackMachineCoroutine = Generator<MachineIOResponse, void>;

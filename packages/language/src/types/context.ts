@@ -49,7 +49,7 @@ export interface FlowDocumentContext {
 
 export interface FlowGraphContext {
     ref: FlowGraph;
-    problems: FlowProblem[];
+    problems: FlowGraphProblem[];
     criticalSubProblems: number;
     nodeContexts: Obj<FlowNodeContext>;
     edges: Obj<FlowEdge>;
@@ -83,8 +83,12 @@ export interface RowContext {
     problems: RowProblem[];
 }
 
+interface PlaceholderProblem {
+    message: string;
+}
+
 export type DocumentProblem =
-    never
+    PlaceholderProblem
 
 interface CyclicNodes {
     type: 'cyclic-nodes';
@@ -100,7 +104,7 @@ interface OutputMissing {
     type: 'output-missing';
     message: string;
 }
-export type FlowProblem =
+export type FlowGraphProblem =
     | CyclicNodes
     | MissingNode
     | OutputMissing

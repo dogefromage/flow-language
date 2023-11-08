@@ -1,4 +1,4 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      typescript:
+        specifier: 5.2.2
+        version: 5.2.2
     devDependencies:
       concurrently:
         specifier: ^8.2.0
@@ -25,8 +29,8 @@ importers:
         specifier: ^4.14.195
         version: 4.14.195
       typescript:
-        specifier: 5.0.2
-        version: 5.0.2
+        specifier: '*'
+        version: 5.2.2
 
   packages/editor:
     dependencies:
@@ -119,7 +123,7 @@ importers:
         specifier: ^9.0.5
         version: 9.0.5
       typescript:
-        specifier: ^5.2.2
+        specifier: '*'
         version: 5.2.2
       typescript-json-schema:
         specifier: ^0.61.0
@@ -186,8 +190,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.3(vite@4.4.5)
       typescript:
-        specifier: ^5.0.2
-        version: 5.0.2
+        specifier: '*'
+        version: 5.2.2
       vite:
         specifier: ^4.3.9
         version: 4.4.5(sass@1.62.1)
@@ -221,10 +225,10 @@ importers:
         version: 0.13.11
       ts-node:
         specifier: ^10.9.1
-        version: 10.9.1(@swc/core@1.2.244)(@types/node@20.4.5)(typescript@5.0.2)
+        version: 10.9.1(@swc/core@1.2.244)(@types/node@20.4.5)(typescript@5.2.2)
       typescript:
-        specifier: ^5.0.2
-        version: 5.0.2
+        specifier: '*'
+        version: 5.2.2
 
   packages/interactive:
     dependencies:
@@ -239,8 +243,8 @@ importers:
         specifier: ^18.0.11
         version: 18.0.11
       typescript:
-        specifier: 5.0.2
-        version: 5.0.2
+        specifier: '*'
+        version: 5.2.2
 
   packages/language:
     dependencies:
@@ -252,8 +256,8 @@ importers:
         specifier: ^4.14.195
         version: 4.14.195
       typescript:
-        specifier: 5.0.2
-        version: 5.0.2
+        specifier: '*'
+        version: 5.2.2
 
 packages:
 
@@ -4147,7 +4151,7 @@ packages:
     hasBin: true
     dev: true
 
-  /ts-node@10.9.1(@swc/core@1.2.244)(@types/node@20.4.5)(typescript@5.0.2):
+  /ts-node@10.9.1(@swc/core@1.2.244)(@types/node@20.4.5)(typescript@5.2.2):
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
     hasBin: true
     peerDependencies:
@@ -4174,7 +4178,38 @@ packages:
       create-require: 1.1.1
       diff: 4.0.2
       make-error: 1.3.6
-      typescript: 5.0.2
+      typescript: 5.2.2
+      v8-compile-cache-lib: 3.0.1
+      yn: 3.1.1
+    dev: true
+
+  /ts-node@10.9.1(@types/node@16.18.59)(typescript@5.1.6):
+    resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
+    hasBin: true
+    peerDependencies:
+      '@swc/core': '>=1.2.50'
+      '@swc/wasm': '>=1.2.50'
+      '@types/node': '*'
+      typescript: '>=2.7'
+    peerDependenciesMeta:
+      '@swc/core':
+        optional: true
+      '@swc/wasm':
+        optional: true
+    dependencies:
+      '@cspotcode/source-map-support': 0.8.1
+      '@tsconfig/node10': 1.0.9
+      '@tsconfig/node12': 1.0.11
+      '@tsconfig/node14': 1.0.3
+      '@tsconfig/node16': 1.0.4
+      '@types/node': 16.18.59
+      acorn: 8.10.0
+      acorn-walk: 8.2.0
+      arg: 4.1.3
+      create-require: 1.1.1
+      diff: 4.0.2
+      make-error: 1.3.6
+      typescript: 5.1.6
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
     dev: true
@@ -4205,18 +4240,12 @@ packages:
       glob: 7.2.3
       path-equal: 1.2.5
       safe-stable-stringify: 2.4.3
-      ts-node: 10.9.1(@swc/core@1.2.244)(@types/node@20.4.5)(typescript@5.0.2)
+      ts-node: 10.9.1(@types/node@16.18.59)(typescript@5.1.6)
       typescript: 5.1.6
       yargs: 17.7.2
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
-    dev: true
-
-  /typescript@5.0.2:
-    resolution: {integrity: sha512-wVORMBGO/FAs/++blGNeAVdbNKtIh1rbBL2EyQ1+J9lClJ93KiiKe8PmFIVdXhHcyv44SL9oglmfeSsndo0jRw==}
-    engines: {node: '>=12.20'}
-    hasBin: true
     dev: true
 
   /typescript@5.1.6:
@@ -4229,7 +4258,6 @@ packages:
     resolution: {integrity: sha512-mI4WrpHsbCIcwT9cF4FZvr80QUeKvsUsUvKDoR+X/7XHQH98xYD8YHZg7ANtz2GtZt/CBq2QJ0thkGJMHfqc1w==}
     engines: {node: '>=14.17'}
     hasBin: true
-    dev: true
 
   /undefsafe@2.0.5:
     resolution: {integrity: sha512-WxONCrssBM8TSPRqN5EmsjVrsv4A8X12J4ArBiiayv3DyyG3ZlIg6yysuuSYdZsVz3TKcTg2fd//Ujd4CHV1iA==}

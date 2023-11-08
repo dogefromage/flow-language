@@ -3,6 +3,7 @@ import contentReducer from "../slices/configSlice";
 import consoleReducer from "../slices/consoleSlice";
 import contextMenuReducer from "../slices/contextMenuSlice";
 import contextReducer from "../slices/contextSlice";
+import documentReducer from "../slices/documentSlice";
 import editorReducer from "../slices/editorSlice";
 import menusReducer from "../slices/menusSlice";
 import flowEditorPanelsReducer from "../slices/panelFlowEditorSlice";
@@ -11,12 +12,11 @@ import panelManagerReducer from "../slices/panelManagerSlice";
 import pageOutlinerPanelsReducer from "../slices/panelPageOutlinerSlice";
 import { EditorConfig, ViewTypes } from "../types";
 import catchExceptionEnhancer from "./catchExceptionEnhancer";
-import enhancedDocumentReducer from "./documentReducer";
 import undoableEnhancer from "./undoableEnhancer";
 
 const appContent = {
     document: undoableEnhancer(
-        enhancedDocumentReducer,
+        documentReducer,
     ),
     context: contextReducer,
     editor: editorReducer,

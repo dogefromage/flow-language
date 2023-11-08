@@ -21,17 +21,3 @@ export function rectanglesIntersect(a: Rect, b: Rect) {
         a.y < b.y+b.h && a.y+a.h > b.y
     );
 }
-
-export function getBasePowers(x: number, base: number) {
-    if (base <= 1) {
-        throw new Error(`Invalid base`);
-    }
-    if (x === 0) return [ 0 ];
-    const result: number[] = [];
-    while (x > 0) {
-        let remainder = x % base;
-        result.push(remainder);
-        x = (x - remainder) / base;
-    }
-    return result;
-}

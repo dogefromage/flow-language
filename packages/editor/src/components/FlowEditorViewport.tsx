@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import useDispatchCommand from '../utils/useDispatchCommand';
 import useContextMenu from '../utils/useContextMenu';
 import FlowEditorLegend from './FlowEditorLegend';
+import { CONTEXT_MENU_DIVIDER } from './ContextMenu';
 
 const EditorWrapper = styled.div`
     position: relative;
@@ -21,18 +22,23 @@ interface Props {
 }
 
 const FlowEditorViewport = ({ panelId }: Props) => {
-    const dispatch = useAppDispatch();
+    // const dispatch = useAppDispatch();
     const panelState = useAppSelector(useSelectPanelState(ViewTypes.FlowEditor, panelId));
     const flowId = panelState?.flowStack[0];
     const dispatchCommand = useDispatchCommand();
 
     const contextMenu = useContextMenu(
         panelId,
-        'Geometry Nodes',
+        'Flow Viewport',
         [
             'flowEditor.addNodeAtPosition',
             'flowEditor.deleteSelected',
-            'flowEditor.createGroup'
+            CONTEXT_MENU_DIVIDER,
+            'flowEditor.createFlow',
+            CONTEXT_MENU_DIVIDER,
+            'flowEditor.copySelected',
+            'flowEditor.cutSelected',
+            'flowEditor.paste',
         ]
     );
 
@@ -41,8 +47,9 @@ const FlowEditorViewport = ({ panelId }: Props) => {
             onContextMenu={contextMenu}
             onDoubleClick={e => {
                 dispatchCommand(
-                    'flowEditor.addNodeAtPosition',
-                    { clientCursor: { x: e.clientX, y: e.clientY } },
+                    'flowEditor.addNodeAtPosition', {
+                        clientCursor: { x: e.clientX, y: e.clientY },
+                    }
                 );
             }}
         >

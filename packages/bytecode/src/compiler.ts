@@ -263,12 +263,31 @@ export function compileDocument(doc: lang.FlowDocumentContext, config: ByteCompi
 }
 
 function assertValidDocument(doc: lang.FlowDocumentContext) {
-    const totalProblemCount = doc.problems.length + doc.criticalSubProblems;
-    if (totalProblemCount > 0) {
-        throw new Error(`Document contains ${totalProblemCount} problem(s).`);
+
+    const problemTree = lang.generateProblemTree(doc);
+    if (problemTree != null) {
+        const msg = [
+            'Document contains problems.',
+            ...formatProblemTree(problemTree),
+        ].join('\n');
+        throw new Error(msg);
     }
+
     const flow = doc.flowContexts[lang.MAIN_FLOW_ID];
     if (flow == null) {
-        throw new Error(`Document is missing a valid 'main' flow.`);
+        throw new Error(`Document requires a flow named 'main' to run.`);
     }
+}
+
+function indentLines(lines: string[]) {
+    const indent = ' '.repeat(4);
+    return lines.map(l => indent + l);
+}
+
+function formatProblemTree(node: lang.ProblemTreeNode): string[] {
+    return [
+        `@ ${node.name}`,
+        ...indentLines(node.problems.map(p => p.message)),
+        ...indentLines(node.children.map(c => formatProblemTree(c)).flat()),
+    ]
 }

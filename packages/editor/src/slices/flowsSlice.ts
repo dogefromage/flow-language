@@ -3,10 +3,14 @@ import { createSlice } from "@reduxjs/toolkit";
 import { Draft } from "immer";
 import { useCallback } from "react";
 import { RootState } from "../redux/rootReducer";
-import { selectDocument } from "../redux/stateHooks";
-import { FlowsSliceState, UndoAction, Vec2, defaultFlows, except, flowsIdRegex, listItemRegex } from "../types";
+import { EditorClipboardNodeContent, UndoAction, Vec2, except } from "../types";
 import { RowSignatureBlueprint } from "../types/flowInspectorView";
-import { getBasePowers } from "../utils/math";
+import { original } from "immer";
+import { selectDocument } from "./documentSlice";
+import { flowsIdRegex, listItemRegex } from "../utils/flows";
+import { defaultFlows } from "../content/defaultDocument";
+
+type FlowsSliceState = Record<string, lang.FlowGraph>;
 
 function getFlow(s: Draft<FlowsSliceState>, a: { payload: { flowId: string } }) {
     const g = s[a.payload.flowId];
@@ -33,14 +37,6 @@ function removeConnectionsToNodes(g: lang.FlowGraph, nodes: Set<string>) {
     }
 }
 
-function generateAlphabeticalId(index: number) {
-    const token = getBasePowers(index, 26)
-        .reverse()
-        .map(x => String.fromCharCode('a'.charCodeAt(0) + x))
-        .join('');
-    return token;
-}
-
 const initialState: FlowsSliceState = { ...defaultFlows };
 
 // function findUniquePortId<T extends { id: string }>(ports: T[]) {
@@ -52,16 +48,21 @@ const initialState: FlowsSliceState = { ...defaultFlows };
 //     }
 // }
 
-function listConnectionsToArr(obj: Record<string, lang.FlowConnection>) {
-    const arr: lang.FlowConnection[] = [];
-    for (const key of Object.keys(obj)) {
-        if (key.match(/^\d+$/)) {
-            arr[parseInt(key)] = obj[key];
-        }
-    }
-    // filter holes
-    const unholy = arr.filter(x => x != null);
-    return unholy;
+// function listConnectionsToArr(obj: Record<string, lang.FlowConnection>) {
+//     const arr: lang.FlowConnection[] = [];
+//     for (const key of Object.keys(obj)) {
+//         if (key.match(/^\d+$/)) {
+//             arr[parseInt(key)] = obj[key];
+//         }
+//     }
+//     // filter holes
+//     const unholy = arr.filter(x => x != null);
+//     return unholy;
+// }
+
+function getNextNodeId(g: lang.FlowGraph) {
+    const gen = lang.createIdGenerator(...Object.keys(g.nodes));
+    return gen.next().value!;
 }
 
 type ListedState = lang.InputRowSignature | lang.TemplateParameter;
@@ -101,7 +102,6 @@ export const flowsSlice = createSlice({
                     a: { id: 'a', signature: { path: `document::${id}::input` }, position: { x: 400, y: 200 }, rowStates: {} },
                     b: { id: 'b', signature: { path: `document::${id}::output` }, position: { x: 1000, y: 200 }, rowStates: {} },
                 },
-                idCounter: 2,
             }
             s[id] = flow as any;
         },
@@ -121,10 +121,15 @@ export const flowsSlice = createSlice({
                 delete g.attributes[a.payload.key];
             }
         },
-        addNode: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, signature: lang.NamespacePath, position: Vec2, rowStates?: lang.FlowNode['rowStates'] }>) => {
+        addNode: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, signature: lang.NamespacePath, 
+            position: Vec2, rowStates?: lang.FlowNode['rowStates'], nodeId?: string }>) => {            
             const g = getFlow(s, a);
+            const nodeId = a.payload.nodeId || getNextNodeId(g);
+            if (g.nodes[nodeId] != null) {
+                except(`Node with id=${nodeId} already in flow ${a.payload.flowId}.`);
+            }
             const node: lang.FlowNode = {
-                id: generateAlphabeticalId(g.idCounter++),
+                id: nodeId,
                 signature: a.payload.signature,
                 rowStates: a.payload.rowStates || {},
                 position: a.payload.position,
@@ -166,12 +171,13 @@ export const flowsSlice = createSlice({
             locations: [lang.JointLocation, lang.JointLocation],
         }>) => {
             const g = getFlow(s, a);
-
+            
             let resolvedLocations = a.payload.locations.map(location => {
                 if (location.nodeId === '*') {
+                    const lastCreatedId = lang.getLastestNodeId(...Object.keys(g.nodes));
                     return {
                         ...location,
-                        nodeId: generateAlphabeticalId(g.idCounter - 1),
+                        nodeId: lastCreatedId,
                     };
                 }
                 return location;
@@ -200,10 +206,9 @@ export const flowsSlice = createSlice({
                 accessor: outputLocation.accessor,
             };
 
-            inputNode.rowStates[inputLocation.rowId] ||= { connections: {}, value: null, /* initializer: 'first' */ };
+            inputNode.rowStates[inputLocation.rowId] ||= { connections: {}, value: null };
             const rs = inputNode.rowStates[inputLocation.rowId];
 
-            // rs.initializer = inputLocation.initializer ?? rs.initializer;
             rs.connections[inputLocation.accessor] = newConn;
         },
         removeConnection: (s: Draft<FlowsSliceState>,
@@ -283,6 +288,15 @@ export const flowsSlice = createSlice({
             if (!generic) except(`Could not find generic`);
             generic.constraint = a.payload.constraint;
         },
+        pasteNodes: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, clipboard: EditorClipboardNodeContent }>) => {
+            const originalFlow = lang.assertDef(original(getFlow(s, a)));
+            s[a.payload.flowId] = lang.pasteSelectedNodes(
+                a.payload.clipboard.flow,
+                originalFlow,
+                a.payload.clipboard.selection, 
+                { x: 20, y: 20 },
+            );
+        }
     }
 });
 
@@ -310,6 +324,8 @@ export const {
     replaceOutput: flowsReplaceOutput,
     updateOutput: flowsUpdateOutput,
     replaceGeneric: flowsReplaceGeneric,
+    // HIGHER ORDER
+    pasteNodes: flowsPasteNodes,
 } = flowsSlice.actions;
 
 export const selectFlows = (state: RootState) => selectDocument(state).flows;

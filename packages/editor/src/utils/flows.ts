@@ -1,8 +1,14 @@
 import * as lang from "@noodles/language";
-import { JointLocationKey } from "../types";
-import { FlowJointStyling } from "../types/flowRows";
+import { FlowJointStyling, JointLocationKey } from "../types";
 import { AllRowSignatures } from "../types/flowInspectorView";
 import _ from "lodash";
+import { NameValidationError } from "../components/FormRenameField";
+import { useAppSelector } from "../redux/stateHooks";
+import { selectDocument } from "../slices/documentSlice";
+import { useCallback } from "react";
+
+export const flowsIdRegex = /^[A-Za-z_][A-Za-z_0-9]*$/;
+export const listItemRegex = /^[A-Za-z_][A-Za-z_0-9]*$/;
 
 export function getJointLocationKey(location: lang.JointLocation): JointLocationKey {
     if (location.direction === 'input') {
@@ -13,9 +19,9 @@ export function getJointLocationKey(location: lang.JointLocation): JointLocation
 }
 
 const style = (
-    background:  FlowJointStyling['background'],
-    border:      FlowJointStyling['border'] = 'transparent',
-    shape:       FlowJointStyling['shape'] = 'round',
+    background: FlowJointStyling['background'],
+    border: FlowJointStyling['border'] = 'transparent',
+    shape: FlowJointStyling['shape'] = 'round',
     borderStyle: FlowJointStyling['borderStyle'] = 'solid',
 ): FlowJointStyling => ({ borderStyle, shape, background, border });
 
@@ -33,8 +39,8 @@ const style = (
 
 const primitiveColors: Record<string, Pick<FlowJointStyling, 'background' | 'border'>> = {
     boolean: { background: '#44adb3', border: null, },
-    number:  { background: '#347dcf', border: null, },
-    string:  { background: '#9249e6', border: null, },
+    number: { background: '#347dcf', border: null, },
+    string: { background: '#9249e6', border: null, },
     // null:    { background: '#b5b5b5', border: null, },
 }
 const missingColor = '#b5b5b5';
@@ -45,7 +51,7 @@ function getBaseStyling(argX: lang.TypeSpecifier, env: lang.FlowEnvironment): Fl
     if (X == null || X.type === 'any') {
         return style(null, '#aaa');
     }
-    
+
     switch (X.type) {
         case 'primitive':
             return {
@@ -65,7 +71,7 @@ function getBaseStyling(argX: lang.TypeSpecifier, env: lang.FlowEnvironment): Fl
 
 export function getJointStyling(argX: lang.TypeSpecifier, env: lang.FlowEnvironment, additional = false): FlowJointStyling {
     const baseStyle = getBaseStyling(argX, env);
-    
+
     if (additional) {
         const borderColor = baseStyle.background || baseStyle.border || missingColor;
         return style(null, borderColor, baseStyle.shape, 'dashed');
@@ -100,22 +106,42 @@ export function formatFlowLabel(label: string) {
 }
 
 export function bracketSymbol(
-    index: number, size: number, 
+    index: number, size: number,
     direction: 'input' | 'output',
-    style: 'round' | 'sharp', 
+    style: 'round' | 'sharp',
 ): string {
-    if (size <= 1)        return '';
+    if (size <= 1) return '';
 
     const bracketPieces = '┌├└┐┤┘╭├╰╮┤╯';
     let bracket = 0;
     // symbol
-    if      (index == 0)       bracket += 0;
+    if (index == 0) bracket += 0;
     else if (index < size - 1) bracket += 1;
-    else                       bracket += 2;    
+    else bracket += 2;
     // direction
-    if (direction === 'output') bracket += 3;
+    if (direction === 'input') bracket += 3;
     // style
     if (style === 'round') bracket += 6;
 
     return bracketPieces[bracket];
+}
+
+export const useFlowNamingValidator = (excludeId?: string) => {
+    const document = useAppSelector(selectDocument);
+
+    return useCallback((newValue: string): NameValidationError | undefined => {
+        const flowIds = Object
+            .keys(document.flows)
+            .filter(x => x != excludeId);
+
+        if (newValue.length == 0) {
+            return { message: 'Please provide a name.' };
+        }
+        if (!flowsIdRegex.test(newValue)) {
+            return { message: 'Please provide a valid name. A name should only contain letters, digits, underscores and should not start with a number. Example: "add_5"' };
+        }
+        if (flowIds.includes(newValue)) {
+            return { message: `There is already a flow named '${newValue}'. Please use a different name.` };
+        }
+    }, [document, excludeId]);
 }

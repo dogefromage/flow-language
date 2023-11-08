@@ -25,6 +25,17 @@ export type MinimalProject = {
     }[];
 }
 
+export type DetailedProject = {
+    id: any;
+    title: any;
+    description: any;
+    creator: {
+        id: any;
+        username: any;
+    }[];
+    project_data: any;
+}
+
 export interface StorageSliceState {
     activeFile: {
         data: ProjectFile | null;

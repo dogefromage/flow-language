@@ -1,13 +1,14 @@
-import { EditorExtension, createExtensionSelector, makeGlobalCommand, selectDocument, useAppDispatch, useAppSelector } from "@noodles/editor";
+import * as bc from '@noodles/bytecode';
+import { EditorExtension, Menus, consolePushLine, createConsoleError, createConsoleWarn, createExtensionSelector, except, makeGlobalCommand, selectDocument, useAppDispatch, useAppSelector } from "@noodles/editor";
 import { FlowDocument } from "@noodles/language";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { Remote, wrap } from "comlink";
+import { useEffect } from 'react';
 import { RuntimeProcess, RuntimeSliceState } from "../types/runtime";
-import * as bc from '@noodles/bytecode';
-import { useEffect } from "react";
 
 const extensionId = 'runtime';
 export const runtimeRunCommand = `${extensionId}.run`;
+export const runtimeKillCommand = `${extensionId}.kill`;
 
 export const runtimeExtension: EditorExtension = config => {
     config.stateReducers[extensionId] = runtimeSlice.reducer;
@@ -17,10 +18,27 @@ export const runtimeExtension: EditorExtension = config => {
         'Run Document',
         ({ appState }, params) => {
             const document = selectDocument(appState);
+            const runtime = selectRuntime(appState);
+            if (runtime.process != null) {
+                return createConsoleWarn('A process is already running.');
+            }
             return runtimeRunDocument({ document });
         },
-        [ { ctrlKey: true, key: 'Enter' }],
+        [{ ctrlKey: true, key: 'Enter' }],
     );
+
+    config.commands[runtimeKillCommand] = makeGlobalCommand(
+        runtimeRunCommand,
+        'Kill Process',
+        ({ appState }, params) => {
+            return runtimeKillProcess();
+        },
+    );
+
+    config.toolbar.inlineMenus.push([
+        'Run',
+        RunMenuContent,
+    ]);
 
     config.managerComponents.push(RuntimeManager);
 }
@@ -35,84 +53,97 @@ const runtimeSlice = createSlice({
     reducers: {
         runDocument: (s, a: PayloadAction<{ document: FlowDocument }>) => {
             if (s.process != null) {
-                console.warn(`Did not create process, already there`);
-                return;
+                except('Process already running.')
             }
-
-            const compilerArgs: bc.ByteCompilerArgs = {
-                // skipValidation: true,
-            }
-            const runtimeArgs: bc.StackMachineArgs = {
-                countExecutedInstructions: true,
-                // recordMaximumStackHeights: true,
-                // trace: true,
-            }
-
-            const process = createNewRuntimeProcess();
-            
-            process.init(a.payload.document, compilerArgs, runtimeArgs);
-            s.process = process;
+            s.process = createNewRuntimeProcess();
         },
+        killProcess: s => {
+            s.process?.worker.terminate();
+            s.process = null;
+        }
     },
-    // extraReducers(builder) {
-        
-    // },
 });
 
 function createNewRuntimeProcess() {
-    const worker = new Worker(new URL('../utils/runtimeWorker.js', import.meta.url), { type: 'module' });
-    return wrap<RuntimeProcess>(worker);
+    const filePath = new URL('../utils/runtimeWorker', import.meta.url);
+    const worker = new Worker(filePath, { type: 'module' });
+    return {
+        remote: wrap<RuntimeProcess>(worker),
+        worker
+    };
 }
 
 export const {
     runDocument: runtimeRunDocument,
+    killProcess: runtimeKillProcess,
 } = runtimeSlice.actions;
 
 export const selectRuntime = createExtensionSelector<RuntimeSliceState>(extensionId);
 
 const RuntimeManager = () => {
     const dispatch = useAppDispatch();
+    const document = useAppSelector(selectDocument);
     const runtime = useAppSelector(selectRuntime);
 
-    // useEffect(() => {
-    //     const handleStateChange = (nextState: RuntimeState) => {
-    //         switch (nextState) {
-    //             case 'idle':
-    //                 setDisplayState('Idle');
-    //                 return;
-    //             case 'running':
-    //                 setDisplayState('Running');
-    //                 return;
-    //             case 'debugging':
-    //                 setDisplayState('Debugging');
-    //                 return;
-    //             case 'interrupted':
-    //                 setDisplayState('Interrupted');
-    //                 return;
-    //         }
-    //     }
+    const startProcess = async (process: Remote<RuntimeProcess>) => {
 
-    //     function handleOutput(output: ConsoleLine) {
-    //         dispatch(consolePushLine({ line: output }));
-    //     }
+        const compilerArgs: bc.ByteCompilerArgs = {
+            // skipValidation: true,
+        }
+        const runtimeArgs: bc.StackMachineArgs = {
+            countExecutedInstructions: true,
+            // recordMaximumStackHeights: true,
+            // trace: true,
+        }
 
-    //     runtime.on('state-changed', handleStateChange);
-    //     runtime.on('output', handleOutput);
-        
-    //     runtime.init();
+        try {
+            await process.init(document, compilerArgs, runtimeArgs);
 
-    //     handleStateChange(runtime.state);
+            while (true) {
+                const currState = await process.getState();
+                if (currState === 'terminated') {
+                    dispatch(runtimeKillProcess());
+                    return;
+                }
 
-    //     return () => {
-    //         runtime.off('state-changed', handleStateChange);
-    //         runtime.off('output', handleOutput);
-    //     }
-    // }, [runtime]);
+                // switch "context" to process and wait for it to stop
+                const response = await process.resume();
 
-    // const document = useAppSelector(selectDocument);
-    // useEffect(() => {
-    //     runtime.setDocument(document);
-    // }, [document, runtime]);
+                if (response != null) {
+                    dispatch(consolePushLine({
+                        line: {
+                            text: response,
+                        },
+                    }));
+                }
+
+            }
+
+        } catch (e: any) {
+            console.error(e);
+            dispatch(createConsoleError(e));
+            dispatch(runtimeKillProcess());
+            return;
+        }
+
+    }
+
+    useEffect(() => {
+        const process = runtime.process;
+        if (!process) return;
+
+        startProcess(process.remote);
+
+    }, [runtime.process]);
 
     return null;
+}
+
+const RunMenuContent = () => {
+    return (
+        <>
+            <Menus.Command commandId={runtimeRunCommand} />
+            <Menus.Command commandId={runtimeKillCommand} />
+        </>
+    );
 }

@@ -222,13 +222,13 @@ export const MenuColorSliderWrapperDiv = styled.div`
     position: relative;
 `;
 
-interface MenuColorValueSliderProps { maxValue: string }
+interface MenuColorValueSliderProps { $maxValue: string }
 
-export const MenuColorValueSliderInput = styled.input.attrs<MenuColorValueSliderProps>(({ maxValue }) => ({
+export const MenuColorValueSliderInput = styled.input.attrs<MenuColorValueSliderProps>(({ $maxValue }) => ({
     type: 'range',
     min: 0, max: 100, step: 0.1,
     style: {
-        '--max-value': maxValue,
+        '--max-value': $maxValue,
     },
 }))<MenuColorValueSliderProps>`
     

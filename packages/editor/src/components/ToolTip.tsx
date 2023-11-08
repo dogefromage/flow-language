@@ -122,6 +122,9 @@ const ToolTipSectionDiv = styled.div`
         border-top: 1px solid var(--color-1);
     }
     padding: 0.25rem 0;
+    p {
+        white-space: normal;
+    }
 `;
 
 const ToolTip = {

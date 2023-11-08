@@ -1,18 +1,18 @@
 import { useDroppable, useMouseDrag } from '@noodles/interactive';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import _ from 'lodash';
+import React, { useCallback, useRef, useState } from 'react';
 import styled from 'styled-components';
-import { CAMERA_MAX_ZOOM, CAMERA_MIN_ZOOM, flowEditorPanelsUpdateCamera, flowEditorSetSelection, flowEditorSetStateAddNodeWithConnection, flowEditorSetStateNeutral, flowEditorUpdateDragginLinkPosition } from '../slices/panelFlowEditorSlice';
+import { Vector2 } from 'threejs-math';
+import { useSelectPanelState } from '../redux/panelStateEnhancer';
+import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
+import { CAMERA_MAX_ZOOM, CAMERA_MIN_ZOOM, flowEditorPanelsUpdateCamera, flowEditorSetSelection, flowEditorSetStateAddNodeWithConnection, flowEditorUpdateDragginLinkPosition } from '../slices/panelFlowEditorSlice';
+import { FLOW_NODE_ROW_HEIGHT, MouseSelectionDiv } from '../styles/flowStyles';
 import { PlanarCamera, Rect, Vec2, ViewTypes } from '../types';
 import { clamp, rectanglesIntersect } from '../utils/math';
 import { pointScreenToWorld } from '../utils/planarCameraMath';
 import FlowEditorContent from './FlowEditorContent';
 import { DRAG_JOIN_DND_TAG } from './FlowJoint';
 import { FLOW_NODE_DIV_CLASS } from './FlowNodeElement';
-import _ from 'lodash';
-import { useSelectPanelState } from '../redux/panelStateEnhancer';
-import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { FLOW_NODE_ROW_HEIGHT, MouseSelectionDiv } from '../styles/flowStyles';
-import { Vector2 } from 'threejs-math';
 
 const defaultPlanarCamera: PlanarCamera = {
     position: { x: 0, y: 0 },

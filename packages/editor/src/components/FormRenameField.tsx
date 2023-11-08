@@ -46,6 +46,9 @@ const RenameFieldError = styled.div`
     background-color: #460000;
     outline: 1px solid red;
     padding: 0 0.5rem;
+    p {
+        white-space: normal;
+    }
 `;
 
 export interface NameValidationError {
@@ -56,7 +59,7 @@ export interface FormRenameFieldProps {
     value: string;
     onChange?: (newValue: string) => void;
     onBlur?: () => void;
-    onValidate?: (newValue: string) => NameValidationError | undefined;
+    onValidate?: (newValue: string, oldValue: string) => NameValidationError | undefined;
     disabled?: boolean;
     autofocus?: boolean;
 }
@@ -81,7 +84,7 @@ const FormRenameField = ({ value: initialValue, onChange, onValidate, disabled, 
     function updateInternally(rawVal: string) {
         const newVal = rawVal.trimStart();
         setLocalValue(newVal);
-        setValidationError(onValidate?.(newVal));
+        setValidationError(onValidate?.(newVal, initialValue));
     }
 
     const handleFocus = () => {

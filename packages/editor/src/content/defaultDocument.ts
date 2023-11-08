@@ -1,21 +1,6 @@
-import * as lang from '@noodles/language';
+import * as lang from "@noodles/language";
 
-export const flowsIdRegex = /^[A-Za-z_][A-Za-z_0-9]*$/;
-export const listItemRegex = /^[A-Za-z_][A-Za-z_0-9]*$/;
-
-export type FlowsSliceState = Record<string, lang.FlowGraph>;
-
-export const mainSignature: lang.AnonymousFlowSignature = {
-    generics: [{ id: 'T', constraint: null }],
-    inputs: [],
-    output: {
-        id: 'value',
-        rowType: 'output-simple',
-        specifier: lang.createGenericType('T'),
-    },
-}
-
-export const emptyFlowSignature: lang.AnonymousFlowSignature = {
+export const defaultFlowSignature: lang.AnonymousFlowSignature = {
     generics: [],
     inputs: [
         {
@@ -32,10 +17,19 @@ export const emptyFlowSignature: lang.AnonymousFlowSignature = {
     },
 }
 
-export const initialDefaultRootFlow: lang.FlowGraph = {
+const mainSignature: lang.AnonymousFlowSignature = {
+    generics: [{ id: 'T', constraint: null }],
+    inputs: [],
+    output: {
+        id: 'value',
+        rowType: 'output-simple',
+        specifier: lang.createGenericType('T'),
+    },
+}
+
+const defaultRootFlow: lang.FlowGraph = {
     id: lang.MAIN_FLOW_ID,
     ...mainSignature,
-    idCounter: 1,
     attributes: {},
     nodes: {
         a: {
@@ -49,5 +43,11 @@ export const initialDefaultRootFlow: lang.FlowGraph = {
 };
 
 export const defaultFlows = {
-    [initialDefaultRootFlow.id]: initialDefaultRootFlow,
+    [defaultRootFlow.id]: defaultRootFlow,
 };
+
+export const defaultDocument: lang.FlowDocument = {
+    title: 'New Document',
+    description: '',
+    flows: defaultFlows
+}

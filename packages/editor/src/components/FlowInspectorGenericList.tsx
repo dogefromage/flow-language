@@ -1,10 +1,12 @@
-import React, { PropsWithChildren } from 'react';
+import { PropsWithChildren } from 'react';
 import { useSelectPanelState } from '../redux/panelStateEnhancer';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
+import { documentRenameGeneric } from '../slices/documentSlice';
+import { flowsAddListItem, flowsRemoveListItem, flowsReorderList, useSelectSingleFlow } from '../slices/flowsSlice';
 import { flowInspectorPanelsSelectItem } from '../slices/panelFlowInspectorSlice';
-import { ViewTypes, listItemRegex } from '../types';
+import { ViewTypes, } from '../types';
 import FormSortableList from './FormSortableList';
-import { flowsAddListItem, flowsRemoveListItem, flowsReorderList, flowsUpdateInput, useSelectSingleFlow } from '../slices/flowsSlice';
+import { listItemRegex } from '../utils/flows';
 
 interface FlowInspectorGenericListProps {
     panelId: string;
@@ -22,6 +24,14 @@ const FlowInspectorGenericList = ({ panelId, flowId }: PropsWithChildren<FlowIns
         panelState.selectedItem.id : '';
 
     const genericNames = new Set(flow.generics.map(g => g.id));
+
+    const select = (id: string) => {
+        dispatch(flowInspectorPanelsSelectItem({
+            panelId,
+            type: 'generics',
+            id,
+        }))
+    }
 
     return (
         <FormSortableList
@@ -41,29 +51,30 @@ const FlowInspectorGenericList = ({ panelId, flowId }: PropsWithChildren<FlowIns
                     flowId,
                     portId,
                     prop: 'generics',
-                    undo: { desc: `Removed generic tag "${portId}" from active flow.` },
+                    undo: { desc: `Removed generic tag '${portId}' from active flow.` },
                 }))
             }}
-            // onRename={(portId, label) => {
-            //     dispatch(flowsUpdateInput({
-            //         flowId,
-            //         portId,
-            //         newState: { label },
-            //         undo: { desc: `Renamed input port to '${label}'.` },
-            //     }));
-            // }}
-            addMessage='Add Generic'
-            onValidateNewName={name => {
-                if (name.length == 0) {
+            onRename={(oldName, newName) => {
+                dispatch(documentRenameGeneric({
+                    flowId,
+                    oldName,
+                    newName,
+                    undo: { desc: `Renamed generic '${oldName}' to '${newName}'.` },
+                }));
+                select(newName);
+            }}
+            onValidateNewName={(newName, oldName) => {
+                if (newName.length == 0) {
                     return { message: 'Please provide a name.' };
                 }
-                if (!listItemRegex.test(name)) {
+                if (!listItemRegex.test(newName)) {
                     return { message: 'Please provide a valid name. A name should only contain letters, digits, underscores and should not start with a number.' };
                 }
-                if (genericNames.has(name)) {
-                    return { message: `There is already a generic named '${name}'. Please use a different name.` };
+                if (genericNames.has(newName) && newName !== oldName) {
+                    return { message: `There is already a generic named '${newName}'. Please use a different name.` };
                 }
             }}
+            addMessage='Add Generic'
             onAdd={name => {
                 dispatch(flowsAddListItem({
                     flowId,
@@ -72,13 +83,7 @@ const FlowInspectorGenericList = ({ panelId, flowId }: PropsWithChildren<FlowIns
                     undo: { desc: `Added generic constraint to active flow.` },
                 }));
             }}
-            onSelect={rowId => {
-                dispatch(flowInspectorPanelsSelectItem({
-                    panelId,
-                    type: 'generics',
-                    id: rowId,
-                }));
-            }}
+            onSelect={select}
         />
     );
 }

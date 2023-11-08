@@ -7,6 +7,10 @@ export {
     createLanguageValidator,
 } from './core/utilities';
 
+export * from './core/modification';
+export * from './core/builder';
+export * from './core/problemTree';
+
 export {
     collectTotalEnvironmentContent,
     findEnvironmentSignature,

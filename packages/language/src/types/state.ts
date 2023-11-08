@@ -41,10 +41,11 @@ export interface FlowGraph {
     inputs: InputRowSignature[];
     output: OutputRowSignature;
     imports: string[];
-    idCounter: number;
 }
 
 export interface FlowDocument {
+    title: string;
+    description: string;
     flows: Obj<FlowGraph>;
 }
 

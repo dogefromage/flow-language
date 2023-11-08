@@ -1,10 +1,10 @@
-import { EditorExtension, Menus, createExtensionSelector, documentReplace, except, makeGlobalCommand, selectDocument, useAppDispatch, useAppSelector } from "@noodles/editor";
+import { EditorExtension, Menus, consolePushLine, content, createConsoleError, createExtensionSelector, documentReplace, editorSetActiveFlow, except, makeGlobalCommand, selectDocument, useAppDispatch, useAppSelector } from "@noodles/editor";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { useEffect } from "react";
 import ProjectSelectionDropdown from "../components/ProjectSelectionDropdown";
-import { selectProjectById, selectUsersProjects, updateProjectTitleDescriptionData } from "../queries";
+import { createProject, selectProjectById, selectUsersProjects, updateProjectTitleDescriptionData } from "../queries";
 import { supabase } from "../config/supabase";
-import { MinimalProject, ProjectFile, ProjectFileLocation, StorageSliceState } from "../types/storage";
+import { DetailedProject, MinimalProject, ProjectFile, ProjectFileData, ProjectFileLocation, StorageSliceState } from "../types/storage";
 import { takeSingle } from "../utils/utils";
 import { documentStateToFileData, fileDataToDocumentState } from "../utils/serialization";
 import { selectUser } from "./userExtension";
@@ -32,7 +32,22 @@ export function getCloudProjectLocation(project: {
     }
 }
 
-const storageLoadFile = createAsyncThunk(
+function buildFile(data: DetailedProject, userId: string) {
+    const creator = takeSingle(data.creator);
+    const writePermission = userId === creator.id;
+    const file: ProjectFile = {
+        location: getCloudProjectLocation(data),
+        data: {
+            title: data.title!,
+            description: data.description!,
+            documentJson: data.project_data,
+        },
+        writePermission,
+    };
+    return file;
+}
+
+export const storageLoadFile = createAsyncThunk(
     'storage/loadFile',
     async (args: { location: ProjectFileLocation }) => {
         const { location } = args;
@@ -43,25 +58,36 @@ const storageLoadFile = createAsyncThunk(
             except(`Could not fetch project (location=${JSON.stringify(location)}).`);
         }
 
-        const project = projectByIdRes.data;
-
-        const creator = takeSingle(project.creator);
-        const writePermission = session.data.session?.user.id === creator.id;
-
-        const file: ProjectFile = {
-            location: getCloudProjectLocation(project),
-            data: {
-                title: project.title!,
-                description: project.description!,
-                documentJson: project.project_data,
-            },
-            writePermission,
-        };
+        const file = buildFile(projectByIdRes.data, session.data.session?.user.id || '');
         return { file };
     }
 );
 
-const storageSaveActiveFile = createAsyncThunk(
+export const storageCreateFile = createAsyncThunk(
+    'storage/createFile',
+    async (args: { data: ProjectFileData }) => {
+        const { data } = args;
+        const session = await supabase.auth.getSession();
+        if (!session.data.session) {
+            except('You must be logged in to save a project.');
+        }
+        const userId = session.data.session.user.id;
+
+        const res = await createProject({
+            title: data.title,
+            description: data.description,
+            project_data: data.documentJson,
+            creator: userId,
+        });
+        if (res.data == null) {
+            except(`Could not save project.`);
+        }
+        const file = buildFile(res.data, session.data.session?.user.id || '');
+        return { file };
+    }
+)
+
+export const storageSaveActiveFile = createAsyncThunk(
     'storage/saveActiveFile',
     async (args: { file: ProjectFile }) => {
         const { file } = args;
@@ -85,7 +111,7 @@ const storageSaveActiveFile = createAsyncThunk(
     }
 )
 
-const storageLoadUsersProjects = createAsyncThunk<{ userProjects: MinimalProject[] | null }>(
+export const storageLoadUsersProjects = createAsyncThunk<{ userProjects: MinimalProject[] | null }>(
     'storage/loadUsersProjects',
     async () => {
         const sessRes = await supabase.auth.getSession();
@@ -104,32 +130,32 @@ const storageLoadUsersProjects = createAsyncThunk<{ userProjects: MinimalProject
 const storageSlice = createSlice({
     name: 'storage',
     initialState,
-    reducers: {},
+    reducers: {
+        dropActiveFile: s => {
+            s.activeFile = {
+                status: 'idle',
+                data: null,
+            };
+        },
+    },
     extraReducers(builder) {
 
-        builder.addCase(storageLoadFile.pending, s => {
-            s.activeFile.status = 'pending';
-        });
-        builder.addCase(storageLoadFile.rejected, s => {
-            s.activeFile.status = 'failed';
-        });
-        builder.addCase(storageLoadFile.fulfilled, (s, a) => {
-            s.activeFile.status = 'idle';
-            s.activeFile.data = a.payload.file;
-        });
-
-
-        builder.addCase(storageSaveActiveFile.pending, (s, a) => {
-            s.activeFile.status = 'pending';
-        });
-        builder.addCase(storageSaveActiveFile.rejected, s => {
-            s.activeFile.status = 'failed';
-        });
-        builder.addCase(storageSaveActiveFile.fulfilled, (s, a) => {
-            s.activeFile.status = 'idle';
-            s.activeFile.data = a.payload.file;
-        });
-
+        for (const fileThunk of [
+            storageLoadFile,
+            storageSaveActiveFile,
+            storageCreateFile,
+        ]) {
+            builder.addCase(fileThunk.pending, s => {
+                s.activeFile.status = 'pending';
+            });
+            builder.addCase(fileThunk.rejected, s => {
+                s.activeFile.status = 'failed';
+            });
+            builder.addCase(fileThunk.fulfilled, (s, a) => {
+                s.activeFile.status = 'idle';
+                s.activeFile.data = a.payload.file;
+            });
+        }
 
         builder.addCase(storageLoadUsersProjects.pending, s => {
             s.usersProjects.status = 'pending';
@@ -146,8 +172,14 @@ const storageSlice = createSlice({
     },
 });
 
+export const {
+    dropActiveFile: storageDropActiveFile,
+} = storageSlice.actions;
+
 const extensionId = 'storage';
 const saveCommand = `${extensionId}.save`;
+const exportCommand = `${extensionId}.export`;
+const blankProjectCommand = `${extensionId}.createBlankProject`;
 
 export const selectStorage = createExtensionSelector<StorageSliceState>(extensionId);
 
@@ -163,13 +195,14 @@ export const storageExtension: EditorExtension = config => {
             if (storage.activeFile.status == 'pending') {
                 return;
             }
-            const activeFile = storage.activeFile.data;
-            if (activeFile == null) {
-                except('Implement saving newly created file!');
-            }
 
             const document = selectDocument(appState);
             const projectData = documentStateToFileData(document);
+
+            const activeFile = storage.activeFile.data;
+            if (activeFile == null) {
+                return storageCreateFile({ data: projectData });
+            }
 
             const file: ProjectFile = {
                 ...activeFile,
@@ -180,22 +213,33 @@ export const storageExtension: EditorExtension = config => {
         [{ ctrlKey: true, key: 's' }],
     );
 
-    // {
-    //     id: 'global.export_document',
-    //     name: "Export Document",
-    //     scope: 'global',
-    //     actionCreator: ({ appState }) => {
-    //         const doc = selectDocument(appState);
-    //         const jsonProject = serializeProject(doc);
-    //         const fileName = 'document.noodles';
-    //         if (jsonProject) {
-    //             download(jsonProject, 'application/json', fileName);
-    //         } else {
-    //             console.error(`No Project found.`);
-    //         }
-    //     }
-    // },
+    config.commands[exportCommand] = makeGlobalCommand(
+        exportCommand,
+        'Export Document',
+        ({ appState }) => {
+            alert('implement');
+            // const doc = selectDocument(appState);
+            // const fileData = documentStateToFileData(doc);
 
+            // const fileName = 'document.noodles';
+            // if (jsonProject) {
+            //     download(jsonProject, 'application/json', fileName);
+            // } else {
+            //     console.error(`No Project found.`);
+            // }
+        }
+    );
+
+    config.commands[blankProjectCommand] = makeGlobalCommand(
+        blankProjectCommand,
+        'Create Blank Project',
+        ({}) => {
+            return [
+                storageDropActiveFile(),
+                documentReplace({ document: content.defaultDocument }),
+            ]
+        }
+    )
 
     config.managerComponents.push(InitialLoader);
     config.toolbar.widgetsCenter.push(ProjectSelectionDropdown);
@@ -218,6 +262,7 @@ const StorageCommandsMenu = () => {
     }
 
     return (<>
+        <Menus.Command commandId={blankProjectCommand} />
         <Menus.Expand name="Load User Project"> {
             usersProjects.status === 'pending' ? (
                 <Menus.Text text='Loading...' />
@@ -237,6 +282,7 @@ const StorageCommandsMenu = () => {
         }
         </Menus.Expand>
         <Menus.Command commandId={saveCommand} />
+        <Menus.Command commandId={exportCommand} />
     </>);
 }
 
@@ -244,7 +290,6 @@ const InitialLoader = () => {
     const dispatch = useAppDispatch();
     const storage = useAppSelector(selectStorage);
     const { user } = useAppSelector(selectUser);
-
     const userId = user.data?.id;
 
     useEffect(() => {
@@ -260,8 +305,13 @@ const InitialLoader = () => {
 
     useEffect(() => {
         if (storage.activeFile.data != null) {
-            const documentState = fileDataToDocumentState(storage.activeFile.data.data);
-            dispatch(documentReplace({ document: documentState }));
+            try {
+                const documentState = fileDataToDocumentState(storage.activeFile.data.data);
+                dispatch(documentReplace({ document: documentState }));
+            } catch (e: any) {
+                console.error(e);
+                dispatch(createConsoleError(Error(`Failed to deserialize project.`)));
+            }
         }
     }, [storage.activeFile.data]);
 

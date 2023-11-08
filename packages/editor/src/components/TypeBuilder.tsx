@@ -105,7 +105,10 @@ const TypeTag = ({ X, env, generics, onChange }: PropsWithChildren<TypeTagProps>
         return { typeMap, nameMap };
     }, [X, env, generics]);
 
-    const currentOption = typeof X === 'string' ? `alias_or_generic.${X}` : X.type;
+    let currentOption: string = X.type;
+    if (X.type === 'alias' || X.type === 'generic') {
+        currentOption = `${X.type}.${X.alias}`;
+    }
 
     return (
         <TypeDiv>

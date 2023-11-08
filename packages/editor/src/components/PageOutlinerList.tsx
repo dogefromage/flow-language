@@ -1,12 +1,13 @@
-import { PropsWithChildren, useMemo, useState } from 'react';
+import { PropsWithChildren, useState } from 'react';
 import styled from 'styled-components';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { selectDocumentContext } from '../slices/contextSlice';
+import { selectDocument } from '../slices/documentSlice';
 import { editorSetActiveFlow, selectEditor } from '../slices/editorSlice';
 import { flowsCreate } from '../slices/flowsSlice';
-import { emptyFlowSignature, flowsIdRegex } from '../types';
+import { useFlowNamingValidator } from '../utils/flows';
 import useContextMenu from '../utils/useContextMenu';
 import FormRenameField from './FormRenameField';
+import { defaultFlowSignature } from '../content/defaultDocument';
 
 const OutlinerListDiv = styled.div`
     display: flex;
@@ -88,43 +89,25 @@ interface PageOutlinerListProps {
 
 const PageOutlinerList = ({ panelId }: PropsWithChildren<PageOutlinerListProps>) => {
     const dispatch = useAppDispatch();
-
-    const { documentContext } = useAppSelector(selectDocumentContext);
-    const flowIds = useMemo(() => {
-        if (!documentContext) return [];
-        return Object
-            .keys(documentContext.flowContexts)
-            .sort((a, b) => a.localeCompare(b));
-    }, [documentContext]);
-
-
+    const document = useAppSelector(selectDocument);
     const [additional, setAdditional] = useState(false);
+    const flowNamingValidator = useFlowNamingValidator();
 
     return (
         <OutlinerListDiv>
             {
-                flowIds.map(flowId =>
+                Object.keys(document.flows).map(flowId =>
                     <PageOutlinerEntry panelId={panelId} flowId={flowId} key={flowId} />
                 )
             }{
                 additional &&
                 <FormRenameField
                     value={'my_flow'}
-                    onValidate={newVal => {
-                        if (newVal.length == 0) {
-                            return { message: 'Please provide a name.' };
-                        }
-                        if (!flowsIdRegex.test(newVal)) {
-                            return { message: 'Please provide a valid name. A name should only contain letters, digits, underscores and should not start with a number. Example: "add_5"' };
-                        }
-                        if (flowIds.includes(newVal)) {
-                            return { message: `There is already a flow named '${newVal}'. Please use a different name.` };
-                        }
-                    }}
+                    onValidate={flowNamingValidator}
                     onChange={newVal => {
                         dispatch(flowsCreate({
                             flowId: newVal,
-                            signature: emptyFlowSignature,
+                            signature: defaultFlowSignature,
                             undo: { desc: 'Created new flow.' },
                         }));
                         setAdditional(false);

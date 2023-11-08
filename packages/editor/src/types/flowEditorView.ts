@@ -43,7 +43,10 @@ export type EditorActionState =
 
 export type JointLocationKey = `${string}.${string}.${number}` | `${string}.${string}`;
 
-export type EditorClipboardNodeContent = lang.FlowNode[];
+export interface EditorClipboardNodeContent {
+    flow: lang.FlowGraph;
+    selection: string[];
+}
 
 export interface FlowEditorPanelState extends PanelState {
     flowStack: string[];
@@ -53,3 +56,12 @@ export interface FlowEditorPanelState extends PanelState {
     relativeJointPosition: Map<JointLocationKey, Vec2>;
     clipboard: EditorClipboardNodeContent | null;
 }
+
+export interface FlowJointStyling {
+    background: string | null;
+    border: string | null;
+    shape: 'square' | 'round';
+    borderStyle: 'dashed' | 'solid';
+}
+
+export type FlowConnectingStrategy = 'list' | 'static';

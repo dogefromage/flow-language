@@ -1,47 +1,43 @@
-import * as lang from "@noodles/language";
 import * as bc from "@noodles/bytecode";
-import { ProcessState, RuntimeCallback, RuntimeProcess } from "../types/runtime";
+import * as lang from "@noodles/language";
 import { languageValidator } from "../config/languageConfig";
+import { ProcessState, RuntimeProcess } from "../types/runtime";
 
 export class ClientSideProcess extends RuntimeProcess {
     private state: ProcessState = 'uninitialized';
-    private machine!: bc.StackMachine;
-    private callback!: RuntimeCallback;
+    private smRoutine!: bc.StackMachineCoroutine;
 
     getState(): ProcessState {
         return this.state;
     }
-
     
     init(
         document: lang.FlowDocument,
         compilerArgs: bc.ByteCompilerArgs,
         runtimeArgs: bc.StackMachineArgs,
-        callback: RuntimeCallback,
     ) {
-
         // VALIDATE
         const context = languageValidator(document);
         // COMPILE
         const program = bc.compileDocument(context, compilerArgs);
         console.log(bc.byteProgramToString(program));
         
-        this.state = 'idle';
-        this.callback = callback;
-        this.machine = new bc.StackMachine(program, runtimeArgs);
+        this.state = 'waiting';
+        const sm = new bc.StackMachine(program, runtimeArgs);
+        this.smRoutine = sm.start();
     }
 
-    run(): void {
-        lang.assertTruthy(this.state !== 'uninitialized', 'Process must be initialized.');
+    resume() {
+        lang.assertTruthy(this.state === 'waiting', 'Can only resume process when it is waiting.');
 
-        this.state = 'active';
+        const ioResponse = this.smRoutine.next();
 
-        this.machine.interpret();
+        if (!ioResponse.done) {
+            this.state = 'waiting';
+            return ioResponse.value;
+        }
 
-        this.callback
-
-        yield this.machine.dpop().toString();
-
-        this.state = 'halted';
+        this.state = 'terminated';
+        return;
     }
 }

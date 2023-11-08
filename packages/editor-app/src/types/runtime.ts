@@ -1,6 +1,7 @@
 import * as bc from "@noodles/bytecode";
 import * as lang from "@noodles/language";
 import { Remote } from "comlink";
+import Emittery from "emittery";
 
 // export type RuntimeState = 'idle'| 'running'| 'debugging'| 'interrupted'
 // export type RuntimeInputSignal = 'run' | 'force-run' | 'debug' | 'restart-debug' | 'abort';
@@ -17,20 +18,22 @@ import { Remote } from "comlink";
 // }
 
 export interface RuntimeSliceState {
-    process: Remote<RuntimeProcess> | null;
+    process: {
+        remote: Remote<RuntimeProcess>;
+        worker: Worker;
+    } | null;
 }
 
-export type ProcessState = 'uninitialized' | 'idle' | 'active' | 'halted';
+export type ProcessState = 'uninitialized' | 'waiting' | 'terminated';
 export type RuntimeCallback = (msg: string) => void;
 
 export abstract class RuntimeProcess {
 
     abstract init(
         document: lang.FlowDocument, compilerArgs: bc.ByteCompilerArgs, runtimeArgs: bc.StackMachineArgs,
-        runtimeCallback: RuntimeCallback,
     ): void;
 
     abstract getState(): ProcessState;
 
-    abstract run(): void;
+    abstract resume(): string | undefined;
 }

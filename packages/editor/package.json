@@ -42,7 +42,7 @@
         "@types/sortablejs": "^1.15.3",
         "@types/styled-components": "^5.1.28",
         "@types/uuid": "^9.0.5",
-        "typescript": "^5.2.2",
+        "typescript": "*",
         "typescript-json-schema": "^0.61.0"
     }
 }

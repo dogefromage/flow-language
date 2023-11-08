@@ -19,8 +19,7 @@ export default function useDispatchCommand() {
             return console.error(`Command with id "${commandId}" not found`);
         }
         
-        const clientCursor = undefined;
-
+        const clientCursor = customParams.clientCursor;
         const baseArgs: BaseCommandArgs = {
             appState,
             clientCursor,
@@ -31,7 +30,7 @@ export default function useDispatchCommand() {
             returnedActions.push(command.actionCreator(baseArgs, customParams));
         } else {
             const panelManager = selectPanelManager(appState);
-            const activePanelId = panelManager.activePanelId;
+            const activePanelId = customParams.activePanelId ?? panelManager.activePanelId;
             const clientPanelRect = panelManager.clientRects.get(activePanelId);
             if (!clientPanelRect) {
                 return console.error(`Command panel client rect not found`);

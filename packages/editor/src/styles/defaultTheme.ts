@@ -19,7 +19,7 @@ const defaultTheme: DefaultTheme = {
         console: {
             accents: {
                 error: '#ed5050',
-                warn: '#eadf4e'
+                warning: '#eadf4e'
             }
         },
         // jointStyles: {

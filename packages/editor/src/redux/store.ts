@@ -20,7 +20,8 @@ function createMiddleware(getDefaultMiddleWare: CurriedGetDefaultMiddleware, con
                 'panels',
                 'config',
                 'menus',
-                'projectStorage.storage'
+                'projectStorage.storage',
+                'extensions',
             ],
             ignoreActions: true,
         },

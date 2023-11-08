@@ -55,6 +55,24 @@ stdChunks['module::standard::greater'] = chunk(2, [
     op(ByteOperation.ngt),
     op(ByteOperation.return),
 ]);
+stdChunks['module::standard::greater_equal'] = chunk(2, [
+    ...evalthunks(true, true),
+    op(ByteOperation.nlt),
+    op(ByteOperation.bneg),
+    op(ByteOperation.return),
+]);
+stdChunks['module::standard::less'] = chunk(2, [
+    ...evalthunks(true, true),
+    op(ByteOperation.nlt),
+    op(ByteOperation.return),
+]);
+stdChunks['module::standard::less_equal'] = chunk(2, [
+    ...evalthunks(true, true),
+    op(ByteOperation.ngt),
+    op(ByteOperation.bneg),
+    op(ByteOperation.return),
+]);
+
 stdChunks['module::standard::concat_strings'] = chunk(2, [
     ...evalthunks(true, true),
     op(ByteOperation.sconcat),
@@ -114,6 +132,10 @@ stdChunks['module::standard::evaluate'] = chunk(2, [
     // call by thunked name
     op(ByteOperation.evaluate),
     op(ByteOperation.call),
+    op(ByteOperation.return),
+]);
+stdChunks['module::standard::destructure'] = chunk(1, [
+    op(ByteOperation.evaluate),
     op(ByteOperation.return),
 ]);
 stdChunks['helper::obj_get'] = chunk(2, [

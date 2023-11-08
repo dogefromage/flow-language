@@ -11,9 +11,8 @@ function getDefaultCommandMap() {
 
 function getDefaultToolbar(): EditorConfig['toolbar'] {
 
-    const DocumentSubmenu = () => (
-        <Menus.Command commandId='global.export_document' />
-    );
+    const DocumentSubmenu = () => (<></>);
+
     const EditSubmenu = () => (<>
         <Menus.Command commandId='global.undo' />
         <Menus.Command commandId='global.redo' />

@@ -1,4 +1,3 @@
-import { Obj } from "@noodles/language/lib/types/types/utilTypes";
 import { PayloadAction } from "@reduxjs/toolkit";
 import { useEffect } from "react";
 import { panelStateBind, panelStateRemove } from "../redux/panelStateEnhancer";
@@ -19,7 +18,7 @@ export function useBindPanelState(panelId: string, createPanelState: CreatePanel
 /**
  * Use inside a panel reducer.
  */
-export function getPanelState<T extends PanelState>(s: Obj<T>, a: PayloadAction<{ panelId: string }>) {
+export function getPanelState<T extends PanelState>(s: Record<string, T>, a: PayloadAction<{ panelId: string }>) {
     const ps = s[ a.payload.panelId ];
     if (!ps) except(`Panel state not found paneldId=${a.payload.panelId}`);
     return ps;
@@ -31,6 +30,8 @@ export function offsetToClientPos(clientRect: Rect, offsetPos: Vec2): Vec2 {
         y: offsetPos.y + clientRect.y,
     }
 }
+
+
 
 export function clientToOffsetPos(clientRect: Rect, clientPos: Vec2): Vec2 {
     return {

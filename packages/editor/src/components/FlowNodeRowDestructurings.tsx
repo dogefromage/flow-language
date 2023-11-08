@@ -75,7 +75,7 @@ const InputListDestructuring = (props: RowComponentProps<lang.InputRowSignature>
                     />
                     <FlowNodeRowNameP $align='left'> {
                         (index < connections.length - 1) ?
-                            `${bracketSymbol(index, originalLen, 'input', 'sharp')} ${formatFlowLabel(row.id)}[${index}]` : ''
+                            `${formatFlowLabel(row.id)}[${index}] ${bracketSymbol(index, originalLen, 'input', 'sharp')}` : ''
                     }
                     </FlowNodeRowNameP>
                 </FlowNodeRowDiv>
@@ -114,7 +114,7 @@ const InputTupleDestructuring = (props: RowComponentProps<lang.InputRowSignature
                         env={env}
                     />
                     <FlowNodeRowNameP $align='left'> {
-                        `${bracketSymbol(index, connections.length, 'input', 'sharp')} ${formatFlowLabel(row.id)}[${index}]`
+                        `${formatFlowLabel(row.id)}[${index}] ${bracketSymbol(index, connections.length, 'input', 'sharp')}`
                     }
                     </FlowNodeRowNameP>
                 </FlowNodeRowDiv>

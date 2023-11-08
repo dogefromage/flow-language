@@ -1,8 +1,5 @@
 import styled, { css } from 'styled-components';
-// import { DataTypes, SelectionStatus } from '../types';
-// import { BORDER_RADIUS, BORDER_RADIUS_TOP, BOX_SHADOW } from './utils';
-import { SelectionStatus, Vec2 } from '../types';
-import { FlowJointStyling } from '../types/flowRows';
+import { FlowJointStyling, SelectionStatus, Vec2 } from '../types';
 
 export const FLOW_NODE_ROW_HEIGHT = 24;
 export const FLOW_NODE_MIN_WIDTH = 7 * FLOW_NODE_ROW_HEIGHT;

@@ -2,9 +2,11 @@ import React, { PropsWithChildren } from 'react';
 import { useSelectPanelState } from '../redux/panelStateEnhancer';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { flowInspectorPanelsSelectItem } from '../slices/panelFlowInspectorSlice';
-import { ViewTypes, listItemRegex } from '../types';
+import { ViewTypes,  } from '../types';
 import FormSortableList from './FormSortableList';
 import { flowsAddListItem, flowsRemoveListItem, flowsReorderList, flowsUpdateInput, useSelectSingleFlow } from '../slices/flowsSlice';
+import { documentRenameInput } from '../slices/documentSlice';
+import { listItemRegex } from '../utils/flows';
 
 interface FlowInspectorPortListProps {
     panelId: string;
@@ -22,6 +24,14 @@ const FlowInspectorInputList = ({ panelId, flowId }: PropsWithChildren<FlowInspe
         panelState.selectedItem.id : '';
         
     const inputNames = new Set(flow.inputs.map(input => input.id));
+
+    const select = (id: string) => {
+        dispatch(flowInspectorPanelsSelectItem({
+            panelId,
+            type: 'inputs',
+            id,
+        }))
+    }
 
     return (
         <FormSortableList
@@ -44,27 +54,27 @@ const FlowInspectorInputList = ({ panelId, flowId }: PropsWithChildren<FlowInspe
                     undo: { desc: `Removed input port "${portId}" from active flow.` },
                 }))
             }}
-            // onRename={(portId, label) => {
-            //     dispatch(flowsUpdateInput({
-            //         flowId,
-            //         portId,
-            //         newState: { label },
-            //         undo: { desc: `Renamed input port to '${label}'.` },
-            //     }));
-            // }}
-
-            addMessage='Add Input'
-            onValidateNewName={name => {
-                if (name.length == 0) {
+            onRename={(oldName, newName) => {
+                dispatch(documentRenameInput({
+                    flowId,
+                    oldName,
+                    newName,
+                    undo: { desc: `Renamed input '${oldName}' to '${newName}'.` },
+                }));
+                select(newName);
+            }}
+            onValidateNewName={(newName, oldName) => {
+                if (newName.length == 0) {
                     return { message: 'Please provide a name.' };
                 }
-                if (!listItemRegex.test(name)) {
+                if (!listItemRegex.test(newName)) {
                     return { message: 'Please provide a valid name. A name should only contain letters, digits, underscores and should not start with a number.' };
                 }
-                if (inputNames.has(name)) {
-                    return { message: `There is already a generic named '${name}'. Please use a different name.` };
+                if (inputNames.has(newName) && newName !== oldName) {
+                    return { message: `There is already an input named '${newName}'. Please use a different name.` };
                 }
             }}
+            addMessage='Add Input'
             onAdd={itemId => {
                 dispatch(flowsAddListItem({
                     flowId,
@@ -73,13 +83,7 @@ const FlowInspectorInputList = ({ panelId, flowId }: PropsWithChildren<FlowInspe
                     undo: { desc: `Added input port to active flow.` },
                 }));
             }}
-            onSelect={rowId => {
-                dispatch(flowInspectorPanelsSelectItem({
-                    panelId,
-                    type: 'inputs',
-                    id: rowId,
-                }));
-            }}
+            onSelect={select}
         />
     );
 }

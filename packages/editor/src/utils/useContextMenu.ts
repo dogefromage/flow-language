@@ -1,6 +1,7 @@
 import React from "react";
-import { useAppDispatch } from "../redux/stateHooks";
+import { useAppDispatch, useAppSelector } from "../redux/stateHooks";
 import { contextMenuOpen } from "../slices/contextMenuSlice";
+import { selectPanelManager } from "../slices/panelManagerSlice";
 import { CustomCommandParams, Vec2 } from "../types";
 
 export default function useContextMenu(
@@ -10,6 +11,7 @@ export default function useContextMenu(
     paramMapCallback?: (e: React.MouseEvent) => CustomCommandParams,
 ) {
     const dispatch = useAppDispatch();
+    const { activePanelId } = useAppSelector(selectPanelManager);
 
     const openContextMenu = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -20,7 +22,11 @@ export default function useContextMenu(
             y: e.clientY,
         };
 
-        const paramMap = paramMapCallback?.(e) || {};
+        const paramMap = {
+            clientCursor,
+            activePanelId,
+            ...paramMapCallback?.(e)
+        };
 
         dispatch(contextMenuOpen({ contextMenu: {
             panelId,

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 import { v4 as uuidv4 } from 'uuid';
-import { useAppDispatch } from '../redux/stateHooks';
 import { Vec2 } from '../types';
 import Menus from './Menus';
 
@@ -12,6 +11,7 @@ const ColorPickerDiv = styled.div.attrs<ColorDivProps>(({ color }) => ({
 })) <ColorDivProps>`
     width: 100%;
     height: 100%;
+    min-height: calc(0.8 * var(--list-height));
     background-color: var(--color);
 
     /* makes outline darker version of input color */
@@ -22,25 +22,6 @@ const ColorPickerDiv = styled.div.attrs<ColorDivProps>(({ color }) => ({
         opacity: 0.8;
     }
 `;
-
-// const COLOR_ELEMENT_KEY = 'color-input';
-
-// const colorPickerMenuShape: FloatingMenuShape = {
-//     type: 'floating',
-//     list: [
-//         {
-//             type: 'title',
-//             key: 'title',
-//             name: 'Color Picker',
-//             color: 'black',
-//         },
-//         {
-//             type: 'color',
-//             key: COLOR_ELEMENT_KEY,
-//             name: 'Color Wheel',
-//         }
-//     ]
-// }
 
 export interface FormColorPickerProps {
     value: string;

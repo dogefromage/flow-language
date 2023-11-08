@@ -1,13 +1,14 @@
-import { EditorDocumentState, except } from "@noodles/editor";
+import { except } from "@noodles/editor";
 import { ProjectFileData } from "../types/storage";
+import * as lang from "@noodles/language";
 
-export function documentStateToFileData(document: EditorDocumentState) {
+export function documentStateToFileData(document: lang.FlowDocument) {
     try {
         const documentJson = JSON.stringify(document);
 
         const data: ProjectFileData = {
-            title: document.header.title,
-            description: document.header.description,
+            title: document.title,
+            description: document.description,
             documentJson,
         }
         return data;
@@ -20,11 +21,9 @@ export function documentStateToFileData(document: EditorDocumentState) {
 
 export function fileDataToDocumentState(fileData: ProjectFileData) {
     try {
-        const doc: EditorDocumentState = JSON.parse(fileData.documentJson);
-        doc.header = {
-            title: fileData.title || 'Unnamed project',
-            description: fileData.description || '',
-        };
+        const doc: lang.FlowDocument = JSON.parse(fileData.documentJson);
+        doc.title = fileData.title || 'Unnamed project';
+        doc.description = fileData.description || '';
         return doc;
     }
     catch (e) {

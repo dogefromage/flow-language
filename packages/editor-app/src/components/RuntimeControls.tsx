@@ -39,7 +39,7 @@ const RuntimeControls = ({ }: PropsWithChildren<RuntimeControlsProps>) => {
             <MaterialSymbol $button $color={control} $size={22}>step_out</MaterialSymbol>
             <MaterialSymbol $button $color={control} $size={22}>step_into</MaterialSymbol> */}
             {/* <MaterialSymbol onClick={() => emitSignal('abort')} $button $color={stop} $size={20} >block</MaterialSymbol> */}
-            <p>{ _.capitalize(runtime.activeRuntime?.state || 'No runtime loaded') }</p>
+            {/* <p>{ _.capitalize(runtime.activeRuntime?.state || 'No runtime loaded') }</p> */}
         </ControlsWrapper>
     </>);
 }

@@ -1,7 +1,5 @@
-import { selectDocument } from "../../redux/stateHooks";
-import { undoEnhancerUndo, undoEnhancerRedo } from "../../redux/undoableEnhancer";
+import { undoEnhancerRedo, undoEnhancerUndo } from "../../redux/undoableEnhancer";
 import { Command } from "../../types";
-import { download } from "../../utils/download";
 import { flowEditorCommands } from "./flowEditorCommands";
 import { pageOutlinerCommands } from "./pageOutlinerCommands";
 

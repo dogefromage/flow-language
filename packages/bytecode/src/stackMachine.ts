@@ -1,6 +1,6 @@
 import * as lang from "@noodles/language";
 import { shorthands } from "./shorthands";
-import { ByteInstruction, ByteOperation, ByteProgram, CallFrame, CallableChunk, MACHINE_ENTRY_LABEL, StackMachineArgs, StackValue, ThunkValue, operationNameTags } from "./types";
+import { ByteInstruction, ByteOperation, ByteProgram, CallFrame, CallableChunk, MACHINE_ENTRY_LABEL, MachineIOResponse, StackMachineArgs, StackMachineCoroutine, StackValue, ThunkValue, operationNameTags } from "./types";
 import { instructionToString } from "./utils";
 
 const { op, thunk } = shorthands;
@@ -37,7 +37,7 @@ export class StackMachine {
         return lang.assertDef(this.program.chunks.get(label), `Could not find chunk with label '${label}'`);
     }
 
-    interpret() {
+    *start(): StackMachineCoroutine {
         try {
             this.execCall(MACHINE_ENTRY_LABEL, this.getChunk(MACHINE_ENTRY_LABEL));
 
@@ -49,6 +49,10 @@ export class StackMachine {
                 scope.ip++;
                 this.runInstruction(instr);
             }
+
+            const finalTop: StackValue = this.dpop();
+            yield finalTop.toString() + '\n';
+
         } catch (e: any) {
             e.message += '\n' + this.stackFrameToString();
             throw e;

@@ -1,10 +1,12 @@
 import { PropsWithChildren, useMemo } from 'react';
 import { useSelectPanelState } from '../redux/panelStateEnhancer';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { flowsUpdateOutput, useSelectSingleFlow } from '../slices/flowsSlice';
+import { documentRenameOutput } from '../slices/documentSlice';
+import { useSelectSingleFlow } from '../slices/flowsSlice';
 import { flowInspectorPanelsSelectItem } from '../slices/panelFlowInspectorSlice';
-import { ViewTypes, listItemRegex } from '../types';
+import { ViewTypes } from '../types';
 import FormSortableList from './FormSortableList';
+import { listItemRegex } from '../utils/flows';
 
 interface FlowInspectorOutputProps {
     panelId: string;
@@ -21,35 +23,38 @@ const FlowInspectorOutput = ({ panelId, flowId }: PropsWithChildren<FlowInspecto
     const selectedId = panelState?.selectedItem?.type === 'output' ?
         panelState?.selectedItem?.id : '';
 
-    const mutableOrder = useMemo(() => [structuredClone(flow.output)], [flow])
+    const mutableOrder = useMemo(() => [structuredClone(flow.output)], [flow]);
+
+    const select = (id: string) => {
+        dispatch(flowInspectorPanelsSelectItem({
+            panelId,
+            type: 'output',
+            id,
+        }))
+    }
 
     return (
         <FormSortableList
             order={mutableOrder}
             selected={selectedId}
             disableAdd
-            onRename={(portId, newId) => {
-                dispatch(flowsUpdateOutput({
+            onRename={(_, newName) => {
+                dispatch(documentRenameOutput({
                     flowId,
-                    newState: { id: newId },
-                    undo: { desc: `Renamed output port to '${newId}'.` },
+                    newName,
+                    undo: { desc: `Renamed output to '${newName}'.` },
                 }));
+                select(newName);
             }}
-            onValidateNewName={newId => {
-                if (newId.length == 0) {
+            onValidateNewName={(newName, oldName) => {
+                if (newName.length == 0) {
                     return { message: 'Please provide a name.' };
                 }
-                if (!listItemRegex.test(newId)) {
+                if (!listItemRegex.test(newName)) {
                     return { message: 'Please provide a valid name. A name should only contain letters, digits, underscores and should not start with a number.' };
                 }
             }}
-            onSelect={id => {
-                dispatch(flowInspectorPanelsSelectItem({
-                    panelId,
-                    type: 'output',
-                    id,
-                }))
-            }}
+            onSelect={select}
         />
     );
 }

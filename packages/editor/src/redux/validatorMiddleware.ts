@@ -1,9 +1,8 @@
 import { Middleware } from 'redux';
-import { selectConfig } from '../slices/configSlice';
-import { validationSetResult } from '../slices/contextSlice';
+import { selectDocumentContext, validationSetResult } from '../slices/contextSlice';
+import { selectDocument } from '../slices/documentSlice';
 import { EditorConfig } from '../types';
 import { RootState } from './rootReducer';
-import { selectDocument, useAppSelector } from './stateHooks';
 
 /**
  * Directly updates context if document has changed
@@ -17,12 +16,13 @@ export function createValidatorMiddleware(config: EditorConfig) {
     > = storeApi => next => action => {
         const oldState = storeApi.getState();
         const oldDoc = selectDocument(oldState);
-    
+        const context = selectDocumentContext(oldState);
+
         let result = next(action);
     
         const newState = storeApi.getState();
         const newDoc = selectDocument(newState);
-        if (oldDoc != newDoc) {
+        if (context.documentContext == null || oldDoc != newDoc) {
             // revalidate
             try {
                 const projectContext = config.language.validator(newDoc);

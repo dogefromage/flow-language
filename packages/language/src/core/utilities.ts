@@ -1,4 +1,4 @@
-import { FlowDocument, LanguageValidator } from "../types";
+import { FlowDocument, FlowDocumentContext, LanguageValidator } from "../types";
 import { LanguageConfiguration } from "../types/configuration";
 import { validateDocument } from "./validateDocument";
 
@@ -6,3 +6,5 @@ export function createLanguageValidator(config: LanguageConfiguration): Language
     return (document: FlowDocument) => 
         validateDocument(document, config);
 }
+
+

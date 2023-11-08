@@ -2,17 +2,19 @@ import _ from 'lodash';
 import { supabase } from '../config/supabase';
 import { except } from '@noodles/editor';
 
+const detailedProjectSelection = `
+    id, 
+    title,
+    description,
+    creator:users (id, username), 
+    project_data
+`;
+
 // Use _.memoize in future but implement expiration somehow. 
 export const selectProjectById = async (projectId: string) => {
     return supabase
         .from('projects')
-        .select(`
-            id, 
-            title,
-            description,
-            creator:users (id, username), 
-            project_data
-        `)
+        .select(detailedProjectSelection)
         .eq('id', projectId)
         .single();
 };
@@ -56,4 +58,17 @@ export async function getSessionStrict() {
         except(`An error occured while loading the current session.`);
     }
     return sess.data.session!;
+}
+
+export const createProject = async (rows: {
+    title: string;
+    description: string;
+    project_data: string;
+    creator: string;
+}) => {
+    return await supabase
+        .from('projects')
+        .insert([rows])
+        .select(detailedProjectSelection)
+        .single();
 }

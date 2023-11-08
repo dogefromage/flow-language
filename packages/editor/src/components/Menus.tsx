@@ -531,7 +531,7 @@ const MenuColorWheel = React.forwardRef<HTMLDivElement, PropsWithChildren<MenuCo
             />
             <MenuColorSliderWrapperDiv>
                 <MenuColorValueSliderInput
-                    maxValue={maxValueHex}
+                    $maxValue={maxValueHex}
                     value={colorValue ?? 0}
                     onChange={e => {
                         const colorValue = (e.target as HTMLInputElement).valueAsNumber;

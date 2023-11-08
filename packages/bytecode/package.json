@@ -14,7 +14,7 @@
     "devDependencies": {
         "@noodles/language": "workspace:^",
         "@types/lodash": "^4.14.195",
-        "typescript": "5.0.2"
+        "typescript": "*"
     },
     "dependencies": {
         "lodash": "^4.17.21"

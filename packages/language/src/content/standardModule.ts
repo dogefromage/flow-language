@@ -158,6 +158,36 @@ signatures.push({
     output: outputRow.boolean('output'),
 });
 signatures.push({
+    id: 'greater_equal',
+    attributes: {
+        category: 'Numbers',
+        description: 'Takes two numbers and returns true if the first value is greater than or equal to the second, otherwise, it returns false.',
+    },
+    generics: [],
+    inputs: [varRow.number('a', 0), varRow.number('b', 0)],
+    output: outputRow.boolean('output'),
+});
+signatures.push({
+    id: 'less',
+    attributes: {
+        category: 'Numbers',
+        description: 'Takes two numbers and returns true if the first value is less than the second, otherwise, it returns false.',
+    },
+    generics: [],
+    inputs: [varRow.number('a', 0), varRow.number('b', 0)],
+    output: outputRow.boolean('output'),
+});
+signatures.push({
+    id: 'less_equal',
+    attributes: {
+        category: 'Numbers',
+        description: 'Takes two numbers and returns true if the first value is less than or equal to the second, otherwise, it returns false.',
+    },
+    generics: [],
+    inputs: [varRow.number('a', 0), varRow.number('b', 0)],
+    output: outputRow.boolean('output'),
+});
+signatures.push({
     id: 'concat_strings',
     attributes: {
         category: 'Strings',
@@ -286,6 +316,18 @@ signatures.push({
         varRow.tuple('_arguments', createGenericType('P')),
     ],
     output: outputRow.generic('return_value', createGenericType('R')),
+});
+signatures.push({
+    id: 'destructure',
+    attributes: {
+        category: 'Data',
+        description: 'Destructures tuple or object type into separate rows.',
+    },
+    generics: [genParam('T')],
+    inputs: [
+        simpleRow.generic('structure', createGenericType('T')),
+    ],
+    output: outputRow.destructured('destructured', createGenericType('T')),
 });
 
 export const primitiveTypes = {

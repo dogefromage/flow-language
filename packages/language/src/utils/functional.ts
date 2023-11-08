@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { assertTruthy } from '.';
 import { Obj } from '../types/internal';
 import { mem } from './mem';
@@ -26,8 +27,8 @@ export function memoObject<T extends any>(obj: Obj<T>): Obj<T> {
 }
 
 export const memoList = mem(
-    <T>(...items: T[]) => items, 
-    undefined, 
+    <T>(...items: T[]) => items,
+    undefined,
     { tag: 'memoList' }
 );
 
@@ -44,21 +45,21 @@ export function mapObj<X, Y>(
     obj: Record<string, X>, map: (value: X, key: string) => Y
 ): Record<string, Y> {
     const pairs = Object.entries(obj);
-    const mapped = pairs.map<[ string, Y ]>(([ k, x ]) => [ k, map(x, k) ]);
+    const mapped = pairs.map<[string, Y]>(([k, x]) => [k, map(x, k)]);
     return Object.fromEntries(mapped);
 }
 export function mapObjKeys<X>(
     obj: Record<string, X>, map: (oldKey: string) => string
 ): Record<string, X> {
     const pairs = Object.entries(obj);
-    const mapped = pairs.map<[ string, X ]>(([ oldKey, x ]) => [ map(oldKey), x ]);
+    const mapped = pairs.map<[string, X]>(([oldKey, x]) => [map(oldKey), x]);
     return Object.fromEntries(mapped);
 }
 export function filterObj<X>(
     obj: Record<string, X>, predicate: (x: X, key: string) => any
 ): Record<string, X> {
     const pairs = Object.entries(obj);
-    const filtered = pairs.filter(([ key, x ]) => predicate(x, key));
+    const filtered = pairs.filter(([key, x]) => predicate(x, key));
     return Object.fromEntries(filtered);
 }
 
@@ -84,4 +85,11 @@ export function findMaxIntegerKey(obj: Record<string, any>) {
         }
     }
     return maxNumKey;
+}
+
+export function maximum<T>(arr: T[], comparator: (a: T, b: T) => number) {
+    return arr.reduce(
+        (a, b) => comparator(a, b) < 0 ? b : a,
+        arr[0]
+    );
 }

@@ -1,7 +1,6 @@
-import { AnyAction, AsyncThunkAction } from '@reduxjs/toolkit';
+import { AppDispatch, RootState } from '../redux/rootReducer';
 import { PanelState, PanelStateMap, ViewTypes } from './panelManager';
 import { Rect, Vec2 } from './utils';
-import { AppDispatch, RootState } from '../redux/rootReducer';
 
 export interface KeyCombination {
     key: string;
@@ -27,7 +26,10 @@ export interface ViewCommandArgs<P extends PanelState> extends BaseCommandArgs {
     offsetCursor?: Vec2;
 }
 
-export type CustomCommandParams = { [key: string]: any }
+export type CustomCommandParams = { [key: string]: any } & {
+    clientCursor?: Vec2;
+    activePanelId?: string;
+}
 
 export type AppAction = Parameters<AppDispatch>[0];
 

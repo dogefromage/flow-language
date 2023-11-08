@@ -29,7 +29,7 @@ const ProjectSelectionDropdown = ({}: PropsWithChildren<ProjectSelectionDropdown
         if (locationKey === 'blank') {
             return {
                 options: ['blank'],
-                names: { 'blank': 'Blank Project (unsaved)' },
+                names: { 'blank': 'Blank Project' },
             };
         }
         const options = [locationKey];
@@ -64,7 +64,7 @@ function formatProjectFileName(file: ProjectFile | null) {
         return `Unsaved Project`;
     }
     const baseName = `[${file.location.channel}] ${file.data.title}`;
-    if (file.data.readonly) {
+    if (!file.writePermission) {
         return baseName + ' (readonly)';
     }
     return baseName;

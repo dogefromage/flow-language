@@ -26,7 +26,7 @@ const LayoutViewRoot = () => {
                 </ReflexContainer>
             </ReflexElement>
             <ReflexSplitter />
-            <ReflexElement minSize={200}  flex={2}>
+            <ReflexElement minSize={250}  flex={2}>
                 <FlowInspectorView panelId={'inspector'} />
             </ReflexElement>
         </ReflexContainer>

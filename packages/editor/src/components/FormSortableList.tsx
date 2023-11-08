@@ -3,6 +3,7 @@ import * as SORTABLE from 'react-sortablejs';
 import styled from 'styled-components';
 import FormRenameField, { NameValidationError } from './FormRenameField';
 import { MaterialSymbol } from '../styles/icons';
+import { ELLIPSIS_STYLES } from '../styles/typography';
 
 const ListDiv = styled.div<{ $disabled?: boolean }>`
     width: 100%;
@@ -14,6 +15,10 @@ const ListDiv = styled.div<{ $disabled?: boolean }>`
     display: flex;
     flex-direction: column;
     gap: var(--list-gap);
+
+    p {
+        ${ELLIPSIS_STYLES}
+    }
 
     .sortable-div {
         display: flex;
@@ -48,7 +53,6 @@ const AddDiv = styled(ItemDiv)``;
 
 interface Item {
     id: string
-    label?: string;
 }
 
 export interface FormSortableListProps {
@@ -59,7 +63,7 @@ export interface FormSortableListProps {
     onRemove?: (id: string) => void;
     onSelect?: (id: string) => void;
     onAdd?: (name: string) => void;
-    onValidateNewName?: (newValue: string) => NameValidationError | undefined;
+    onValidateNewName?: (newValue: string, lastName: string) => NameValidationError | undefined;
     addMessage?: string;
     disableAdd?: boolean;
 }
@@ -95,7 +99,7 @@ const FormSortableList = ({ order, selected, onOrder, onSelect, onRename,
                                     /* $disabled={disabled */>drag_handle</MaterialSymbol>
                                         <FormRenameField
                                             disabled={!onRename}
-                                            value={row.label || row.id}
+                                            value={row.id}
                                             onChange={newId => onRename?.(row.id, newId)}
                                             onValidate={onValidateNewName}
                                         />
