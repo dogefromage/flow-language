@@ -102,6 +102,7 @@ export const flowsSlice = createSlice({
                     a: { id: 'a', signature: { path: `document::${id}::input` }, position: { x: 400, y: 200 }, rowStates: {} },
                     b: { id: 'b', signature: { path: `document::${id}::output` }, position: { x: 1000, y: 200 }, rowStates: {} },
                 },
+                regions: {},
             }
             s[id] = flow as any;
         },

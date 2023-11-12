@@ -39,6 +39,17 @@ const defaultRootFlow: lang.FlowGraph = {
             position: { x: 400, y: 294 }
         },
     },
+    regions: {
+        a: {
+            id: 'a',
+            attributes: {
+                text: 'Hello region!',
+                color: 'red',
+            },
+            position: { x: 200, y: 100 },
+            size: { w: 200, h: 150 },
+        }
+    },
     imports: [ 'standard' ],
 };
 

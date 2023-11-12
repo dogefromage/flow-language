@@ -1,6 +1,6 @@
 import { InputRowSignature, NamespacePath, OutputRowSignature } from "./signatures";
 import { TemplateParameter, InitializerValue } from "./typeSystem";
-import { Obj, Vec2 } from "./internal";
+import { Obj, Vec2, Size2 } from "./internal";
 
 export interface InputJointLocation {
     direction: 'input';
@@ -29,13 +29,20 @@ export interface RowState {
 export interface FlowNode {
     id: string;
     position: Vec2;
-    rowStates: Obj<RowState>;
     signature: NamespacePath;
+    rowStates: Obj<RowState>;
+}
+export interface FlowRegion {
+    id: string;
+    position: Vec2;
+    size: Size2;
+    attributes: Record<string, string>;
 }
 
 export interface FlowGraph {
     id: string;
     nodes: Obj<FlowNode>;
+    regions: Obj<FlowRegion>;
     attributes: Record<string, string>;
     generics: TemplateParameter[];
     inputs: InputRowSignature[];

@@ -28,7 +28,7 @@ export const runtimeExtension: EditorExtension = config => {
     );
 
     config.commands[runtimeKillCommand] = makeGlobalCommand(
-        runtimeRunCommand,
+        runtimeKillCommand,
         'Kill Process',
         ({ appState }, params) => {
             return runtimeKillProcess();

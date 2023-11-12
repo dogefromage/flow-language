@@ -65,3 +65,7 @@ export interface FlowJointStyling {
 }
 
 export type FlowConnectingStrategy = 'list' | 'static';
+
+export interface ContextSliceState {
+    documentContext: lang.FlowDocumentContext | null;
+}

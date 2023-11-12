@@ -3,10 +3,7 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { castDraft } from "immer";
 import { useCallback } from "react";
 import { RootState } from "../redux/rootReducer";
-
-interface ContextSliceState {
-    documentContext: lang.FlowDocumentContext | null;
-}
+import { ContextSliceState } from '../types';
 
 const initialState: ContextSliceState = {
     documentContext: null,

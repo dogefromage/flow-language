@@ -21,7 +21,13 @@ const FlowEditorContent = ({ flowId, panelId, getPanelState }: Props) => {
     }
 
     return (
-        <>
+        <> 
+            {
+                // regions
+                Object.values(context.ref.regions).map(region => 
+                    <FlowRegion key={region.id} region={region} />
+                )
+            }
             <FlowEdges panelId={panelId} flowId={flowId} />
             {
                 // nodes

@@ -3,6 +3,10 @@ export interface Vec2 {
     x: number;
     y: number;
 }
+export interface Size2 {
+    w: number;
+    h: number;
+}
 
 export type Obj<T> = Record<string, T>;
 
