@@ -1,4 +1,4 @@
-import * as lang from "@noodles/language";
+import * as lang from "noodle-language";
 import { shorthands } from "./shorthands";
 import { ByteInstruction, ByteOperation, ByteProgram, CallFrame, CallableChunk, MACHINE_ENTRY_LABEL, MachineIOResponse, StackMachineArgs, StackMachineCoroutine, StackValue, ThunkValue, operationNameTags } from "./types";
 import { instructionToString } from "./utils";

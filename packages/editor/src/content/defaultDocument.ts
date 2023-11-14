@@ -1,4 +1,4 @@
-import * as lang from "@noodles/language";
+import * as lang from "noodle-language";
 
 export const defaultFlowSignature: lang.AnonymousFlowSignature = {
     generics: [],

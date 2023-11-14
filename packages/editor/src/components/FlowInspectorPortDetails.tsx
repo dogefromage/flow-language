@@ -2,7 +2,7 @@ import FormSelectOption from './FormSelectOption';
 import React, { PropsWithChildren } from 'react';
 import TypeBuilder from './TypeBuilder';
 import { AllRowSignatures } from '../types/flowInspectorView';
-import * as lang from '@noodles/language';
+import * as lang from 'noodle-language';
 import { flowRowTypeNames } from '../utils/flows';
 import {
     flowsReplaceGeneric,

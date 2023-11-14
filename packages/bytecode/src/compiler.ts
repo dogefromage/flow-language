@@ -1,4 +1,4 @@
-import * as lang from "@noodles/language";
+import * as lang from "noodle-language";
 import _ from 'lodash';
 import { shorthands } from "./shorthands";
 import { DocumentSource, StandardSource } from "./sources";

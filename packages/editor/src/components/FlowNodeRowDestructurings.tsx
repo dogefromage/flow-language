@@ -1,4 +1,4 @@
-import * as lang from '@noodles/language';
+import * as lang from 'noodle-language';
 import { RowComponentProps } from './FlowNodeRowComponents';
 import { FlowNodeRowErrorWrapper } from './FlowNodeErrorWrapper';
 import { FlowNodeRowDiv, FlowNodeRowNameP } from '../styles/flowStyles';

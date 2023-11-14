@@ -1,4 +1,4 @@
-import { assertDef } from "@noodles/language";
+import { assertDef } from "noodle-language";
 import { ByteProgram, MACHINE_ENTRY_LABEL } from "./types";
 
 

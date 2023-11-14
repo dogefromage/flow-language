@@ -1,4 +1,4 @@
-import * as lang from "@noodles/language";
+import * as lang from "noodle-language";
 import { AnyAction, createAction } from "@reduxjs/toolkit";
 import produce from "immer";
 import { createUndoAction } from "../types";

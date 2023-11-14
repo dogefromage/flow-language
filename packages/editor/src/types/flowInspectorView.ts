@@ -1,5 +1,5 @@
 import { PanelState } from "./panelManager";
-import * as lang from '@noodles/language';
+import * as lang from 'noodle-language';
 
 export const FLOW_INSPECTOR_VIEW_TYPE = 'flow-inspector';
 

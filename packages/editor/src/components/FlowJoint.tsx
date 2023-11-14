@@ -1,5 +1,5 @@
-import { useDraggable, useDroppable } from '@noodles/interactive';
-import * as lang from '@noodles/language';
+import { useDraggable, useDroppable } from 'dragzone';
+import * as lang from 'noodle-language';
 import React, { useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { flowsAddConnection } from '../slices/flowsSlice';

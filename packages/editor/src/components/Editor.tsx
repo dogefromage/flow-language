@@ -1,4 +1,4 @@
-import { DragzonePortalMount } from '@noodles/interactive';
+import { DragzonePortalMount } from 'dragzone';
 import { Provider } from 'react-redux';
 import { ThemeProvider } from 'styled-components';
 import { initStore } from '../redux/store';

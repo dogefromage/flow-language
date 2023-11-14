@@ -1,4 +1,4 @@
-import * as lang from "@noodles/language";
+import * as lang from "noodle-language";
 import React from "react";
 import { FlowNodeRowDiv, FlowNodeRowNameP } from "../styles/flowStyles";
 import { formatFlowLabel } from "../utils/flows";

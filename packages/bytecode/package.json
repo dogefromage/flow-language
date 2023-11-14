@@ -1,5 +1,5 @@
 {
-    "name": "@noodles/bytecode",
+    "name": "noodle-bytecode-runtime",
     "version": "1.0.0",
     "description": "",
     "types": "lib/types/index.d.ts",
@@ -12,7 +12,7 @@
     "author": "dogefromage",
     "license": "MIT",
     "devDependencies": {
-        "@noodles/language": "workspace:^",
+        "noodle-language": "workspace:^",
         "@types/lodash": "^4.14.195",
         "typescript": "*"
     },

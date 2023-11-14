@@ -1,4 +1,4 @@
-import * as lang from "@noodles/language";
+import * as lang from "noodle-language";
 import { createSlice } from "@reduxjs/toolkit";
 import { Draft, original } from "immer";
 import { useCallback } from "react";

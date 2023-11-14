@@ -1,5 +1,5 @@
-import { useMouseDrag } from '@noodles/interactive';
-import * as lang from '@noodles/language';
+import { useMouseDrag } from 'dragzone';
+import * as lang from 'noodle-language';
 import React, { useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';

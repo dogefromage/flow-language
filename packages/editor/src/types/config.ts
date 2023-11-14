@@ -2,8 +2,8 @@ import { Reducer } from "@reduxjs/toolkit";
 import React from 'react';
 import { Command, PanelState } from ".";
 import { RootState } from "../redux/rootReducer";
-import { assertDef } from "@noodles/language";
-import * as lang from '@noodles/language';
+import { assertDef } from "noodle-language";
+import * as lang from 'noodle-language';
 
 export interface EditorConfig {
     // state

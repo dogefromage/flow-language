@@ -1,4 +1,4 @@
-import { FlowDocumentContext, NamespacePath } from "@noodles/language";
+import { FlowDocumentContext, NamespacePath } from "noodle-language";
 import { shorthands } from "./shorthands";
 import { ByteInstructionStream, ByteOperation, ByteSource, CallableChunk } from "./types";
 

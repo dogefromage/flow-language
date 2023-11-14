@@ -1,4 +1,4 @@
-import { assertDef, assertNever, AnonymousFlowSignature } from "@noodles/language";
+import { assertDef, assertNever, AnonymousFlowSignature } from "noodle-language";
 import { ByteProgram, operationNameTags, ByteInstruction, StackValue } from "./types";
 
 export function byteProgramToString(program: ByteProgram) {

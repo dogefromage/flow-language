@@ -1,4 +1,4 @@
-import { NamespacePath } from "@noodles/language";
+import { NamespacePath } from "noodle-language";
 
 export enum ByteOperation {
     // Unary ops

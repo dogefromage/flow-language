@@ -7,7 +7,7 @@ import { CreatePanelStateCallback, DraggingJointContext, EditorClipboardNodeCont
 import { clamp } from "../utils/math";
 import { getPanelState } from "../utils/panelManager";
 import { pointScreenToWorld, vectorScreenToWorld } from "../utils/planarCameraMath";
-import * as lang from '@noodles/language';
+import * as lang from 'noodle-language';
 import { except } from "../utils/exceptions";
 
 export const CAMERA_MIN_ZOOM = 1e-2;

@@ -1,5 +1,5 @@
-import { useDroppable, useMouseDrag } from '@noodles/interactive';
-import * as lang from '@noodles/language';
+import { useDroppable, useMouseDrag } from 'dragzone';
+import * as lang from 'noodle-language';
 import _ from 'lodash';
 import React, { useCallback, useRef, useState } from 'react';
 import styled from 'styled-components';

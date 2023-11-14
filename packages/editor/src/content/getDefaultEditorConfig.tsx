@@ -1,7 +1,7 @@
 import Menus from "../components/Menus";
 import { EditorConfig } from "../types/config";
 import { defaultCommands } from "./commands/defaultCommands";
-import * as lang from '@noodles/language';
+import * as lang from 'noodle-language';
 import { defaultPanelReducers } from "./defaultPanels";
 
 function getDefaultCommandMap() {

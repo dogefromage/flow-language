@@ -1,4 +1,4 @@
-import lang, { assertNever } from '@noodles/language';
+import lang, { assertNever } from 'noodle-language';
 
 export function formatSpecifier(X: lang.TypeSpecifier, env: lang.FlowEnvironment): string {
     switch (X.type) {

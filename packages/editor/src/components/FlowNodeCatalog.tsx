@@ -1,5 +1,5 @@
-import * as lang from "@noodles/language";
-import { NamespacePath } from "@noodles/language";
+import * as lang from "noodle-language";
+import { NamespacePath } from "noodle-language";
 import { useCallback, useMemo, useState } from "react";
 import { AppDispatch } from "../redux/rootReducer";
 import { useAppDispatch, useAppSelector } from "../redux/stateHooks";

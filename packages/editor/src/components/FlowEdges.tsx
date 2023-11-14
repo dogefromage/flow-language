@@ -1,4 +1,4 @@
-import { EdgeColor, FlowEdge, FlowGraph, JointLocation } from '@noodles/language';
+import { EdgeColor, FlowEdge, FlowGraph, JointLocation } from 'noodle-language';
 import styled from 'styled-components';
 import { Box2, Vector2 } from 'threejs-math';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';

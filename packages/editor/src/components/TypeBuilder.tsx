@@ -1,4 +1,4 @@
-import * as lang from '@noodles/language';
+import * as lang from 'noodle-language';
 import React, { PropsWithChildren, useMemo } from 'react';
 import styled from 'styled-components';
 import FormSelectOption from './FormSelectOption';

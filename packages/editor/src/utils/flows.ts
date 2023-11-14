@@ -1,4 +1,4 @@
-import * as lang from "@noodles/language";
+import * as lang from "noodle-language";
 import { FlowJointStyling, JointLocationKey } from "../types";
 import { AllRowSignatures } from "../types/flowInspectorView";
 import _ from "lodash";

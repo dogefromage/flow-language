@@ -1,4 +1,4 @@
-import * as lang from '@noodles/language';
+import * as lang from 'noodle-language';
 import React, { Fragment, PropsWithChildren } from 'react';
 import styled from 'styled-components';
 import { Bold } from '../styles/typography';

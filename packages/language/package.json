@@ -1,5 +1,5 @@
 {
-    "name": "@noodles/language",
+    "name": "noodle-language",
     "version": "1.0.0",
     "description": "",
     "types": "lib/types/index.d.ts",

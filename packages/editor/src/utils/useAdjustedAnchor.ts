@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useAppSelector } from "../redux/stateHooks";
 import { selectPanelManager } from "../slices/panelManagerSlice";
 import { Size2, Vec2 } from "../types";
-import { assertNever } from "@noodles/language";
+import { assertNever } from "noodle-language";
 
 const AVAIL_MARGIN = 8;
 const SIZE_MARGIN = 4;

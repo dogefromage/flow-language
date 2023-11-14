@@ -1,6 +1,6 @@
 import React, { PropsWithChildren } from 'react';
 import { FlowNodeNameWrapper, FlowNodeRowDiv, FlowNodeRowNameP } from '../styles/flowStyles';
-import * as lang from '@noodles/language';
+import * as lang from 'noodle-language';
 
 interface FlowNodeMissingContentProps {
     signaturePath: lang.NamespacePath;

@@ -1,5 +1,5 @@
 import React, { PropsWithChildren, useRef, useState } from 'react';
-import * as lang from '@noodles/language';
+import * as lang from 'noodle-language';
 import { useAppDispatch } from '../redux/stateHooks';
 import { flowsSetRegionAttribute } from '../slices/flowsSlice';
 import styled from 'styled-components';
