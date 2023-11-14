@@ -1,7 +1,6 @@
 import * as bc from "@noodles/bytecode";
 import * as lang from "@noodles/language";
 import { Remote } from "comlink";
-import Emittery from "emittery";
 
 // export type RuntimeState = 'idle'| 'running'| 'debugging'| 'interrupted'
 // export type RuntimeInputSignal = 'run' | 'force-run' | 'debug' | 'restart-debug' | 'abort';

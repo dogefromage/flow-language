@@ -1,9 +1,10 @@
 import * as lang from "@noodles/language";
 import { AnyAction, createAction } from "@reduxjs/toolkit";
 import produce from "immer";
-import { createUndoAction, except } from "../types";
+import { createUndoAction } from "../types";
 import flowsReducer from "./flowsSlice";
 import { RootState } from "../redux/rootReducer";
+import { except } from "../utils/exceptions";
 
 export const documentSetTitle = createUndoAction
     <{ title: string }, 'document.setTitle'>('document.setTitle');

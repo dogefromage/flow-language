@@ -1,12 +1,12 @@
-import { EditorExtension, Menus, consolePushLine, content, createConsoleError, createExtensionSelector, documentReplace, editorSetActiveFlow, except, makeGlobalCommand, selectDocument, useAppDispatch, useAppSelector } from "@noodles/editor";
+import { EditorExtension, Menus, content, createConsoleError, createExtensionSelector, createGlobalCommand, documentReplace, except, selectDocument, useAppDispatch, useAppSelector } from "@noodles/editor";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { useEffect } from "react";
 import ProjectSelectionDropdown from "../components/ProjectSelectionDropdown";
-import { createProject, selectProjectById, selectUsersProjects, updateProjectTitleDescriptionData } from "../queries";
 import { supabase } from "../config/supabase";
+import { createProject, selectProjectById, selectUsersProjects, updateProjectTitleDescriptionData } from "../queries";
 import { DetailedProject, MinimalProject, ProjectFile, ProjectFileData, ProjectFileLocation, StorageSliceState } from "../types/storage";
-import { takeSingle } from "../utils/utils";
 import { documentStateToFileData, fileDataToDocumentState } from "../utils/serialization";
+import { takeSingle } from "../utils/utils";
 import { selectUser } from "./userExtension";
 
 const initialState: StorageSliceState = {
@@ -185,9 +185,9 @@ export const selectStorage = createExtensionSelector<StorageSliceState>(extensio
 
 export const storageExtension: EditorExtension = config => {
     // add user state
-    config.stateReducers[extensionId] = storageSlice.reducer;
+    config.customReducers[extensionId] = storageSlice.reducer;
 
-    config.commands[saveCommand] = makeGlobalCommand(
+    config.commands[saveCommand] = createGlobalCommand(
         saveCommand,
         'Save Project',
         ({ appState }) => {
@@ -213,7 +213,7 @@ export const storageExtension: EditorExtension = config => {
         [{ ctrlKey: true, key: 's' }],
     );
 
-    config.commands[exportCommand] = makeGlobalCommand(
+    config.commands[exportCommand] = createGlobalCommand(
         exportCommand,
         'Export Document',
         ({ appState }) => {
@@ -230,7 +230,7 @@ export const storageExtension: EditorExtension = config => {
         }
     );
 
-    config.commands[blankProjectCommand] = makeGlobalCommand(
+    config.commands[blankProjectCommand] = createGlobalCommand(
         blankProjectCommand,
         'Create Blank Project',
         ({}) => {

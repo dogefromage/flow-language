@@ -6,11 +6,8 @@ import contextReducer from "../slices/contextSlice";
 import documentReducer from "../slices/documentSlice";
 import editorReducer from "../slices/editorSlice";
 import menusReducer from "../slices/menusSlice";
-import flowEditorPanelsReducer from "../slices/panelFlowEditorSlice";
-import flowInspectorPanelsReducer from "../slices/panelFlowInspectorSlice";
 import panelManagerReducer from "../slices/panelManagerSlice";
-import pageOutlinerPanelsReducer from "../slices/panelPageOutlinerSlice";
-import { EditorConfig, ViewTypes } from "../types";
+import { EditorConfig } from "../types";
 import catchExceptionEnhancer from "./catchExceptionEnhancer";
 import undoableEnhancer from "./undoableEnhancer";
 
@@ -20,11 +17,6 @@ const appContent = {
     ),
     context: contextReducer,
     editor: editorReducer,
-    panels: combineReducers({
-        [ViewTypes.FlowEditor]: flowEditorPanelsReducer,
-        [ViewTypes.PageOutliner]: pageOutlinerPanelsReducer,
-        [ViewTypes.FlowInspector]: flowInspectorPanelsReducer,
-    }),
     panelManager: panelManagerReducer,
     menus: menusReducer,
     config: contentReducer,
@@ -41,7 +33,8 @@ function createFullReducer(config: EditorConfig) {
     return catchExceptionEnhancer(
         combineReducers({
             ...appContent,
-            extensions: combineReducers(config.stateReducers || {}),
+            extensions: combineReducers(config.customReducers || {}),
+            panels: combineReducers(config.panelReducers || {}),
         })
     );
 }

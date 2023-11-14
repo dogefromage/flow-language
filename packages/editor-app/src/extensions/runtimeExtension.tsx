@@ -1,5 +1,5 @@
 import * as bc from '@noodles/bytecode';
-import { EditorExtension, Menus, consolePushLine, createConsoleError, createConsoleWarn, createExtensionSelector, except, makeGlobalCommand, selectDocument, useAppDispatch, useAppSelector } from "@noodles/editor";
+import { createConsoleWarn, EditorExtension, Menus, consolePushLine, createExtensionSelector, createGlobalCommand, selectDocument, useAppDispatch, useAppSelector, except, createConsoleError } from "@noodles/editor";
 import { FlowDocument } from "@noodles/language";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { Remote, wrap } from "comlink";
@@ -11,9 +11,9 @@ export const runtimeRunCommand = `${extensionId}.run`;
 export const runtimeKillCommand = `${extensionId}.kill`;
 
 export const runtimeExtension: EditorExtension = config => {
-    config.stateReducers[extensionId] = runtimeSlice.reducer;
+    config.customReducers[extensionId] = runtimeSlice.reducer;
 
-    config.commands[runtimeRunCommand] = makeGlobalCommand(
+    config.commands[runtimeRunCommand] = createGlobalCommand(
         runtimeRunCommand,
         'Run Document',
         ({ appState }, params) => {
@@ -27,7 +27,7 @@ export const runtimeExtension: EditorExtension = config => {
         [{ ctrlKey: true, key: 'Enter' }],
     );
 
-    config.commands[runtimeKillCommand] = makeGlobalCommand(
+    config.commands[runtimeKillCommand] = createGlobalCommand(
         runtimeKillCommand,
         'Kill Process',
         ({ appState }, params) => {

@@ -5,7 +5,6 @@ import { selectEditor } from "../slices/editorSlice";
 import FlowInspectorContentDocument from "./FlowInspectorContentDocument";
 import FlowInspectorContentFlow from "./FlowInspectorContentFlow";
 import FlowInspectorContentSelection from "./FlowInspectorContentSelection";
-import FormExpandableRegion from "./FormExpandableRegion";
 
 const InspectorWrapper = styled.div`
     min-height: 100%;

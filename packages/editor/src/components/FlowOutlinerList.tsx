@@ -38,17 +38,17 @@ const OutlinerEntryDiv = styled.div<{ $active: boolean }>`
     }
 `;
 
-interface PageOutlinerEntryProps {
+interface EntryProps {
     panelId: string;
     flowId: string;
 }
-const PageOutlinerEntry = ({ panelId, flowId }: PropsWithChildren<PageOutlinerEntryProps>) => {
+const FlowOutlinerEntry = ({ panelId, flowId }: PropsWithChildren<EntryProps>) => {
     const dispatch = useAppDispatch();
     const editorState = useAppSelector(selectEditor);
     const contextHandler = useContextMenu(
         panelId,
         'Flow',
-        [ 'pageOutliner.deleteFlowEntry' ],
+        [ 'FlowOutliner.deleteFlowEntry' ],
         () => ({ flowId }),
     );
 
@@ -83,11 +83,11 @@ const ListRemainingDiv = styled.div`
     }
 `;
 
-interface PageOutlinerListProps {
+interface FlowOutlinerListProps {
     panelId: string;
 }
 
-const PageOutlinerList = ({ panelId }: PropsWithChildren<PageOutlinerListProps>) => {
+const FlowOutlinerList = ({ panelId }: PropsWithChildren<FlowOutlinerListProps>) => {
     const dispatch = useAppDispatch();
     const document = useAppSelector(selectDocument);
     const [additional, setAdditional] = useState(false);
@@ -97,7 +97,7 @@ const PageOutlinerList = ({ panelId }: PropsWithChildren<PageOutlinerListProps>)
         <OutlinerListDiv>
             {
                 Object.keys(document.flows).map(flowId =>
-                    <PageOutlinerEntry panelId={panelId} flowId={flowId} key={flowId} />
+                    <FlowOutlinerEntry panelId={panelId} flowId={flowId} key={flowId} />
                 )
             }{
                 additional &&
@@ -134,4 +134,4 @@ const PageOutlinerList = ({ panelId }: PropsWithChildren<PageOutlinerListProps>)
     );
 }
 
-export default PageOutlinerList;
+export default FlowOutlinerList;

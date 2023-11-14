@@ -1,23 +1,19 @@
 import { undoEnhancerRedo, undoEnhancerUndo } from "../../redux/undoableEnhancer";
-import { Command } from "../../types";
+import { Command, createGlobalCommand } from "../../types";
 import { flowEditorCommands } from "./flowEditorCommands";
-import { pageOutlinerCommands } from "./pageOutlinerCommands";
+import { flowOutlinerCommands } from "./flowOutlinerCommands";
 
 export const defaultCommands: Command[] = [
-    {
-        id: 'global.undo',
-        name: 'Undo',
-        scope: 'global',
-        actionCreator: () => undoEnhancerUndo(),
-        keyCombinations: [{ key: 'z', ctrlKey: true }],
-    },
-    {
-        id: 'global.redo',
-        name: 'Redo',
-        scope: 'global',
-        actionCreator: () => undoEnhancerRedo(),
-        keyCombinations: [{ key: 'y', ctrlKey: true }],
-    },
+    createGlobalCommand(
+        'global.undo', 'Undo',
+        undoEnhancerUndo,
+        [{ key: 'z', ctrlKey: true }],
+    ),
+    createGlobalCommand(
+        'global.redo', 'Redo',
+        undoEnhancerRedo,
+        [{ key: 'y', ctrlKey: true }],
+    ),
     ...flowEditorCommands,
-    ...pageOutlinerCommands,
+    ...flowOutlinerCommands,
 ]

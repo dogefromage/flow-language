@@ -1,15 +1,14 @@
 import * as lang from "@noodles/language";
 import { NamespacePath } from "@noodles/language";
 import { useCallback, useMemo, useState } from "react";
-import { useSelectPanelState } from "../redux/panelStateEnhancer";
+import { AppDispatch } from "../redux/rootReducer";
 import { useAppDispatch, useAppSelector } from "../redux/stateHooks";
 import { selectFlowContext } from "../slices/contextSlice";
 import { flowsAddConnection, flowsAddNode } from "../slices/flowsSlice";
-import { flowEditorSetStateNeutral } from "../slices/panelFlowEditorSlice";
+import { flowEditorSetStateNeutral, useSelectFlowEditorPanel } from "../slices/panelFlowEditorSlice";
 import { FLOW_NODE_MIN_WIDTH } from "../styles/flowStyles";
-import { EditorActionAddNodeAtPositionState, EditorActionAddNodeWithConnectionState, EditorActionState, Vec2, ViewTypes } from "../types";
+import { EditorActionAddNodeAtPositionState, EditorActionAddNodeWithConnectionState, EditorActionState, Vec2 } from "../types";
 import Menus from "./Menus";
-import { AppDispatch } from "../redux/rootReducer";
 
 interface Props {
     panelId: string;
@@ -17,7 +16,7 @@ interface Props {
 
 const FlowNodeCatalog = ({ panelId }: Props) => {
     const dispatch = useAppDispatch();
-    const panelState = useAppSelector(useSelectPanelState(ViewTypes.FlowEditor, panelId));
+    const panelState = useAppSelector(useSelectFlowEditorPanel(panelId));
     const flowId = panelState?.flowStack[0];
     const graphValidation = useAppSelector(selectFlowContext(flowId!));
 

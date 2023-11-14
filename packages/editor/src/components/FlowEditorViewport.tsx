@@ -1,14 +1,12 @@
-import React from 'react';
 import styled from 'styled-components';
-import { ViewTypes } from '../types';
+import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
+import useContextMenu from '../utils/useContextMenu';
+import useDispatchCommand from '../utils/useDispatchCommand';
+import { CONTEXT_MENU_DIVIDER } from './ContextMenu';
+import FlowEditorLegend from './FlowEditorLegend';
 import FlowEditorTransform from './FlowEditorTransform';
 import FlowNodeCatalog from './FlowNodeCatalog';
-import { useSelectPanelState } from '../redux/panelStateEnhancer';
-import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import useDispatchCommand from '../utils/useDispatchCommand';
-import useContextMenu from '../utils/useContextMenu';
-import FlowEditorLegend from './FlowEditorLegend';
-import { CONTEXT_MENU_DIVIDER } from './ContextMenu';
+import { useSelectFlowEditorPanel } from '../slices/panelFlowEditorSlice';
 
 const EditorWrapper = styled.div`
     position: relative;
@@ -22,8 +20,8 @@ interface Props {
 }
 
 const FlowEditorViewport = ({ panelId }: Props) => {
-    // const dispatch = useAppDispatch();
-    const panelState = useAppSelector(useSelectPanelState(ViewTypes.FlowEditor, panelId));
+    const dispatch = useAppDispatch();
+    const panelState = useAppSelector(useSelectFlowEditorPanel(panelId));
     const flowId = panelState?.flowStack[0];
     const dispatchCommand = useDispatchCommand();
 

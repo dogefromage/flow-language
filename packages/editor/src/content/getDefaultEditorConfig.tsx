@@ -2,6 +2,7 @@ import Menus from "../components/Menus";
 import { EditorConfig } from "../types/config";
 import { defaultCommands } from "./commands/defaultCommands";
 import * as lang from '@noodles/language';
+import { defaultPanelReducers } from "./defaultPanels";
 
 function getDefaultCommandMap() {
     return Object.fromEntries(
@@ -30,11 +31,12 @@ function getDefaultToolbar(): EditorConfig['toolbar'] {
 
 export function getDefaultEditorConfig(): EditorConfig {
     return {
+        customReducers: {},
+        panelReducers: defaultPanelReducers,
         debug: {
             reduxLogger: false,
         },
         commands: getDefaultCommandMap(),
-        stateReducers: {},
         toolbar: getDefaultToolbar(),
         managerComponents: [],
         language: {

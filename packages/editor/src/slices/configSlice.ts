@@ -1,13 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { RootState } from "../redux/rootReducer";
-import { EditorConfig } from "../types";
 import { getDefaultEditorConfig } from "../content/getDefaultEditorConfig";
-
-const initialState: EditorConfig = getDefaultEditorConfig();
+import { RootState } from "../redux/rootReducer";
 
 export const contentSlice = createSlice({
     name: 'config',
-    initialState,
+    initialState: getDefaultEditorConfig,
     reducers: {}
 });
 

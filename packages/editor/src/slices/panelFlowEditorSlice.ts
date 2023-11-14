@@ -1,20 +1,21 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { castDraft } from "immer";
 import { useCallback } from "react";
-import panelStateEnhancer, { useSelectPanelState } from "../redux/panelStateEnhancer";
+import { useSelectPanelState, panelStateEnhancer } from "../redux/panelStateEnhancer";
 import { RootState } from "../redux/rootReducer";
-import { CreatePanelStateCallback, DraggingJointContext, EditorClipboardNodeContent, except, FlowEditorPanelState, JointLocationKey, PlanarCamera, Vec2, ViewTypes } from "../types";
+import { CreatePanelStateCallback, DraggingJointContext, EditorClipboardNodeContent, FLOW_EDITOR_VIEW_TYPE, FlowEditorPanelState, JointLocationKey, PlanarCamera, Vec2 } from "../types";
 import { clamp } from "../utils/math";
 import { getPanelState } from "../utils/panelManager";
 import { pointScreenToWorld, vectorScreenToWorld } from "../utils/planarCameraMath";
 import * as lang from '@noodles/language';
+import { except } from "../utils/exceptions";
 
 export const CAMERA_MIN_ZOOM = 1e-2;
 export const CAMERA_MAX_ZOOM = 1e+2;
 
 export const createFlowEditorPanelState: CreatePanelStateCallback<FlowEditorPanelState> = () => {
     const panelState: FlowEditorPanelState = {
-        viewType: ViewTypes.FlowEditor,
+        viewType: FLOW_EDITOR_VIEW_TYPE,
         flowStack: [],
         camera: { position: { x: 0, y: 0 }, zoom: 1, },
         selection: { items: [] },
@@ -132,11 +133,14 @@ export const {
 
 const flowEditorPanelsReducer = panelStateEnhancer(
     flowEditorPanelsSlice.reducer,
-    ViewTypes.FlowEditor,
+    FLOW_EDITOR_VIEW_TYPE,
 );
 
+export const useSelectFlowEditorPanel = (panelId: string) =>
+    useSelectPanelState<FlowEditorPanelState>(FLOW_EDITOR_VIEW_TYPE, panelId);
+
 export const useSelectFlowEditorPanelActionState = (panelId: string) => {
-    const panelStateSelector = useSelectPanelState(ViewTypes.FlowEditor, panelId);
+    const panelStateSelector = useSelectFlowEditorPanel(panelId);
     return useCallback((state: RootState) =>
         panelStateSelector(state)?.state,
         [panelStateSelector],
@@ -144,7 +148,7 @@ export const useSelectFlowEditorPanelActionState = (panelId: string) => {
 }
 
 export const useFlowEditorSelection = (panelId: string) => {
-    const panelStateSelector = useSelectPanelState(ViewTypes.FlowEditor, panelId);
+    const panelStateSelector = useSelectFlowEditorPanel(panelId);
     return useCallback((state: RootState) =>
         panelStateSelector(state)?.selection,
         [panelStateSelector],

@@ -1,5 +1,5 @@
 
 
 export * from './config';
-export * from './console';
+export * from './consoleView';
 export * from './commands';

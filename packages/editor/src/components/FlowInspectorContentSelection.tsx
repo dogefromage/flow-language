@@ -10,7 +10,7 @@ const FlowInspectorContentSelection = ({ panelId }: PropsWithChildren<FlowInspec
     // const dispatch = useAppDispatch();
     // const flowId = useAppSelector(selectEditor).activeFlow;
     // const flow = useAppSelector(useSelectSingleFlow(flowId!));
-    // const selection = useAppSelector(useSelectPanelState(ViewTypes.FlowEditor, panelId));
+    // const selection = useAppSelector(useFlowEditorPanelState(panelId));
 
 
     // if (!flow || !flowId) return null;

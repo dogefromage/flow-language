@@ -2,6 +2,8 @@ import * as lang from "@noodles/language";
 import { Vec2 } from "./utils";
 import { PanelState } from "./panelManager";
 
+export const FLOW_EDITOR_VIEW_TYPE = 'flow-editor';
+
 export interface PlanarCamera {
     position: Vec2;
     zoom: number;

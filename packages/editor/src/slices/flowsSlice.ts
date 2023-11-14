@@ -5,10 +5,11 @@ import { useCallback } from "react";
 import { defaultFlows } from "../content/defaultDocument";
 import { RootState } from "../redux/rootReducer";
 import { FLOW_REGION_MIN_SIZE } from "../styles/flowStyles";
-import { EditorClipboardNodeContent, Size2, UndoAction, Vec2, except } from "../types";
+import { EditorClipboardNodeContent, Size2, UndoAction, Vec2 } from "../types";
 import { RowSignatureBlueprint } from "../types/flowInspectorView";
 import { flowsIdRegex, listItemRegex } from "../utils/flows";
 import { selectDocument } from "./documentSlice";
+import { except } from "../utils/exceptions";
 
 type FlowsSliceState = Record<string, lang.FlowGraph>;
 

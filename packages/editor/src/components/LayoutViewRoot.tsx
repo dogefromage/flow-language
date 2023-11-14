@@ -1,10 +1,11 @@
-import React from 'react';
 import { ReflexContainer, ReflexElement, ReflexSplitter } from 'react-reflex';
+import { FLOW_EDITOR_VIEW_TYPE, FLOW_OUTLINER_VIEW_TYPE } from '../types';
+import { CONSOLE_VIEW_TYPE } from '../types/consoleView';
+import { FLOW_INSPECTOR_VIEW_TYPE } from '../types/flowInspectorView';
+import ConsoleView from './ConsoleView';
 import FlowEditorView from './FlowEditorView';
 import FlowInspectorView from './FlowInspectorView';
-import PageOutlinerView from './PageOutlinerView';
-import ConsoleView from './ConsoleView';
-import { ViewTypes } from '../types';
+import FlowOutlinerView from './FlowOutlinerView';
 
 const LayoutViewRoot = () => {
     return (
@@ -12,23 +13,23 @@ const LayoutViewRoot = () => {
             overflow: 'hidden',
         }}>
             <ReflexElement minSize={200} flex={1}>
-                <PageOutlinerView panelId={'outliner'} viewType={ViewTypes.PageOutliner}/>
+                <FlowOutlinerView panelId={'outliner'} viewType={FLOW_OUTLINER_VIEW_TYPE}/>
             </ReflexElement>
             <ReflexSplitter />
             <ReflexElement flex={5}>
                 <ReflexContainer orientation='horizontal'>
                     <ReflexElement>
-                        <FlowEditorView panelId={'editor'} viewType={ViewTypes.FlowEditor} />
+                        <FlowEditorView panelId={'editor'} viewType={FLOW_EDITOR_VIEW_TYPE} />
                     </ReflexElement>
                     <ReflexSplitter />
                     <ReflexElement minSize={200} size={250}>
-                        <ConsoleView panelId={'console'} viewType={ViewTypes.Console}/>
+                        <ConsoleView panelId={'console'} viewType={CONSOLE_VIEW_TYPE}/>
                     </ReflexElement>
                 </ReflexContainer>
             </ReflexElement>
             <ReflexSplitter />
             <ReflexElement minSize={250}  flex={2}>
-                <FlowInspectorView panelId={'inspector'} viewType={ViewTypes.FlowInspector} />
+                <FlowInspectorView panelId={'inspector'} viewType={FLOW_INSPECTOR_VIEW_TYPE} />
             </ReflexElement>
         </ReflexContainer>
     );

@@ -1,12 +1,11 @@
-import React from 'react';
+import { EdgeColor, FlowEdge, FlowGraph, JointLocation } from '@noodles/language';
 import styled from 'styled-components';
 import { Box2, Vector2 } from 'threejs-math';
-import { useSelectPanelState } from '../redux/panelStateEnhancer';
+import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { selectFlowContext } from '../slices/contextSlice';
 import { flowsRemoveConnection, useSelectSingleFlow } from '../slices/flowsSlice';
-import { FlowEditorPanelState, ViewTypes } from '../types';
-import { EdgeColor, FlowEdge, FlowGraph, JointLocation } from '@noodles/language';
-import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
+import { useSelectFlowEditorPanel } from '../slices/panelFlowEditorSlice';
+import { FlowEditorPanelState } from '../types';
 import { getJointLocationKey } from '../utils/flows';
 
 const NEW_LINK_KEY = `NEW_LINK`;
@@ -66,7 +65,7 @@ const FlowEdges = ({ panelId, flowId }: Props) => {
     const dispatch = useAppDispatch();
     const flow = useAppSelector(useSelectSingleFlow(flowId));
     const context = useAppSelector(selectFlowContext(flowId));
-    const panelState = useAppSelector(useSelectPanelState(ViewTypes.FlowEditor, panelId));
+    const panelState = useAppSelector(useSelectFlowEditorPanel(panelId));
 
     const removeEdge = (edgeId: string) => {
         if (!context) return;

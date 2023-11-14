@@ -1,19 +1,18 @@
 import { useDroppable, useMouseDrag } from '@noodles/interactive';
+import * as lang from '@noodles/language';
 import _ from 'lodash';
 import React, { useCallback, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { Vector2 } from 'threejs-math';
-import { useSelectPanelState } from '../redux/panelStateEnhancer';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { CAMERA_MAX_ZOOM, CAMERA_MIN_ZOOM, flowEditorPanelsUpdateCamera, flowEditorSetSelection, flowEditorSetStateAddNodeWithConnection, flowEditorUpdateDragginLinkPosition } from '../slices/panelFlowEditorSlice';
+import { flowsAddRegion } from '../slices/flowsSlice';
+import { CAMERA_MAX_ZOOM, CAMERA_MIN_ZOOM, flowEditorPanelsUpdateCamera, flowEditorSetSelection, flowEditorSetStateAddNodeWithConnection, flowEditorUpdateDragginLinkPosition, useSelectFlowEditorPanel } from '../slices/panelFlowEditorSlice';
 import { FLOW_NODE_ROW_HEIGHT, MouseSelectionDiv } from '../styles/flowStyles';
-import { EDITOR_ITEM_ID_ATTR, EDITOR_SELECTABLE_ITEM_CLASS, EDITOR_SELECTABLE_ITEM_TYPE_ATTR, PlanarCamera, Rect, Vec2, ViewTypes } from '../types';
+import { EDITOR_ITEM_ID_ATTR, EDITOR_SELECTABLE_ITEM_CLASS, EDITOR_SELECTABLE_ITEM_TYPE_ATTR, PlanarCamera, Rect, Vec2 } from '../types';
 import { clamp, rectanglesIntersect } from '../utils/math';
 import { pointScreenToWorld, vectorScreenToWorld } from '../utils/planarCameraMath';
 import FlowEditorContent from './FlowEditorContent';
 import { DRAG_JOIN_DND_TAG } from './FlowJoint';
-import * as lang from '@noodles/language';
-import { flowsAddRegion } from '../slices/flowsSlice';
 
 const defaultPlanarCamera: PlanarCamera = {
     position: { x: 0, y: 0 },
@@ -74,7 +73,7 @@ interface Props {
 
 const FlowEditorTransform = ({ flowId, panelId }: Props) => {
     const dispatch = useAppDispatch();
-    const panelState = useAppSelector(useSelectPanelState(ViewTypes.FlowEditor, panelId));
+    const panelState = useAppSelector(useSelectFlowEditorPanel(panelId));
     const panelStateRef = useRef(panelState);
     panelStateRef.current = panelState;
     const getPanelState = useCallback(() => {

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../redux/stateHooks";
 import { selectEditor } from "../slices/editorSlice";
 import { createFlowEditorPanelState, flowEditorPanelsSetFlowId } from "../slices/panelFlowEditorSlice";
-import { ViewProps, ViewTypes } from "../types";
+import { FLOW_EDITOR_VIEW_TYPE, ViewProps } from "../types";
 import { useBindPanelState } from "../utils/panelManager";
 import FlowEditorViewport from "./FlowEditorViewport";
 import PanelBody from "./PanelBody";
@@ -16,7 +16,7 @@ const FlowEditorView = (viewProps: ViewProps) => {
     useBindPanelState(
         panelId,
         createFlowEditorPanelState,
-        ViewTypes.FlowEditor,
+        FLOW_EDITOR_VIEW_TYPE,
     );
 
     useEffect(() => {

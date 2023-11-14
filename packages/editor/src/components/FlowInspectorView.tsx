@@ -1,16 +1,17 @@
 import React from 'react';
-import { ViewProps, ViewTypes } from '../types';
+import { ViewProps } from '../types';
 import PanelBody from './PanelBody';
 import FlowInspectorContent from './FlowInspectorContent';
 import { useBindPanelState } from '../utils/panelManager';
 import { createFlowInspectorPanelState } from '../slices/panelFlowInspectorSlice';
 import { PanelHeaderDiv, PanelHeadingH } from '../styles/panels';
+import { FLOW_INSPECTOR_VIEW_TYPE } from '../types/flowInspectorView';
 
 const FlowInspectorView = (viewProps: ViewProps) => {
     useBindPanelState(
         viewProps.panelId,
         createFlowInspectorPanelState,
-        ViewTypes.FlowInspector,
+        FLOW_INSPECTOR_VIEW_TYPE,
     );
 
     return (

@@ -1,15 +1,17 @@
 import { Reducer } from "@reduxjs/toolkit";
 import React from 'react';
-import { Command } from ".";
+import { Command, PanelState } from ".";
 import { RootState } from "../redux/rootReducer";
 import { assertDef } from "@noodles/language";
 import * as lang from '@noodles/language';
 
 export interface EditorConfig {
+    // state
+    customReducers: Record<string, Reducer>;
+    panelReducers: Record<string, Reducer<Record<string, PanelState>>>
     debug: {
         reduxLogger: boolean;
     }
-    stateReducers: Record<string, Reducer>;
     commands: Record<string, Command>;
     toolbar: {
         inlineMenus: [string, React.FC][];

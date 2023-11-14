@@ -1,12 +1,10 @@
 import { PropsWithChildren } from 'react';
-import { useSelectPanelState } from '../redux/panelStateEnhancer';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { documentRenameGeneric } from '../slices/documentSlice';
 import { flowsAddListItem, flowsRemoveListItem, flowsReorderList, useSelectSingleFlow } from '../slices/flowsSlice';
-import { flowInspectorPanelsSelectItem } from '../slices/panelFlowInspectorSlice';
-import { ViewTypes, } from '../types';
-import FormSortableList from './FormSortableList';
+import { flowInspectorPanelsSelectItem, useSelectFlowInspectorPanel } from '../slices/panelFlowInspectorSlice';
 import { listItemRegex } from '../utils/flows';
+import FormSortableList from './FormSortableList';
 
 interface FlowInspectorGenericListProps {
     panelId: string;
@@ -15,7 +13,7 @@ interface FlowInspectorGenericListProps {
 
 const FlowInspectorGenericList = ({ panelId, flowId }: PropsWithChildren<FlowInspectorGenericListProps>) => {
     const dispatch = useAppDispatch();
-    const panelState = useAppSelector(useSelectPanelState(ViewTypes.FlowInspector, panelId));
+    const panelState = useAppSelector(useSelectFlowInspectorPanel(panelId));
     const flow = useAppSelector(useSelectSingleFlow(flowId));
 
     if (!flow) return null;

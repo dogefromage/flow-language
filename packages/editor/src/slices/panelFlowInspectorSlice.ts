@@ -1,12 +1,12 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import panelStateEnhancer from "../redux/panelStateEnhancer";
-import { CreatePanelStateCallback, ViewTypes } from "../types";
-import { FlowInspectorPanelState, FlowInspectorSelectionItem } from "../types/flowInspectorView";
+import { panelStateEnhancer, useSelectPanelState } from "../redux/panelStateEnhancer";
+import { CreatePanelStateCallback } from "../types";
+import { FLOW_INSPECTOR_VIEW_TYPE, FlowInspectorPanelState, FlowInspectorSelectionItem } from "../types/flowInspectorView";
 import { getPanelState } from "../utils/panelManager";
 
 export const createFlowInspectorPanelState: CreatePanelStateCallback<FlowInspectorPanelState> = () => {
     const panelState: FlowInspectorPanelState = {
-        viewType: ViewTypes.FlowInspector,
+        viewType: FLOW_INSPECTOR_VIEW_TYPE,
     };
     return panelState;
 }
@@ -31,7 +31,10 @@ export const {
 
 const flowInspectorPanelsReducer = panelStateEnhancer(
     flowInspectorPanelsSlice.reducer,
-    ViewTypes.FlowInspector,
+    FLOW_INSPECTOR_VIEW_TYPE,
 );
+
+export const useSelectFlowInspectorPanel = (panelId: string) => 
+    useSelectPanelState<FlowInspectorPanelState>(FLOW_INSPECTOR_VIEW_TYPE, panelId);
 
 export default flowInspectorPanelsReducer;

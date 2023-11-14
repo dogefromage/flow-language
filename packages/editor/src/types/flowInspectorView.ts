@@ -1,6 +1,8 @@
 import { PanelState } from "./panelManager";
 import * as lang from '@noodles/language';
 
+export const FLOW_INSPECTOR_VIEW_TYPE = 'flow-inspector';
+
 export type AllRowSignatures = lang.InputRowSignature | lang.OutputRowSignature;
 export type RowSignatureBlueprint = {
     specifier: lang.TypeSpecifier;

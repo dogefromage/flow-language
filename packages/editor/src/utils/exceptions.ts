@@ -1,17 +1,5 @@
 import { consolePushLine } from "../slices/consoleSlice";
-
-export type ConsoleAccents = 'error' | 'warning';
-
-export interface ConsoleLine {
-    text: string;
-    accent?: ConsoleAccents;
-}
-
-export interface ConsoleSliceState {
-    lines: ConsoleLine[];
-}
-
-export class AppException extends Error {}
+import { AppException } from "../types";
 
 export function except(message: string): never {
     throw new AppException(message);
@@ -25,7 +13,6 @@ export function createConsoleError(e: Error) {
         }
     });
 }
-
 export function createConsoleWarn(msg: string) {
     return consolePushLine({
         line: {

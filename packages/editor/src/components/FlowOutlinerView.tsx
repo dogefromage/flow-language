@@ -1,18 +1,18 @@
 import { PropsWithChildren } from 'react';
-import { createPageOutlinerPanelState } from '../slices/panelPageOutlinerSlice';
-import { ViewProps, ViewTypes } from '../types';
+import { createFlowOutlinerPanelState } from '../slices/panelFlowOutlinerSlice';
+import { FLOW_OUTLINER_VIEW_TYPE, ViewProps } from '../types';
 import { useBindPanelState } from '../utils/panelManager';
-import PageOutlinerList from './PageOutlinerList';
+import FlowOutlinerList from './FlowOutlinerList';
 import PanelBody from './PanelBody';
 import { PanelHeaderDiv, PanelHeadingH } from '../styles/panels';
 
-const PageOutlinerView = (viewProps: PropsWithChildren<ViewProps>) => {
+const FlowOutlinerView = (viewProps: PropsWithChildren<ViewProps>) => {
     const { panelId } = viewProps;
 
     useBindPanelState(
         panelId,
-        createPageOutlinerPanelState,
-        ViewTypes.PageOutliner,
+        createFlowOutlinerPanelState,
+        FLOW_OUTLINER_VIEW_TYPE,
     );
 
     return (
@@ -20,9 +20,9 @@ const PageOutlinerView = (viewProps: PropsWithChildren<ViewProps>) => {
             <PanelHeaderDiv>
                 <PanelHeadingH>Outliner</PanelHeadingH>
             </PanelHeaderDiv>
-            <PageOutlinerList panelId={panelId} />
+            <FlowOutlinerList panelId={panelId} />
         </PanelBody>
     );
 }
 
-export default PageOutlinerView;
+export default FlowOutlinerView;

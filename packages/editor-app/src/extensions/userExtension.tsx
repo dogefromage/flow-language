@@ -1,12 +1,12 @@
-import { EditorExtension, Menus, ToolTip, createExtensionSelector, except, makeGlobalCommand, useAppDispatch, useAppSelector } from "@noodles/editor";
+import { EditorExtension, Menus, ToolTip, createExtensionSelector, createGlobalCommand, except, useAppDispatch, useAppSelector } from "@noodles/editor";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { useLayoutEffect } from "react";
 import { startOAuthSignIn } from "../config/appAuth";
-import { selectUserById } from "../queries";
 import { supabase } from "../config/supabase";
+import { selectUserById } from "../queries";
 import { AppUser } from "../types";
-import { assertDef } from "../utils/utils";
 import { LoadingStatus } from "../types/utils";
+import { assertDef } from "../utils/utils";
 
 interface UserExtensionState {
     user: {
@@ -101,10 +101,10 @@ export const selectUser = createExtensionSelector<UserExtensionState>(extensionI
 
 export const userExtension: EditorExtension = config => {
     // add user state
-    config.stateReducers[extensionId] = userSlice.reducer;
+    config.customReducers[extensionId] = userSlice.reducer;
 
     const signinCommand = `${extensionId}.signin`;
-    config.commands[signinCommand] = makeGlobalCommand(
+    config.commands[signinCommand] = createGlobalCommand(
         signinCommand, 'Sign in',
         () => {
             // config.storage?.emit('reset');
@@ -113,7 +113,7 @@ export const userExtension: EditorExtension = config => {
     );
 
     const signoutCommand = `${extensionId}.signout`;
-    config.commands[signoutCommand] = makeGlobalCommand(
+    config.commands[signoutCommand] = createGlobalCommand(
         signoutCommand,
         'Sign Out',
         () => {

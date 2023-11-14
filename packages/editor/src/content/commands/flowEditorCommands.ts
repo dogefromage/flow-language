@@ -1,12 +1,12 @@
 import { flowsAddRegion, flowsPasteNodes, flowsRemoveNodes, selectFlows } from "../../slices/flowsSlice";
 import { flowEditorSetClipboard, flowEditorSetStateAddNodeAtPosition } from "../../slices/panelFlowEditorSlice";
-import { Command, ViewTypes, except, makeViewCommand } from "../../types";
+import { Command, FLOW_EDITOR_VIEW_TYPE, FlowEditorPanelState, createViewCommand } from "../../types";
 import { pointScreenToWorld } from "../../utils/planarCameraMath";
 
 export const flowEditorCommands: Command[] = [
-    makeViewCommand<ViewTypes.FlowEditor>(
+    createViewCommand<FlowEditorPanelState>(
         'flowEditor.addNodeAtPosition',
-        ViewTypes.FlowEditor,
+        FLOW_EDITOR_VIEW_TYPE,
         'Add Node',
         ({ activePanelId, clientCursor, offsetCursor, offsetPanelCenter, clientPanelCenter }, params) => {
             return flowEditorSetStateAddNodeAtPosition({
@@ -17,11 +17,11 @@ export const flowEditorCommands: Command[] = [
         },
         [{ key: ' ', displayName: 'Space' }],
     ),
-    makeViewCommand<ViewTypes.FlowEditor>(
+    createViewCommand<FlowEditorPanelState>(
         'flowEditor.addRegionAtPosition',
-        ViewTypes.FlowEditor,
+        FLOW_EDITOR_VIEW_TYPE,
         'Add Region',
-        ({ panelState: { flowStack, camera }, clientCursor, offsetCursor, offsetPanelCenter, clientPanelCenter }, params) => {
+        ({ panelState: { flowStack, camera }, offsetCursor, offsetPanelCenter }, params) => {
             const offsetPoint = offsetCursor || offsetPanelCenter;
             const worldPoint = pointScreenToWorld(camera, offsetPoint);
             return flowsAddRegion({
@@ -30,14 +30,12 @@ export const flowEditorCommands: Command[] = [
                 undo: { desc: 'Added region in active flow.' },
             });
         },
-        // [{ key: ' ', displayName: 'Space' }],
     ),
-    {
-        scope: 'view',
-        viewType: ViewTypes.FlowEditor,
-        id: 'flowEditor.deleteSelected',
-        name: 'Delete Selected',
-        actionCreator({ panelState: { flowStack, selection } }, params) {
+    createViewCommand<FlowEditorPanelState>(
+        'flowEditor.deleteSelected',
+        FLOW_EDITOR_VIEW_TYPE,
+        'Delete Selected',
+        ({ panelState: { flowStack, selection } }, params) => {
             const flowId = flowStack[0];
             if (flowId == null) return;
             return flowsRemoveNodes({
@@ -46,14 +44,14 @@ export const flowEditorCommands: Command[] = [
                 undo: { desc: `Deleted selected nodes in active flow.` },
             });
         },
-        keyCombinations: [{ key: 'Delete', displayName: 'Del' },],
-    },
-    {
-        scope: 'view',
-        viewType: ViewTypes.FlowEditor,
-        id: 'flowEditor.copySelected',
-        name: 'Copy Selected',
-        actionCreator({ appState, activePanelId, panelState: { flowStack, selection } }, params) {
+        [{ key: 'Delete', displayName: 'Del' },]
+    ),
+
+    createViewCommand<FlowEditorPanelState>(
+        'flowEditor.copySelected',
+        FLOW_EDITOR_VIEW_TYPE,
+        'Copy Selected',
+        ({ appState, activePanelId, panelState: { flowStack, selection } }, params) => {
             const flow = selectFlows(appState)[flowStack[0]];
             if (!flow) return console.error(`Could not find flow.`);
             return flowEditorSetClipboard({
@@ -61,14 +59,13 @@ export const flowEditorCommands: Command[] = [
                 clipboard: { selection, flow },
             });
         },
-        keyCombinations: [{ key: 'c', ctrlKey: true }],
-    },
-    {
-        scope: 'view',
-        viewType: ViewTypes.FlowEditor,
-        id: 'flowEditor.cutSelected',
-        name: 'Cut Selected',
-        actionCreator({ appState, activePanelId, panelState: { flowStack, selection } }, params) {
+        [{ key: 'c', ctrlKey: true }],
+    ),
+    createViewCommand<FlowEditorPanelState>(
+        'flowEditor.cutSelected',
+        FLOW_EDITOR_VIEW_TYPE,
+        'Cut Selected',
+        ({ appState, activePanelId, panelState: { flowStack, selection } }, params) => {
             const flow = selectFlows(appState)[flowStack[0]];
             if (!flow) return console.error(`Could not find flow.`);
 
@@ -84,14 +81,13 @@ export const flowEditorCommands: Command[] = [
                 })
             ];
         },
-        keyCombinations: [{ ctrlKey: true, key: 'x' }],
-    },
-    {
-        scope: 'view',
-        viewType: ViewTypes.FlowEditor,
-        id: 'flowEditor.paste',
-        name: 'Paste',
-        actionCreator({ appState, panelState: { clipboard, flowStack } }, params) {
+        [{ ctrlKey: true, key: 'x' }],
+    ),
+    createViewCommand<FlowEditorPanelState>(
+        'flowEditor.paste',
+        FLOW_EDITOR_VIEW_TYPE,
+        'Paste',
+        ({ appState, panelState: { clipboard, flowStack } }, params) => {
             const flowId = flowStack[0];
             if (flowId == null || clipboard == null) return;
             return flowsPasteNodes({
@@ -100,6 +96,6 @@ export const flowEditorCommands: Command[] = [
                 undo: { desc: `Pasted ${clipboard.selection.items.length} nodes into active flow.` },
             });
         },
-        keyCombinations: [{ key: 'v', ctrlKey: true }],
-    },
+        [{ key: 'v', ctrlKey: true }],
+    ),
 ];

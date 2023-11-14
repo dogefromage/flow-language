@@ -13,7 +13,7 @@ import {
 import { selectFlowContext } from '../slices/contextSlice';
 import { useSelectPanelState } from '../redux/panelStateEnhancer';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { ViewTypes } from '../types';
+import { useSelectFlowInspectorPanel } from '../slices/panelFlowInspectorSlice';
 
 type RowTypes = AllRowSignatures['rowType'];
 
@@ -29,7 +29,7 @@ const FlowInspectorPortDetails = ({ panelId, flowId }: PropsWithChildren<FlowIns
     const dispatch = useAppDispatch();
     const flow = useAppSelector(useSelectSingleFlow(flowId));
     const flowContext = useAppSelector(selectFlowContext(flowId));
-    const panelState = useAppSelector(useSelectPanelState(ViewTypes.FlowInspector, panelId));
+    const panelState = useAppSelector(useSelectFlowInspectorPanel(panelId));
 
     const notSelected = <p>Nothing selected.</p>;
     if (!flow) {

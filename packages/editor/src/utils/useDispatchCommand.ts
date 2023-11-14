@@ -1,10 +1,10 @@
 import { useCallback } from "react";
-import { RootState } from "../redux/rootReducer";
-import { selectPanels, useAppDispatch, useAppStore } from "../redux/stateHooks";
+import { useAppDispatch, useAppStore } from "../redux/stateHooks";
 import { selectConfig } from "../slices/configSlice";
 import { selectPanelManager } from "../slices/panelManagerSlice";
-import { AppAction, BaseCommandArgs, CustomCommandParams, PanelState, PanelStateMap, Vec2, ViewCommandArgs, ViewTypes } from "../types";
+import { AppAction, BaseCommandParams, CustomCommandParams, PanelState, ViewCommandParams } from "../types";
 import { clientToOffsetPos, offsetToClientPos } from "./panelManager";
+import { selectPanelStateUnmemoized } from "../redux/panelStateEnhancer";
 
 export default function useDispatchCommand() {
     const dispatch = useAppDispatch();
@@ -20,7 +20,7 @@ export default function useDispatchCommand() {
         }
         
         const clientCursor = customParams.clientCursor;
-        const baseArgs: BaseCommandArgs = {
+        const baseArgs: BaseCommandParams = {
             appState,
             clientCursor,
         };
@@ -36,8 +36,7 @@ export default function useDispatchCommand() {
                 return console.error(`Command panel client rect not found`);
             }
 
-            const panelsState = selectPanels(appState);
-            const panelState = panelsState[command.viewType]?.[activePanelId];
+            const panelState = selectPanelStateUnmemoized(command.viewType, activePanelId)(appState);
 
             // center
             const offsetPanelCenter = {
@@ -54,7 +53,7 @@ export default function useDispatchCommand() {
                 return console.error(`No panel state found for panel with viewType ${command.viewType}.`);
             }
 
-            const viewArgs: ViewCommandArgs<PanelState> = {
+            const viewArgs: ViewCommandParams<PanelState> = {
                 ...baseArgs,
                 activePanelId,
                 clientPanelRect,
@@ -63,7 +62,6 @@ export default function useDispatchCommand() {
                 clientPanelCenter,
                 offsetCursor,
             };
-            // @ts-ignore
             const retAction = command.actionCreator(viewArgs, customParams);
             returnedActions.push(retAction);
         }

@@ -1,4 +1,4 @@
-import { PayloadAction, PrepareAction, createAction } from "@reduxjs/toolkit";
+import { PayloadAction, createAction } from "@reduxjs/toolkit";
 
 export interface UndoRecord {
     desc: String;

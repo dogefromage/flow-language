@@ -1,12 +1,11 @@
 import { PropsWithChildren, useMemo } from 'react';
-import { useSelectPanelState } from '../redux/panelStateEnhancer';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { documentRenameOutput } from '../slices/documentSlice';
 import { useSelectSingleFlow } from '../slices/flowsSlice';
 import { flowInspectorPanelsSelectItem } from '../slices/panelFlowInspectorSlice';
-import { ViewTypes } from '../types';
-import FormSortableList from './FormSortableList';
 import { listItemRegex } from '../utils/flows';
+import FormSortableList from './FormSortableList';
+import { useSelectFlowInspectorPanel } from '../slices/panelFlowInspectorSlice';
 
 interface FlowInspectorOutputProps {
     panelId: string;
@@ -15,7 +14,7 @@ interface FlowInspectorOutputProps {
 
 const FlowInspectorOutput = ({ panelId, flowId }: PropsWithChildren<FlowInspectorOutputProps>) => {
     const dispatch = useAppDispatch();
-    const panelState = useAppSelector(useSelectPanelState(ViewTypes.FlowInspector, panelId));
+    const panelState = useAppSelector(useSelectFlowInspectorPanel(panelId));
     const flow = useAppSelector(useSelectSingleFlow(flowId));
 
     if (!flow) return null;
