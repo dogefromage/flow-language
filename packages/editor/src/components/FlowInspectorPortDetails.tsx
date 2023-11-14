@@ -1,19 +1,18 @@
-import FormSelectOption from './FormSelectOption';
-import React, { PropsWithChildren } from 'react';
-import TypeBuilder from './TypeBuilder';
-import { AllRowSignatures } from '../types/flowInspectorView';
 import * as lang from 'noodle-language';
-import { flowRowTypeNames } from '../utils/flows';
+import { PropsWithChildren } from 'react';
+import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
+import { selectFlowContext } from '../slices/contextSlice';
 import {
     flowsReplaceGeneric,
     flowsReplaceInput,
     flowsReplaceOutput,
     useSelectSingleFlow
-    } from '../slices/flowsSlice';
-import { selectFlowContext } from '../slices/contextSlice';
-import { useSelectPanelState } from '../redux/panelStateEnhancer';
-import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
+} from '../slices/flowsSlice';
 import { useSelectFlowInspectorPanel } from '../slices/panelFlowInspectorSlice';
+import { AllRowSignatures } from '../types';
+import { flowRowTypeNames } from '../utils/flows';
+import FormSelectOption from './FormSelectOption';
+import TypeBuilder from './TypeBuilder';
 
 type RowTypes = AllRowSignatures['rowType'];
 

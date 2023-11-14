@@ -1,6 +1,5 @@
 import { createAnyType, createFunctionType, createGenericType, createListType, createMapType, createReducedTemplateType, createTemplatedType, createTupleType } from ".";
-import { FlowEnvironment } from "../types/context";
-import { FunctionTypeSpecifier, InstantiationConstraints, ListTypeSpecifier, MapTypeSpecifier, TemplateParameter, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
+import { FlowEnvironment, FunctionTypeSpecifier, InstantiationConstraints, ListTypeSpecifier, MapTypeSpecifier, TemplateParameter, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types";
 import { Obj } from "../types/internal";
 import { assertNever, assertTruthy } from "../utils";
 import { mapObj, zipInner } from "../utils/functional";

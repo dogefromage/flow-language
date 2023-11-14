@@ -1,12 +1,10 @@
-import { pushContent } from "./environment";
 import { createAnyType, createMapType, createReducedTemplateType, memoizeTemplatedType } from "../typeSystem";
-import { FlowEnvironment, FlowGraph, FlowSignature, InputRowSignature, TemplatedTypeSpecifier, pathTail } from "../types";
-import { EdgeColor, FlowEdge, FlowGraphContext } from "../types/context";
-import { FlowModule } from "../types/module";
+import { EdgeColor, FlowEdge, FlowEnvironment, FlowGraph, FlowGraphContext, FlowModule, FlowSignature, InputRowSignature, TemplatedTypeSpecifier, pathTail } from "../types";
 import { assertDef, deepFreeze } from "../utils";
 import { findDependencies, sortTopologically } from "../utils/algorithms";
 import { memoObjectByFlatEntries } from "../utils/functional";
 import { mem } from '../utils/mem';
+import { pushContent } from "./environment";
 import { validateNode } from "./validateNode";
 
 export const validateFlowGraph = mem((

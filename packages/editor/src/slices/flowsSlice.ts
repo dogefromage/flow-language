@@ -1,15 +1,14 @@
-import * as lang from "noodle-language";
 import { createSlice } from "@reduxjs/toolkit";
 import { Draft, original } from "immer";
+import * as lang from "noodle-language";
 import { useCallback } from "react";
 import { defaultFlows } from "../content/defaultDocument";
 import { RootState } from "../redux/rootReducer";
 import { FLOW_REGION_MIN_SIZE } from "../styles/flowStyles";
-import { EditorClipboardNodeContent, Size2, UndoAction, Vec2 } from "../types";
-import { RowSignatureBlueprint } from "../types/flowInspectorView";
+import { EditorClipboardNodeContent, RowSignatureBlueprint, Size2, UndoAction, Vec2 } from "../types";
+import { except } from "../utils/exceptions";
 import { flowsIdRegex, listItemRegex } from "../utils/flows";
 import { selectDocument } from "./documentSlice";
-import { except } from "../utils/exceptions";
 
 type FlowsSliceState = Record<string, lang.FlowGraph>;
 

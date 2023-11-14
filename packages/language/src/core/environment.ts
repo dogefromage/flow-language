@@ -1,7 +1,5 @@
-import { FlowEnvironment, FlowEnvironmentContent, FlowEnvironmentNamespace, FlowNamedEnvironmentContent } from "../types";
-import { FlowSignature, NamespacePath } from "../types/signatures";
+import { FlowEnvironment, FlowEnvironmentNamespace, FlowNamedEnvironmentContent, NamespacePath } from "../types";
 import { ListCache } from "../utils/ListCache";
-import { mapObjKeys } from "../utils/functional";
 import { mem } from '../utils/mem';
 
 // use shared cache since same values appear often in different functions

@@ -1,7 +1,4 @@
-import { FlowDocument, FlowSignature } from "../types";
-import { LanguageConfiguration } from "../types/configuration";
-import { DocumentProblem, FlowDocumentContext, FlowEnvironmentNamespace, FlowGraphContext } from "../types/context";
-import { Obj } from "../types/internal";
+import { DocumentProblem, FlowDocument, FlowDocumentContext, FlowEnvironmentNamespace, FlowGraphContext, FlowSignature, LanguageConfiguration } from "../types";
 import { ListCache } from "../utils/ListCache";
 import { mem } from '../utils/mem';
 import { createEnvironment } from "./environment";
@@ -10,7 +7,7 @@ import { getFlowSignature, validateFlowGraph } from "./validateFlowGraph";
 export const validateDocument = mem((document: FlowDocument, configuration: LanguageConfiguration) => {
     const { flows: rawFlowMap } = document;
     
-    const flowContexts: Obj<FlowGraphContext> = {};
+    const flowContexts: Record<string, FlowGraphContext> = {};
     const problems: DocumentProblem[] = [];
     let criticalSubProblems = 0;
 

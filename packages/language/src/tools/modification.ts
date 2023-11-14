@@ -1,6 +1,5 @@
-import { FlowGraph } from "../types";
+import { FlowGraph, FlowSelection } from "../types";
 import { Vec2 } from "../types/internal";
-import { FlowSelection } from "../types/tools";
 import { maximum } from "../utils/functional";
 
 function base26StringToIndex(id: string) {

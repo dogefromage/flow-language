@@ -53,7 +53,7 @@ function generatePreloadedState(config: EditorConfig): RecursivePartial<RootStat
 }
 
 export const initStore = _.memoize((config: EditorConfig) => {
-    enableMapSet()
+    enableMapSet();
 
     const reducer = createFullReducer(config);
     const middleware = (defaultMiddleware: CurriedGetDefaultMiddleware) => 

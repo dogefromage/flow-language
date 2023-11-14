@@ -1,4 +1,3 @@
-import { findEnvironmentSignature } from "./environment";
 import { createAnyType, createFunctionType, createMapType, createReducedTemplateType, createTemplatedType, createTupleType, findAllGenericLiterals, getTemplatedSignatureType, memoizeTemplatedType } from "../typeSystem";
 import { assertSubsetType } from "../typeSystem/comparison";
 import { TypeSystemException, TypeSystemExceptionData, TypeTreePath } from "../typeSystem/exceptionHandling";
@@ -11,6 +10,7 @@ import { Obj } from "../types/internal";
 import { assertDef, assertTruthy } from "../utils";
 import { mapObj, objToArr, zipInner } from "../utils/functional";
 import { mem } from '../utils/mem';
+import { findEnvironmentSignature } from "./environment";
 
 export const validateNodeSyntax = mem((
     rowStates: Obj<RowState>,

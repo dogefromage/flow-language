@@ -1,6 +1,5 @@
 import { findEnvironmentType } from "../core/environment";
-import { FlowEnvironment } from "../types/context";
-import { AliasTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
+import { AliasTypeSpecifier, FlowEnvironment, TypeSpecifier } from "../types";
 import { TypeSystemException, TypeTreePath } from "./exceptionHandling";
 
 export function tryResolveTypeAlias(X: TypeSpecifier, env: FlowEnvironment) {

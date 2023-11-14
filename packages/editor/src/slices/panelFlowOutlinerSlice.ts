@@ -1,7 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { panelStateEnhancer } from "../redux/panelStateEnhancer";
-import { CreatePanelStateCallback } from "../types";
-import { FLOW_OUTLINER_VIEW_TYPE, FlowOutlinerPanelState } from "../types/flowOutlinerView";
+import { CreatePanelStateCallback, FLOW_OUTLINER_VIEW_TYPE, FlowOutlinerPanelState } from "../types";
 
 export const createFlowOutlinerPanelState: CreatePanelStateCallback<FlowOutlinerPanelState> = () => {
     const panelState: FlowOutlinerPanelState = {

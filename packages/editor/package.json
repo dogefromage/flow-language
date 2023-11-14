@@ -11,7 +11,7 @@
     "author": "dogefromage",
     "license": "MIT",
     "dependencies": {
-        "dragzone": "^1.0.1",
+        "dragzone": "^1.0.2",
         "noodle-language": "workspace:^",
         "@react-hook/resize-observer": "^1.2.6",
         "@reduxjs/toolkit": "^1.9.7",

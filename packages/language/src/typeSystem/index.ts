@@ -1,8 +1,7 @@
-import { FlowSignature } from "../types/signatures";
-import { AliasTypeSpecifier, AnyTypeSpecifier, FunctionTypeSpecifier, GenericTypeSpecifier, ListTypeSpecifier, MapTypeSpecifier, PrimitiveTypeSpecifier, TemplateParameter, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types/typeSystem";
+import { AliasTypeSpecifier, AnyTypeSpecifier, FlowSignature, FunctionTypeSpecifier, GenericTypeSpecifier, ListTypeSpecifier, MapTypeSpecifier, PrimitiveTypeSpecifier, TemplateParameter, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types";
 import { assertNever, assertTruthy } from "../utils";
 import { ListCache } from "../utils/ListCache";
-import { always, memoList } from "../utils/functional";
+import { always } from "../utils/functional";
 import { mem } from '../utils/mem';
 
 export const createAnyType = always<AnyTypeSpecifier>({ type: 'any' })

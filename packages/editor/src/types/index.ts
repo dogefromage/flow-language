@@ -10,4 +10,4 @@ export * from './commands';
 export * from './contextMenu';
 export * from './config';
 export * from './consoleView';
-export * from './consoleView';
+export * from './flowInspectorView';

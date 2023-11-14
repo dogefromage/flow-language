@@ -1,7 +1,5 @@
 import { ReflexContainer, ReflexElement, ReflexSplitter } from 'react-reflex';
-import { FLOW_EDITOR_VIEW_TYPE, FLOW_OUTLINER_VIEW_TYPE } from '../types';
-import { CONSOLE_VIEW_TYPE } from '../types/consoleView';
-import { FLOW_INSPECTOR_VIEW_TYPE } from '../types/flowInspectorView';
+import { CONSOLE_VIEW_TYPE, FLOW_EDITOR_VIEW_TYPE, FLOW_INSPECTOR_VIEW_TYPE, FLOW_OUTLINER_VIEW_TYPE } from '../types';
 import ConsoleView from './ConsoleView';
 import FlowEditorView from './FlowEditorView';
 import FlowInspectorView from './FlowInspectorView';
