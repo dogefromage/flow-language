@@ -31,7 +31,7 @@ const FlowInspectorPortDetails = ({ panelId, flowId }: PropsWithChildren<FlowIns
     const flowContext = useAppSelector(selectFlowContext(flowId));
     const panelState = useAppSelector(useSelectFlowInspectorPanel(panelId));
 
-    const notSelected = <p>Nothing selected.</p>;
+    const notSelected = <p>No Port selected.</p>;
     if (!flow) {
         return notSelected;
     }
