@@ -38,6 +38,8 @@ const FlowEditorViewport = ({ panelId }: Props) => {
             'flowEditor.copySelected',
             'flowEditor.cutSelected',
             'flowEditor.paste',
+            CONTEXT_MENU_DIVIDER,
+            'flowEditor.fitCamera',
         ]
     );
 

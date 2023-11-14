@@ -1,6 +1,8 @@
 import { flowsAddRegion, flowsPasteNodes, flowsRemoveNodes, selectFlows } from "../../slices/flowsSlice";
-import { flowEditorSetClipboard, flowEditorSetStateAddNodeAtPosition } from "../../slices/panelFlowEditorSlice";
-import { Command, FLOW_EDITOR_VIEW_TYPE, FlowEditorPanelState, createViewCommand } from "../../types";
+import { flowEditorPanelsUpdateCamera, flowEditorSetClipboard, flowEditorSetStateAddNodeAtPosition } from "../../slices/panelFlowEditorSlice";
+import { FLOW_NODE_MIN_WIDTH, FLOW_NODE_ROW_HEIGHT } from "../../styles/flowStyles";
+import { Command, EDITOR_SELECTABLE_ITEM_CLASS, FLOW_EDITOR_VIEW_TYPE, FlowEditorPanelState, PlanarCamera, Vec2, createViewCommand } from "../../types";
+import { clientToOffsetPos, getPanelDivId } from "../../utils/panelManager";
 import { pointScreenToWorld } from "../../utils/planarCameraMath";
 
 export const flowEditorCommands: Command[] = [
@@ -98,4 +100,67 @@ export const flowEditorCommands: Command[] = [
         },
         [{ key: 'v', ctrlKey: true }],
     ),
+    createViewCommand<FlowEditorPanelState>(
+        'flowEditor.fitCamera',
+        FLOW_EDITOR_VIEW_TYPE,
+        'Fit camera to flow.',
+        ({ activePanelId, clientPanelRect, appState, panelState: { flowStack, camera } }) => {
+            const flow = selectFlows(appState)[flowStack[0]];
+            if (!flow) return console.error(`Could not find flow.`);
+
+
+            const panelDivId = getPanelDivId({ viewType: FLOW_EDITOR_VIEW_TYPE, panelId: activePanelId });
+            const selectorResult = document.querySelector(`#${panelDivId}`)
+                ?.querySelectorAll(`.${EDITOR_SELECTABLE_ITEM_CLASS}`) || [];
+
+            const border = { l: Infinity, t: Infinity, r: -Infinity, b: -Infinity };
+
+            for (const elementDiv of Array.from(selectorResult)) {
+                const clientBounds = elementDiv.getBoundingClientRect();
+                border.l = Math.min(border.l, clientBounds.left);
+                border.t = Math.min(border.t, clientBounds.top);
+                border.r = Math.max(border.r, clientBounds.right);
+                border.b = Math.max(border.b, clientBounds.bottom);
+            }
+
+            const {
+                x: rect_l,
+                y: rect_t,
+            } = pointScreenToWorld(
+                camera, clientToOffsetPos(
+                    clientPanelRect, { x: border.l, y: border.t },
+                )
+            );
+            const {
+                x: rect_r,
+                y: rect_b,
+            } = pointScreenToWorld(
+                camera, clientToOffsetPos(
+                    clientPanelRect, { x: border.r, y: border.b },
+                )
+            );
+
+            const { w, h } = clientPanelRect;
+
+            const k_x = w / (rect_r - rect_l);
+            const k_y = h / (rect_b - rect_t);
+
+
+            const MAX_ZOOM = 1.0;
+            const newZoom = Math.min( 0.75 * Math.min(k_x, k_y), MAX_ZOOM );
+
+            const newCamera: PlanarCamera = {
+                position: {
+                    x: 0.5 * (rect_l + rect_r - w / newZoom),
+                    y: 0.5 * (rect_t + rect_b - h / newZoom),
+                },
+                zoom: newZoom,
+            };
+
+            return flowEditorPanelsUpdateCamera({
+                panelId: activePanelId,
+                newCamera,
+            });
+        }
+    )
 ];

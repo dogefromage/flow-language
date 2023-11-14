@@ -8,8 +8,8 @@ export type CreatePanelStateCallback<T extends PanelState = PanelState> =
     (panelId: string) => T;
 
 export interface ViewProps {
-    viewType: string;
     panelId: string;
+    viewType: string;
 }
 
 export interface PanelManagerSliceState {

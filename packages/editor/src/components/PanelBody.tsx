@@ -6,6 +6,7 @@ import { Rect, ViewProps } from '../types';
 import { useAppDispatch } from '../redux/stateHooks';
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
 import { MaterialSymbol } from '../styles/icons';
+import { getPanelDivId } from '../utils/panelManager';
 
 const PanelDiv = styled.div`
     width: 100%;
@@ -40,8 +41,10 @@ const PanelBody = ({ children, viewProps }: Props) => {
         dispatch(panelManagerSetClientRect({ panelId, rect }));
     });
 
+    const htmlPanelId = getPanelDivId(viewProps);
+
     return (
-        <PanelDiv ref={panelDiv} onMouseEnter={mouseEnter}>
+        <PanelDiv id={htmlPanelId} ref={panelDiv} onMouseEnter={mouseEnter}>
             <ErrorBoundary FallbackComponent={PanelErrorFallback}>
                 {children}
             </ErrorBoundary>

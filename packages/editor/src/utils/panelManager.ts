@@ -2,7 +2,7 @@ import { PayloadAction } from "@reduxjs/toolkit";
 import { useEffect } from "react";
 import { panelStateBind, panelStateRemove } from "../redux/panelStateEnhancer";
 import { useAppDispatch } from "../redux/stateHooks";
-import { CreatePanelStateCallback, PanelState, Rect, Vec2 } from "../types";
+import { CreatePanelStateCallback, PanelState, Rect, Vec2, ViewProps } from "../types";
 import { except } from "./exceptions";
 
 export function useBindPanelState(panelId: string, createPanelState: CreatePanelStateCallback, viewType: string) {
@@ -38,3 +38,9 @@ export function clientToOffsetPos(clientRect: Rect, clientPos: Vec2): Vec2 {
         y: clientPos.y - clientRect.y,
     }
 }
+
+export function getPanelDivId(viewProps: ViewProps) {
+    return `panel-body-type-${viewProps.viewType}-id-${viewProps.panelId}`;
+}
+
+
