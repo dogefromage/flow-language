@@ -7,12 +7,13 @@ import { useSelectPanelState } from '../redux/panelStateEnhancer';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { CAMERA_MAX_ZOOM, CAMERA_MIN_ZOOM, flowEditorPanelsUpdateCamera, flowEditorSetSelection, flowEditorSetStateAddNodeWithConnection, flowEditorUpdateDragginLinkPosition } from '../slices/panelFlowEditorSlice';
 import { FLOW_NODE_ROW_HEIGHT, MouseSelectionDiv } from '../styles/flowStyles';
-import { PlanarCamera, Rect, Vec2, ViewTypes } from '../types';
+import { EDITOR_ITEM_ID_ATTR, EDITOR_SELECTABLE_ITEM_CLASS, EDITOR_SELECTABLE_ITEM_TYPE_ATTR, PlanarCamera, Rect, Vec2, ViewTypes } from '../types';
 import { clamp, rectanglesIntersect } from '../utils/math';
-import { pointScreenToWorld } from '../utils/planarCameraMath';
+import { pointScreenToWorld, vectorScreenToWorld } from '../utils/planarCameraMath';
 import FlowEditorContent from './FlowEditorContent';
 import { DRAG_JOIN_DND_TAG } from './FlowJoint';
-import { FLOW_NODE_DIV_CLASS } from './FlowNodeElement';
+import * as lang from '@noodles/language';
+import { flowsAddRegion } from '../slices/flowsSlice';
 
 const defaultPlanarCamera: PlanarCamera = {
     position: { x: 0, y: 0 },
@@ -90,8 +91,50 @@ const FlowEditorTransform = ({ flowId, panelId }: Props) => {
         };
     }
 
-    const selectionRef = useRef<{ startPoint: Vec2 }>();
-    const [selection, setSelection] = useState<Rect>();
+    const boxSelectFlowObjects = (box: Rect) => {
+        const selectableDivs = Array.from(wrapperRef.current
+            ?.querySelectorAll(`.${EDITOR_SELECTABLE_ITEM_CLASS}`) || []);
+        const intersectingItems = selectableDivs.filter(item => {
+            const clientBounds = item.getBoundingClientRect();
+            const offsetPoint = getOffsetPoint(clientBounds);
+            if (!offsetPoint) return false;
+            const offsetNode: Rect = {
+                ...offsetPoint,
+                w: clientBounds.width,
+                h: clientBounds.height
+            };
+            return rectanglesIntersect(offsetNode, box);
+        });
+        const selection: lang.FlowSelection = { items: [] };
+        intersectingItems.forEach(div => {
+            const id = div.getAttribute(EDITOR_ITEM_ID_ATTR);
+            const type = div.getAttribute(EDITOR_SELECTABLE_ITEM_TYPE_ATTR);
+            if (id && type) {
+                selection.items.push({ id, type: type as 'node' | 'region' });
+            }
+        });
+        dispatch(flowEditorSetSelection({
+            panelId,
+            selection,
+        }));
+    }
+
+    const createRegionFromRect = (rect: Rect) => {
+        const cam = panelStateRef.current?.camera;
+        if (!cam) return;
+        const worldPoint = pointScreenToWorld(cam, rect);
+        const worldSizeVec = vectorScreenToWorld(cam, { x: rect.w, y: rect.h });
+        const worldSize = { w: worldSizeVec.x, h: worldSizeVec.y };
+        dispatch(flowsAddRegion({
+            flowId,
+            position: worldPoint,
+            size: worldSize,
+            undo: { desc: 'Added region using selection box.' },
+        }));
+    }
+
+    const selectionRef = useRef<{ startPoint: Vec2, ctrlKey: boolean }>();
+    const [selectionBox, setSelectionBox] = useState<Rect>();
     const panRef = useRef<{ lastMouse: Vec2, lastCamera: PlanarCamera }>();
     const isActionOngoingRef = useRef(false);
 
@@ -101,7 +144,7 @@ const FlowEditorTransform = ({ flowId, panelId }: Props) => {
             start: e => {
                 const startPoint = getOffsetPoint({ x: e.clientX, y: e.clientY });
                 if (!startPoint) return;
-                selectionRef.current = { startPoint };
+                selectionRef.current = { startPoint, ctrlKey: e.ctrlKey };
             },
             move: e => {
                 const startPoint = selectionRef.current?.startPoint;
@@ -113,7 +156,7 @@ const FlowEditorTransform = ({ flowId, panelId }: Props) => {
                 const right = Math.max(startPoint.x, endPoint.x);
                 const bottom = Math.max(startPoint.y, endPoint.y);
 
-                setSelection({
+                setSelectionBox({
                     x: left,
                     y: top,
                     w: right - left,
@@ -122,28 +165,15 @@ const FlowEditorTransform = ({ flowId, panelId }: Props) => {
                 isActionOngoingRef.current = true;
             },
             end: e => {
-                setSelection(undefined);
+                setSelectionBox(undefined);
                 isActionOngoingRef.current = false;
-                if (!selection) return;
-                const nodeDivs = Array.from(wrapperRef.current?.querySelectorAll(`.${FLOW_NODE_DIV_CLASS}`) || []);
-                const intersectingNodes = nodeDivs.filter(item => {
-                    const clientBounds = item.getBoundingClientRect();
-                    const offsetPoint = getOffsetPoint(clientBounds);
-                    if (!offsetPoint) return false;
-                    const offsetNode: Rect = {
-                        ...offsetPoint,
-                        w: clientBounds.width,
-                        h: clientBounds.height
-                    };
-                    return rectanglesIntersect(offsetNode, selection);
-                });
-                const intersectingIds = intersectingNodes
-                    .map(node => node.getAttribute('data-id'))
-                    .filter(id => id != null) as string[];
-                dispatch(flowEditorSetSelection({
-                    panelId,
-                    selection: intersectingIds,
-                }));
+                if (!selectionBox) return;
+                
+                if (selectionRef.current?.ctrlKey) {
+                    createRegionFromRect(selectionBox);
+                } else {
+                    boxSelectFlowObjects(selectionBox);
+                }
             }
         },
         {
@@ -219,7 +249,7 @@ const FlowEditorTransform = ({ flowId, panelId }: Props) => {
                 panelId, offsetCursor,
             }));
         }, 16),
-        [ dispatch, panelId, wrapperRef ]
+        [dispatch, panelId, wrapperRef]
     );
 
     const { handlers: dragJointHandler } = useDroppable({
@@ -239,7 +269,7 @@ const FlowEditorTransform = ({ flowId, panelId }: Props) => {
             const clientPosition = { x: e.clientX, y: e.clientY };
             const offsetPosition = getOffsetCursor(clientPosition);
             if (!offsetPosition) return;
-            dispatch(flowEditorSetStateAddNodeWithConnection({ 
+            dispatch(flowEditorSetStateAddNodeWithConnection({
                 panelId,
                 clientPosition,
                 offsetPosition,
@@ -269,8 +299,8 @@ const FlowEditorTransform = ({ flowId, panelId }: Props) => {
             {
                 panCatcher
             }{
-                selection &&
-                <MouseSelectionDiv $rect={selection} />
+                selectionBox &&
+                <MouseSelectionDiv $rect={selectionBox} />
             }
         </BackgroundDiv>
     );

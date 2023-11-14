@@ -45,13 +45,13 @@ export type JointLocationKey = `${string}.${string}.${number}` | `${string}.${st
 
 export interface EditorClipboardNodeContent {
     flow: lang.FlowGraph;
-    selection: string[];
+    selection: lang.FlowSelection;
 }
 
 export interface FlowEditorPanelState extends PanelState {
     flowStack: string[];
     camera: PlanarCamera;
-    selection: string[];
+    selection: lang.FlowSelection;
     state: EditorActionState;
     relativeJointPosition: Map<JointLocationKey, Vec2>;
     clipboard: EditorClipboardNodeContent | null;
@@ -69,3 +69,7 @@ export type FlowConnectingStrategy = 'list' | 'static';
 export interface ContextSliceState {
     documentContext: lang.FlowDocumentContext | null;
 }
+
+export const EDITOR_ITEM_ID_ATTR = 'data-id';
+export const EDITOR_SELECTABLE_ITEM_CLASS = 'editor-selectable-items';
+export const EDITOR_SELECTABLE_ITEM_TYPE_ATTR = 'selectable-type';

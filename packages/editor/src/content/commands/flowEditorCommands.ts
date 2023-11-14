@@ -1,6 +1,7 @@
-import { flowsPasteNodes, flowsRemoveNodes, selectFlows } from "../../slices/flowsSlice";
+import { flowsAddRegion, flowsPasteNodes, flowsRemoveNodes, selectFlows } from "../../slices/flowsSlice";
 import { flowEditorSetClipboard, flowEditorSetStateAddNodeAtPosition } from "../../slices/panelFlowEditorSlice";
-import { Command, ViewTypes, makeViewCommand } from "../../types";
+import { Command, ViewTypes, except, makeViewCommand } from "../../types";
+import { pointScreenToWorld } from "../../utils/planarCameraMath";
 
 export const flowEditorCommands: Command[] = [
     makeViewCommand<ViewTypes.FlowEditor>(
@@ -15,6 +16,21 @@ export const flowEditorCommands: Command[] = [
             });
         },
         [{ key: ' ', displayName: 'Space' }],
+    ),
+    makeViewCommand<ViewTypes.FlowEditor>(
+        'flowEditor.addRegionAtPosition',
+        ViewTypes.FlowEditor,
+        'Add Region',
+        ({ panelState: { flowStack, camera }, clientCursor, offsetCursor, offsetPanelCenter, clientPanelCenter }, params) => {
+            const offsetPoint = offsetCursor || offsetPanelCenter;
+            const worldPoint = pointScreenToWorld(camera, offsetPoint);
+            return flowsAddRegion({
+                flowId: flowStack[0],
+                position: worldPoint,
+                undo: { desc: 'Added region in active flow.' },
+            });
+        },
+        // [{ key: ' ', displayName: 'Space' }],
     ),
     {
         scope: 'view',
@@ -81,7 +97,7 @@ export const flowEditorCommands: Command[] = [
             return flowsPasteNodes({
                 flowId,
                 clipboard,
-                undo: { desc: `Pasted ${clipboard.selection.length} nodes into active flow.` },
+                undo: { desc: `Pasted ${clipboard.selection.items.length} nodes into active flow.` },
             });
         },
         keyCombinations: [{ key: 'v', ctrlKey: true }],

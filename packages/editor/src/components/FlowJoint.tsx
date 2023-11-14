@@ -3,7 +3,7 @@ import * as lang from '@noodles/language';
 import React, { useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { flowsAddConnection } from '../slices/flowsSlice';
-import { flowEditorSetStateDraggingLink, flowEditorSetStateNeutral, selectFlowEditorPanelActionState } from '../slices/panelFlowEditorSlice';
+import { flowEditorSetStateDraggingLink, flowEditorSetStateNeutral, useSelectFlowEditorPanelActionState } from '../slices/panelFlowEditorSlice';
 import { FlowJointDiv } from '../styles/flowStyles';
 import { getJointLocationKey, getJointStyling } from '../utils/flows';
 
@@ -21,7 +21,7 @@ export const FLOW_JOINT_TARGET_CLASS = `joint-target`;
 
 const FlowJoint = ({ panelId, flowId, location, env, type, additional, }: Props) => {
     const dispatch = useAppDispatch();
-    const actionState = useAppSelector(selectFlowEditorPanelActionState(panelId));
+    const actionState = useAppSelector(useSelectFlowEditorPanelActionState(panelId));
 
     const drag = useDraggable({
         tag: DRAG_JOIN_DND_TAG,

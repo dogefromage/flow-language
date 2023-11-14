@@ -5,29 +5,35 @@ import { v4 as uuidv4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { editorSetActiveFlow } from '../slices/editorSlice';
 import { flowsMoveSelection, useSelectSingleFlow } from '../slices/flowsSlice';
-import { flowEditorSetRelativeClientJointPositions, flowEditorSetSelection } from '../slices/panelFlowEditorSlice';
+import { flowEditorSetRelativeClientJointPositions, flowEditorSetSelection, useFlowEditorSelection } from '../slices/panelFlowEditorSlice';
 import { FlowNodeDiv } from '../styles/flowStyles';
-import { FlowEditorPanelState, JointLocationKey, SelectionStatus, Vec2 } from '../types';
+import { EDITOR_ITEM_ID_ATTR, EDITOR_SELECTABLE_ITEM_CLASS, EDITOR_SELECTABLE_ITEM_TYPE_ATTR, FlowEditorPanelState, JointLocationKey, SelectionStatus, Vec2 } from '../types';
 import { vectorScreenToWorld } from '../utils/planarCameraMath';
 import { useDebouncedValue } from '../utils/useDebouncedValue';
 import { FLOW_JOINT_TARGET_CLASS } from './FlowJoint';
 import FlowNodeContent from './FlowNodeContent';
 import { FlowNodeMissingContent } from './FlowNodeMissingContent';
 
-export const FLOW_NODE_DIV_CLASS = 'flow-node-div';
 
 interface Props {
     panelId: string;
     flowId: string;
     context: lang.FlowNodeContext;
     getPanelState: () => FlowEditorPanelState;
-    selectionStatus: SelectionStatus;
     env: lang.FlowEnvironment;
 }
 
-const FlowNodeElement = ({ panelId, flowId, context, getPanelState, selectionStatus, env }: Props) => {
+const FlowNodeElement = ({ panelId, flowId, context, getPanelState, env }: Props) => {
     const dispatch = useAppDispatch();
     const wrapperRef = useRef<HTMLDivElement>(null);
+    const nodeId = context.ref.id;
+
+    const selection = useAppSelector(useFlowEditorSelection(panelId));
+    let selectionStatus: SelectionStatus = 'nothing';
+    if (selection?.items.find(
+        x => x.type === 'node' && x.id === nodeId)) {
+        selectionStatus = 'selected';
+    }
 
     const referencedFlow = useAppSelector(useSelectSingleFlow(context.templateSignature?.id!)) as lang.FlowGraph | undefined;
 
@@ -49,7 +55,7 @@ const FlowNodeElement = ({ panelId, flowId, context, getPanelState, selectionSta
                 if (jointKeyAttr == null) {
                     return;
                 }
-                return { 
+                return {
                     relativeClientPosition,
                     jointKey: jointKeyAttr.value as JointLocationKey,
                 };
@@ -58,7 +64,6 @@ const FlowNodeElement = ({ panelId, flowId, context, getPanelState, selectionSta
         dispatch(flowEditorSetRelativeClientJointPositions({
             panelId, updates,
         }));
-
     }, [debouncedContext]);
 
     const dragRef = useRef<{
@@ -69,10 +74,10 @@ const FlowNodeElement = ({ panelId, flowId, context, getPanelState, selectionSta
     }>();
 
     const ensureSelection = () => {
-        if (selectionStatus !== SelectionStatus.Selected) {
+        if (selectionStatus !== 'selected') {
             dispatch(flowEditorSetSelection({
                 panelId,
-                selection: [context.ref.id],
+                selection: { items: [{ type: 'node', id: nodeId }] },
             }));
         }
     }
@@ -108,26 +113,27 @@ const FlowNodeElement = ({ panelId, flowId, context, getPanelState, selectionSta
                 delta: worldMove,
                 undo: {
                     actionToken: dragRef.current!.stackToken,
-                    desc: `Moved selection in active geometry.`
+                    desc: `Moved selection in active flow.`
                 },
             }));
         },
-    }, {
-        cursor: 'grab',
-    });
+    }, { cursor: 'grab' });
+
+    const dataProps = {
+        [EDITOR_ITEM_ID_ATTR]: nodeId,
+        [EDITOR_SELECTABLE_ITEM_TYPE_ATTR]: 'node',
+    };
+
     return (
         <FlowNodeDiv
             $position={context.ref.position}
             $selectionStatus={selectionStatus}
             {...handlers}
-            className={FLOW_NODE_DIV_CLASS}
-            data-id={context.ref.id} // for DOM querying node ids
-            onClick={e => {
-                e.stopPropagation();
-            }}
+            className={EDITOR_SELECTABLE_ITEM_CLASS}
+            {...dataProps}
+            onClick={e => e.stopPropagation()}
             onContextMenu={() => ensureSelection()} // context will be triggered further down in tree
             ref={wrapperRef}
-            // debugOutlineColor={color}
             onDoubleClick={e => {
                 if (!referencedFlow) {
                     return;

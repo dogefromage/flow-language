@@ -1,10 +1,11 @@
 import React from 'react';
-import { FlowEditorPanelState, SelectionStatus, ViewTypes } from '../types';
-import FlowEdges from './FlowEdges';
-import FlowNodeElement from './FlowNodeElement';
 import { useSelectPanelState } from '../redux/panelStateEnhancer';
 import { useAppSelector } from '../redux/stateHooks';
 import { selectFlowContext } from '../slices/contextSlice';
+import { FlowEditorPanelState, ViewTypes } from '../types';
+import FlowEdges from './FlowEdges';
+import FlowNodeElement from './FlowNodeElement';
+import FlowRegion from './FlowRegion';
 
 interface Props {
     panelId: string;
@@ -21,34 +22,32 @@ const FlowEditorContent = ({ flowId, panelId, getPanelState }: Props) => {
     }
 
     return (
-        <> 
+        <>
             {
                 // regions
-                Object.values(context.ref.regions).map(region => 
-                    <FlowRegion key={region.id} region={region} />
+                Object.values(context.ref.regions).map(region =>
+                    <FlowRegion
+                        key={region.id}
+                        flowId={flowId}
+                        panelId={panelId}
+                        region={region}
+                        getPanelState={getPanelState}
+                    />
                 )
             }
             <FlowEdges panelId={panelId} flowId={flowId} />
             {
                 // nodes
-                Object.values(context.nodeContexts).map(nodeContext => {
-                    const node = nodeContext.ref;
-                    let selectionStatus = SelectionStatus.Nothing;
-                    if (panelState.selection.includes(node.id)) {
-                        selectionStatus = SelectionStatus.Selected;
-                    }
-                    return (
-                        <FlowNodeElement
-                            key={node.id}
-                            flowId={flowId}
-                            panelId={panelId}
-                            context={nodeContext}
-                            getPanelState={getPanelState}
-                            selectionStatus={selectionStatus}
-                            env={context.flowEnvironment}
-                        />
-                    );
-                })
+                Object.values(context.nodeContexts).map(nodeContext =>
+                    <FlowNodeElement
+                        key={nodeContext.ref.id}
+                        flowId={flowId}
+                        panelId={panelId}
+                        context={nodeContext}
+                        env={context.flowEnvironment}
+                        getPanelState={getPanelState}
+                    />
+                )
             }
         </>
     );

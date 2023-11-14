@@ -1,8 +1,13 @@
 import styled, { css } from 'styled-components';
-import { FlowJointStyling, SelectionStatus, Vec2 } from '../types';
+import { FlowJointStyling, SelectionStatus, Size2, Vec2 } from '../types';
 
 export const FLOW_NODE_ROW_HEIGHT = 24;
 export const FLOW_NODE_MIN_WIDTH = 7 * FLOW_NODE_ROW_HEIGHT;
+
+export const FLOW_REGION_MIN_SIZE: Size2 = {
+    w: FLOW_NODE_MIN_WIDTH,
+    h: FLOW_NODE_ROW_HEIGHT,
+};
 
 export interface FlowNodeDivProps {
     $position: Vec2;
@@ -21,18 +26,66 @@ export const FlowNodeDiv = styled.div.attrs<FlowNodeDivProps>(({ $position: posi
     left: 0;
     min-width: ${FLOW_NODE_MIN_WIDTH}px;
         
-    ${({ $selectionStatus: $selectionStatus, theme }) =>
-        $selectionStatus !== SelectionStatus.Nothing && css`
+    ${({ $selectionStatus, theme }) =>
+        $selectionStatus !== 'nothing' && css`
             outline: solid calc(3px / min(var(--zoom), 1)) ${theme.colors.selectionStatus[$selectionStatus]};
     `}
 
-    ${({ $debugOutlineColor: $debugOutlineColor }) => $debugOutlineColor && css`
+    ${({ $debugOutlineColor }) => $debugOutlineColor && css`
         outline: 5px solid ${$debugOutlineColor};
         outline-offset: 5px;
     `}
 
     background-color: ${({ theme }) => theme.colors.flowEditor.nodeColor};
 
+    cursor: pointer;
+`;
+
+export interface FlowRegionDivProps {
+    $position: Vec2;
+    $size: Size2;
+    $selectionStatus: SelectionStatus;
+    $color: string;
+}
+export const FlowRegionDiv = styled.div.attrs<FlowRegionDivProps>(({ $position, $size }) => ({
+    style: {
+        transform: `translate(${$position.x}px, ${$position.y}px)`,
+        width: `${$size.w}px`,
+        height: `${$size.h}px`,
+        ['--height-pixels']: $size.h,
+    },
+})) <FlowRegionDivProps>`
+
+    position: absolute;
+    z-index: 0;
+    top: 0;
+    left: 0;
+    min-width: ${FLOW_REGION_MIN_SIZE.w}px;
+    min-height: ${FLOW_REGION_MIN_SIZE.h}px;
+
+    padding: 4px 8px;
+    /* overflow: hidden; */
+
+    background-color: color-mix(in srgb, 
+        ${({ $color }) => $color } 35%, transparent);
+        
+    ${({ $selectionStatus, $color }) =>
+        $selectionStatus !== 'nothing' && css`
+            outline: solid calc(3px / min(var(--zoom), 1)) ${$color};
+    `}
+
+    p {
+        line-break: normal;
+    }
+
+    .resize-icon {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        clip-path: polygon(100% 20%, 20% 100%, 100% 100%);
+        /* clip-path: polygon(80% 0, 100% 0, 100% 100%, 0 100%, 0 80%); */
+    }
+    
     cursor: pointer;
 `;
 
@@ -58,9 +111,6 @@ export const FlowNodeNameWrapper = styled(FlowNodeRowDiv) <{
     margin: 0;
     padding: 0 8px;
 `;
-
-// ${BORDER_RADIUS_TOP}
-
 
 export const FlowNodeRowNameP = styled.p<{
     $align: 'right' | 'left';

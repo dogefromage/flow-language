@@ -1,7 +1,7 @@
 import { PropsWithChildren, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import styled from 'styled-components';
-import { Size, Vec2 } from '../types';
+import { Size2, Vec2 } from '../types';
 import useAdjustedAnchor from '../utils/useAdjustedAnchor';
 
 interface ToolTipBoxDivProps {
@@ -47,7 +47,7 @@ const ToolTipBoxDiv = styled.div.attrs<ToolTipBoxDivProps>(({
 
 interface ToolTipBoxProps {
     anchor: Vec2;
-    parentSize: Size;
+    parentSize: Size2;
 }
 
 const ToolTipBox = ({ children, anchor, parentSize }: PropsWithChildren<ToolTipBoxProps>) => {
@@ -77,7 +77,7 @@ interface ToolTipProps {
 }
 
 const ToolTipAnchor = ({ tooltip: ToolTipContent, children, hoverMillis }: PropsWithChildren<ToolTipProps>) => {
-    const [tooltip, setTooltip] = useState<{ anchor: Vec2, parentSize: Size }>();
+    const [tooltip, setTooltip] = useState<{ anchor: Vec2, parentSize: Size2 }>();
     const timeoutRef = useRef<number | undefined>();
 
     hoverMillis ||= 500;

@@ -32,6 +32,7 @@ const FlowEditorViewport = ({ panelId }: Props) => {
         'Flow Viewport',
         [
             'flowEditor.addNodeAtPosition',
+            'flowEditor.addRegionAtPosition',
             'flowEditor.deleteSelected',
             CONTEXT_MENU_DIVIDER,
             'flowEditor.createFlow',

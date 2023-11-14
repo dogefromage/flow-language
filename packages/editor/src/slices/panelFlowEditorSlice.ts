@@ -7,6 +7,7 @@ import { CreatePanelStateCallback, DraggingJointContext, EditorClipboardNodeCont
 import { clamp } from "../utils/math";
 import { getPanelState } from "../utils/panelManager";
 import { pointScreenToWorld, vectorScreenToWorld } from "../utils/planarCameraMath";
+import * as lang from '@noodles/language';
 
 export const CAMERA_MIN_ZOOM = 1e-2;
 export const CAMERA_MAX_ZOOM = 1e+2;
@@ -16,7 +17,7 @@ export const createFlowEditorPanelState: CreatePanelStateCallback<FlowEditorPane
         viewType: ViewTypes.FlowEditor,
         flowStack: [],
         camera: { position: { x: 0, y: 0 }, zoom: 1, },
-        selection: [],
+        selection: { items: [] },
         state: { type: 'neutral' },
         relativeJointPosition: new Map(),
         clipboard: null,
@@ -97,7 +98,7 @@ export const flowEditorPanelsSlice = createSlice({
                 draggingContext: lastState.draggingContext,
             };
         },
-        setSelection: (s, a: PayloadAction<{ panelId: string, selection: string[] }>) => {
+        setSelection: (s, a: PayloadAction<{ panelId: string, selection: lang.FlowSelection }>) => {
             const ps = getPanelState(s, a);
             ps.selection = a.payload.selection;
         },
@@ -134,10 +135,18 @@ const flowEditorPanelsReducer = panelStateEnhancer(
     ViewTypes.FlowEditor,
 );
 
-export const selectFlowEditorPanelActionState = (panelId: string) => {
+export const useSelectFlowEditorPanelActionState = (panelId: string) => {
     const panelStateSelector = useSelectPanelState(ViewTypes.FlowEditor, panelId);
     return useCallback((state: RootState) =>
         panelStateSelector(state)?.state,
+        [panelStateSelector],
+    );
+}
+
+export const useFlowEditorSelection = (panelId: string) => {
+    const panelStateSelector = useSelectPanelState(ViewTypes.FlowEditor, panelId);
+    return useCallback((state: RootState) =>
+        panelStateSelector(state)?.selection,
         [panelStateSelector],
     );
 }

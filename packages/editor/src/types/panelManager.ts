@@ -11,6 +11,7 @@ export type CreatePanelStateCallback<T extends PanelState = PanelState> =
     (panelId: string) => T;
 
 export interface ViewProps {
+    viewType: ViewTypes;
     panelId: string;
 }
 
@@ -21,6 +22,7 @@ export enum ViewTypes {
     FlowEditor = 'flow_editor',
     PageOutliner = 'page_outliner',
     FlowInspector = 'flow_inspector',
+    Console = 'console',
 }
 
 export type PanelStateMap = {

@@ -1,26 +1,31 @@
 import * as lang from "@noodles/language";
 import { createSlice } from "@reduxjs/toolkit";
-import { Draft } from "immer";
+import { Draft, original } from "immer";
 import { useCallback } from "react";
-import { RootState } from "../redux/rootReducer";
-import { EditorClipboardNodeContent, UndoAction, Vec2, except } from "../types";
-import { RowSignatureBlueprint } from "../types/flowInspectorView";
-import { original } from "immer";
-import { selectDocument } from "./documentSlice";
-import { flowsIdRegex, listItemRegex } from "../utils/flows";
 import { defaultFlows } from "../content/defaultDocument";
+import { RootState } from "../redux/rootReducer";
+import { FLOW_REGION_MIN_SIZE } from "../styles/flowStyles";
+import { EditorClipboardNodeContent, Size2, UndoAction, Vec2, except } from "../types";
+import { RowSignatureBlueprint } from "../types/flowInspectorView";
+import { flowsIdRegex, listItemRegex } from "../utils/flows";
+import { selectDocument } from "./documentSlice";
 
 type FlowsSliceState = Record<string, lang.FlowGraph>;
 
 function getFlow(s: Draft<FlowsSliceState>, a: { payload: { flowId: string } }) {
     const g = s[a.payload.flowId];
-    if (!g) except(`Flow with id ${a.payload.flowId} not found`);
+    if (!g) except(`Flow with id '${a.payload.flowId}' not found`);
     return g as any as lang.FlowGraph;
 }
 
 function getNode(s: Draft<FlowsSliceState>, a: { payload: { flowId: string, nodeId: string } }) {
     const n = getFlow(s, a)?.nodes[a.payload.nodeId];
-    if (!n) except(`Node with id ${a.payload.nodeId} not found`);
+    if (!n) except(`Node with id '${a.payload.nodeId}' not found`);
+    return n;
+}
+function getRegion(s: Draft<FlowsSliceState>, a: { payload: { flowId: string, regionId: string } }) {
+    const n = getFlow(s, a)?.regions[a.payload.regionId];
+    if (!n) except(`Region with id '${a.payload.regionId}' not found`);
     return n;
 }
 
@@ -60,8 +65,8 @@ const initialState: FlowsSliceState = { ...defaultFlows };
 //     return unholy;
 // }
 
-function getNextNodeId(g: lang.FlowGraph) {
-    const gen = lang.createIdGenerator(...Object.keys(g.nodes));
+function getNextId(usedIds: string[]) {
+    const gen = lang.createIdGenerator(...usedIds);
     return gen.next().value!;
 }
 
@@ -125,7 +130,7 @@ export const flowsSlice = createSlice({
         addNode: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, signature: lang.NamespacePath, 
             position: Vec2, rowStates?: lang.FlowNode['rowStates'], nodeId?: string }>) => {            
             const g = getFlow(s, a);
-            const nodeId = a.payload.nodeId || getNextNodeId(g);
+            const nodeId = a.payload.nodeId || getNextId(Object.keys(g.nodes));
             if (g.nodes[nodeId] != null) {
                 except(`Node with id=${nodeId} already in flow ${a.payload.flowId}.`);
             }
@@ -137,28 +142,61 @@ export const flowsSlice = createSlice({
             }
             g.nodes[node.id] = node;
         },
-        removeNodes: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, selection: string[] }>) => {
+        removeSelection: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, selection: lang.FlowSelection }>) => {
             const g = getFlow(s, a);
-            const targets = a.payload.selection;
-            if (targets.length > 0) {
-                for (const id of targets) {
-                    delete g.nodes[id];
+            const removedNodeIds = new Set<string>();
+            for (const item of a.payload.selection.items) {
+                if (item.type === 'node') {
+                    delete g.nodes[item.id];
+                    removedNodeIds.add(item.id);
+                } 
+                if (item.type === 'region') {
+                    delete g.regions[item.id];
                 }
-                removeConnectionsToNodes(g, new Set(targets));
             }
+            removeConnectionsToNodes(g, removedNodeIds);
         },
-        positionNode: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, nodeId: string, position: Vec2 }>) => {
-            const n = getNode(s, a);
-            n.position = { ...a.payload.position };
-        },
-        moveSelection: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, selection: string[], delta: Vec2 }>) => {
+        // positionNode: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, nodeId: string, position: Vec2 }>) => {
+        //     const n = getNode(s, a);
+        //     n.position = { ...a.payload.position };
+        // },
+        moveSelection: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, selection: lang.FlowSelection, delta: Vec2 }>) => {
             const g = getFlow(s, a);
-            for (const id of a.payload.selection) {
-                const node = g.nodes[id];
-                if (!node) continue;
-                node.position.x += a.payload.delta.x;
-                node.position.y += a.payload.delta.y;
+            for (const selItem of a.payload.selection.items) {
+                let element: { position: Vec2 } | undefined;
+                if (selItem.type === 'node')   element = g.nodes[selItem.id];
+                if (selItem.type === 'region') element = g.regions[selItem.id];
+                if (!element) continue;
+                element.position.x += a.payload.delta.x;
+                element.position.y += a.payload.delta.y;
             }
+        },
+        addRegion: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, 
+            position: Vec2, size?: Size2, regionId?: string }>) => {            
+                const g = getFlow(s, a);
+                const regionId = a.payload.regionId || getNextId(Object.keys(g.regions));
+                if (g.regions[regionId] != null) {
+                    except(`Region with id=${regionId} already in flow ${a.payload.flowId}.`);
+                }
+                const region: lang.FlowRegion = {
+                    id: regionId,
+                    position: a.payload.position,
+                    attributes: {},
+                    size: a.payload.size || FLOW_REGION_MIN_SIZE,
+                }
+                g.regions[region.id] = region;
+        },
+        resizeRegion: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, regionId: string, size: Size2 }>) => {
+            const r = getRegion(s, a);
+            const clamped: Size2 = {
+                w: Math.max(FLOW_REGION_MIN_SIZE.w, a.payload.size.w),
+                h: Math.max(FLOW_REGION_MIN_SIZE.h, a.payload.size.h),
+            };
+            r.size = clamped;
+        },
+        setRegionAttribute: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, regionId: string, key: string, value: string }>) => {
+            const r = getRegion(s, a);
+            r.attributes[a.payload.key] = a.payload.value;
         },
         setRowValue: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, nodeId: string, rowId: string, rowValue: lang.InitializerValue }>) => {
             const n = getNode(s, a);
@@ -309,9 +347,11 @@ export const {
     // CONTENT
     setAttribute: flowsSetAttribute,
     addNode: flowsAddNode,
-    removeNodes: flowsRemoveNodes,
-    positionNode: flowsPositionNode,
+    removeSelection: flowsRemoveNodes,
     moveSelection: flowsMoveSelection,
+    addRegion: flowsAddRegion,
+    resizeRegion: flowsResizeRegion,
+    setRegionAttribute: flowsSetRegionAttribute,
     addConnection: flowsAddConnection,
     removeConnection: flowsRemoveConnection,
     setRowValue: flowsSetRowValue,

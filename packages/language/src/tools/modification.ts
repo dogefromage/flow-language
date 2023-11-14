@@ -1,5 +1,6 @@
 import { FlowGraph } from "../types";
 import { Vec2 } from "../types/internal";
+import { FlowSelection } from "../types/tools";
 import { maximum } from "../utils/functional";
 
 function base26StringToIndex(id: string) {
@@ -54,22 +55,27 @@ export function *createIdGenerator(...previousIds: string[]) {
 
 export function pasteSelectedNodes(
     source: FlowGraph, target: FlowGraph,
-    selection: string[], move: Vec2
+    selection: FlowSelection, move: Vec2
 ): FlowGraph {
     // make mutable
     target = structuredClone(target);
     
+    // add regions later
+    let nodesOnly = selection.items
+        .filter(x => x.type === 'node')
+        .map(x => x.id);
+
     const idGenerator = createIdGenerator(
-        ...selection,
+        ...nodesOnly,
         ...Object.keys(target.nodes),
     );
 
     // fix selection if incorrect
-    selection = selection.filter(id => source.nodes[id] != null);
-    const nodes = structuredClone(selection.map(id => source.nodes[id]));
+    nodesOnly = nodesOnly.filter(id => source.nodes[id] != null);
+    const nodes = structuredClone(nodesOnly.map(id => source.nodes[id]));
 
     const newIds = new Set<string>();
-    for (const oldId of selection) {
+    for (const oldId of nodesOnly) {
         const newId = idGenerator.next().value!;
         newIds.add(newId);
         

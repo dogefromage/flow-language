@@ -46,7 +46,8 @@ function documentReducer(s: lang.FlowDocument | undefined, a: AnyAction): lang.F
         });
     }
     if (documentReplace.match(a)) {
-        return a.payload.document;
+        // let reducer run on document, this will initialize newer members which are missing
+        return documentReducer(a.payload.document, { type: '' });
     }
     if (documentRenameFlow.match(a)) {
         const builder = new lang.Builder(s);

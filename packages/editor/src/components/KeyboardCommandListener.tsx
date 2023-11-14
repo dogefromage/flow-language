@@ -11,7 +11,8 @@ const KeyboardCommandListener = () => {
     useEffect(() => {
 
         function onKey(e: KeyboardEvent) {
-            if (document.activeElement instanceof HTMLInputElement) {
+            if (document.activeElement instanceof HTMLInputElement ||
+                document.activeElement instanceof HTMLTextAreaElement) {
                 return;
             }
 

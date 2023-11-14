@@ -2,7 +2,7 @@ import useResizeObserver from "@react-hook/resize-observer";
 import { useMemo, useState } from "react";
 import { useAppSelector } from "../redux/stateHooks";
 import { selectPanelManager } from "../slices/panelManagerSlice";
-import { Size, Vec2 } from "../types";
+import { Size2, Vec2 } from "../types";
 import { assertNever } from "@noodles/language";
 
 const AVAIL_MARGIN = 8;
@@ -80,14 +80,14 @@ function adjustPosition(
 
 export default function useAdjustedAnchor(
     ref: React.RefObject<HTMLElement>,
-    baseAnchor: Vec2, parentSize: Size,
+    baseAnchor: Vec2, parentSize: Size2,
     horizontalStragegy: AnchorAdjustmentStrategy,
     verticalStrategy: AnchorAdjustmentStrategy,
 ) {
     const panelManagerState = useAppSelector(selectPanelManager);
     const { rootClientRect: root } = panelManagerState;
 
-    const [menuSize, setMenuSize] = useState<Size>({ w: 0, h: 0 });
+    const [menuSize, setMenuSize] = useState<Size2>({ w: 0, h: 0 });
 
     const adjustedAnchor = useMemo(() => ({
         x: adjustPosition(root.x, root.w, baseAnchor.x, menuSize.w, parentSize.w, horizontalStragegy),
