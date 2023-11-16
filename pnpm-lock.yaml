@@ -59,7 +59,7 @@ importers:
         specifier: workspace:^
         version: link:../language
       react:
-        specifier: ^18.2.0
+        specifier: 18.2.0
         version: 18.2.0
       react-error-boundary:
         specifier: ^4.0.11

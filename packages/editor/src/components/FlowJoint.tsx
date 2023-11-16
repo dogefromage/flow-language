@@ -35,6 +35,7 @@ const FlowJoint = ({ panelId, flowId, location, env, type, additional, }: Props)
                     environment: env,
                 }
             }));
+            return {}; // remove in future, bug currently
         },
     });
 

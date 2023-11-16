@@ -4,12 +4,12 @@ import { PropsWithChildren, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { flowsMoveSelection, flowsResizeRegion } from '../slices/flowsSlice';
-import { flowEditorSetSelection, useFlowEditorSelection } from '../slices/panelFlowEditorSlice';
 import { FlowRegionDiv } from '../styles/flowStyles';
-import { EDITOR_ITEM_ID_ATTR, EDITOR_SELECTABLE_ITEM_CLASS, EDITOR_SELECTABLE_ITEM_TYPE_ATTR, FlowEditorPanelState, SelectionStatus, Size2, Vec2 } from '../types';
+import { EDITOR_ITEM_ID_ATTR, EDITOR_SELECTABLE_ITEM_CLASS, EDITOR_SELECTABLE_ITEM_TYPE_ATTR, FlowEditorPanelState, SelectionStatus, Size2, Vec2, getActiveEditorCamera } from '../types';
 import { vectorScreenToWorld } from '../utils/planarCameraMath';
 import { MaterialSymbol } from '../styles/icons';
 import FlowRegionText from './FlowRegionText';
+import { editorSetSelection, selectEditor } from '../slices/editorSlice';
 
 interface FlowRegionProps {
     panelId: string;
@@ -21,10 +21,10 @@ interface FlowRegionProps {
 const FlowRegion = ({ panelId, flowId, region, getPanelState }: PropsWithChildren<FlowRegionProps>) => {
     const dispatch = useAppDispatch();
 
-    const selection = useAppSelector(useFlowEditorSelection(panelId));
+    const { selection } = useAppSelector(selectEditor);
     let selectionStatus: SelectionStatus = 'nothing';
-    if (selection?.items.find(
-        x => x.type === 'region' && x.id === region.id)) {
+    if (flowId === selection?.flowId &&
+        selection?.items.find(x => x.type === 'region' && x.id === region.id)) {
         selectionStatus = 'selected';
     }
 
@@ -38,9 +38,8 @@ const FlowRegion = ({ panelId, flowId, region, getPanelState }: PropsWithChildre
 
     const ensureSelection = () => {
         if (selectionStatus !== 'selected') {
-            dispatch(flowEditorSetSelection({
-                panelId,
-                selection: { items: [{ type: 'region', id: region.id }] },
+            dispatch(editorSetSelection({
+                selection: { flowId, items: [{ type: 'region', id: region.id }] },
             }));
         }
     }
@@ -62,8 +61,8 @@ const FlowRegion = ({ panelId, flowId, region, getPanelState }: PropsWithChildre
             ensureSelection();
         },
         move: e => {
-            const { camera, selection } = getPanelState();
-            if (!dragRef.current || !camera) return;
+            const camera = getActiveEditorCamera(getPanelState());
+            if (!dragRef.current || !camera || !selection) return;
 
             const screenDelta = {
                 x: e.clientX - dragRef.current.lastCursor.x,
@@ -103,7 +102,7 @@ const FlowRegion = ({ panelId, flowId, region, getPanelState }: PropsWithChildre
             e.stopPropagation();
         },
         move: e => {
-            const { camera, selection } = getPanelState();
+            const camera = getActiveEditorCamera(getPanelState());
             if (!sizeRef.current || !camera) return;
 
             const screenDelta = {

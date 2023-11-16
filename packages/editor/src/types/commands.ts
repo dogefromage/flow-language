@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { AppDispatch, RootState } from '../redux/rootReducer';
 import { PanelState } from './panelManager';
 import { Rect, Vec2 } from './utils';
@@ -18,7 +19,7 @@ export interface BaseCommandParams {
 }
 
 export interface ViewCommandParams<P extends PanelState = PanelState> extends BaseCommandParams {
-    activePanelId: string;
+    targetPanelId: string;
     clientPanelRect: Rect;
     panelState: P;
     offsetPanelCenter: Vec2;
@@ -28,7 +29,7 @@ export interface ViewCommandParams<P extends PanelState = PanelState> extends Ba
 
 export type CustomCommandParams = { [key: string]: any } & {
     clientCursor?: Vec2;
-    activePanelId?: string;
+    targetPanelId?: string;
 }
 
 export type AppAction = Parameters<AppDispatch>[0];
@@ -65,3 +66,29 @@ export const createViewCommand = <P extends PanelState>
         keyCombinations?: KeyCombination[]): ViewCommand =>
     ({ id, scope: 'view', viewType, name, keyCombinations,
         actionCreator: actionCreator as ViewCommandActionCreator });
+
+export const createGlobalCommandUnlabeled = (name: string, 
+        actionCreator: GlobalCommand['actionCreator'], 
+        keyCombinations?: KeyCombination[]): Omit<GlobalCommand, 'id'> =>
+    ({ scope: 'global', name, actionCreator, keyCombinations });
+export const createViewCommandUnlabeled = <P extends PanelState>
+    (viewType: string, name: string, actionCreator: ViewCommandActionCreator<P>, 
+        keyCombinations?: KeyCombination[]): Omit<ViewCommand, 'id'> =>
+    ({ scope: 'view', viewType, name, keyCombinations,
+        actionCreator: actionCreator as ViewCommandActionCreator });
+
+export function createCommandGroup<Keys extends string>(
+    groupName: string, 
+    group: Record<Keys, Omit<GlobalCommand, 'id'> | Omit<ViewCommand, 'id'>>,
+) {
+    const relabledCommands = 
+        _.mapValues(group, (group, key) => ({
+            ...group,
+            id: `${groupName}:${key}`,
+        })) as Record<Keys, Command>;
+    const commands = Object.values<Command>(relabledCommands);
+    const labels =
+        _.mapValues(relabledCommands, group => group.id);
+
+    return { commands, labels }
+}

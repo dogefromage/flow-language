@@ -22,9 +22,9 @@ export default function useContextMenu(
             y: e.clientY,
         };
 
-        const paramMap = {
+        const paramMap: CustomCommandParams = {
             clientCursor,
-            activePanelId,
+            targetPanelId: activePanelId,
             ...paramMapCallback?.(e)
         };
 

@@ -3,17 +3,16 @@ import * as lang from 'noodle-language';
 import React, { useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { editorSetActiveFlow } from '../slices/editorSlice';
+import { editorSetActiveFlow, editorSetSelection, selectEditor } from '../slices/editorSlice';
 import { flowsMoveSelection, useSelectSingleFlow } from '../slices/flowsSlice';
-import { flowEditorSetRelativeClientJointPositions, flowEditorSetSelection, useFlowEditorSelection } from '../slices/panelFlowEditorSlice';
+import { flowEditorSetRelativeClientJointPositions } from '../slices/panelFlowEditorSlice';
 import { FlowNodeDiv } from '../styles/flowStyles';
-import { EDITOR_ITEM_ID_ATTR, EDITOR_SELECTABLE_ITEM_CLASS, EDITOR_SELECTABLE_ITEM_TYPE_ATTR, FlowEditorPanelState, JointLocationKey, SelectionStatus, Vec2 } from '../types';
+import { EDITOR_ITEM_ID_ATTR, EDITOR_SELECTABLE_ITEM_CLASS, EDITOR_SELECTABLE_ITEM_TYPE_ATTR, FlowEditorPanelState, JointLocationKey, SelectionStatus, Vec2, getActiveEditorCamera } from '../types';
 import { vectorScreenToWorld } from '../utils/planarCameraMath';
 import { useDebouncedValue } from '../utils/useDebouncedValue';
 import { FLOW_JOINT_TARGET_CLASS } from './FlowJoint';
 import FlowNodeContent from './FlowNodeContent';
 import { FlowNodeMissingContent } from './FlowNodeMissingContent';
-
 
 interface Props {
     panelId: string;
@@ -28,10 +27,10 @@ const FlowNodeElement = ({ panelId, flowId, context, getPanelState, env }: Props
     const wrapperRef = useRef<HTMLDivElement>(null);
     const nodeId = context.ref.id;
 
-    const selection = useAppSelector(useFlowEditorSelection(panelId));
+    const { selection } = useAppSelector(selectEditor);
     let selectionStatus: SelectionStatus = 'nothing';
-    if (selection?.items.find(
-        x => x.type === 'node' && x.id === nodeId)) {
+    if (flowId === selection?.flowId &&
+        selection?.items.find(x => x.type === 'node' && x.id === nodeId)) {
         selectionStatus = 'selected';
     }
 
@@ -75,9 +74,8 @@ const FlowNodeElement = ({ panelId, flowId, context, getPanelState, env }: Props
 
     const ensureSelection = () => {
         if (selectionStatus !== 'selected') {
-            dispatch(flowEditorSetSelection({
-                panelId,
-                selection: { items: [{ type: 'node', id: nodeId }] },
+            dispatch(editorSetSelection({
+                selection: { flowId, items: [{ type: 'node', id: nodeId }] },
             }));
         }
     }
@@ -96,9 +94,9 @@ const FlowNodeElement = ({ panelId, flowId, context, getPanelState, env }: Props
             ensureSelection();
         },
         move: e => {
-            const { camera, selection } = getPanelState();
+            const camera = getActiveEditorCamera(getPanelState());
 
-            if (!dragRef.current || !camera) return;
+            if (!dragRef.current || !camera || !selection) return;
 
             const screenDelta = {
                 x: e.clientX - dragRef.current.lastCursor.x,

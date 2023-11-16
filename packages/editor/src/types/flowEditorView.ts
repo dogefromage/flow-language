@@ -45,18 +45,11 @@ export type EditorActionState =
 
 export type JointLocationKey = `${string}.${string}.${number}` | `${string}.${string}`;
 
-export interface EditorClipboardNodeContent {
-    flow: lang.FlowGraph;
-    selection: lang.FlowSelection;
-}
-
 export interface FlowEditorPanelState extends PanelState {
     flowStack: string[];
-    camera: PlanarCamera;
-    selection: lang.FlowSelection;
+    cameras: Record<string, PlanarCamera>;
     state: EditorActionState;
     relativeJointPosition: Map<JointLocationKey, Vec2>;
-    clipboard: EditorClipboardNodeContent | null;
 }
 
 export interface FlowJointStyling {
@@ -75,3 +68,9 @@ export interface ContextSliceState {
 export const EDITOR_ITEM_ID_ATTR = 'data-id';
 export const EDITOR_SELECTABLE_ITEM_CLASS = 'editor-selectable-items';
 export const EDITOR_SELECTABLE_ITEM_TYPE_ATTR = 'selectable-type';
+
+export const DEFAULT_EDITOR_CAMERA = { position: { x: 0, y: 0 }, zoom: 1, };
+
+export function getActiveEditorCamera(ps?: FlowEditorPanelState) {
+    return ps?.cameras[ps?.flowStack[0]] || DEFAULT_EDITOR_CAMERA;
+}

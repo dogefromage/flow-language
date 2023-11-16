@@ -1,27 +1,24 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { castDraft } from "immer";
 import { useCallback } from "react";
-import { useSelectPanelState, panelStateEnhancer } from "../redux/panelStateEnhancer";
+import { panelStateEnhancer, useSelectPanelState } from "../redux/panelStateEnhancer";
 import { RootState } from "../redux/rootReducer";
-import { CreatePanelStateCallback, DraggingJointContext, EditorClipboardNodeContent, FLOW_EDITOR_VIEW_TYPE, FlowEditorPanelState, JointLocationKey, PlanarCamera, Vec2 } from "../types";
+import { CreatePanelStateCallback, DEFAULT_EDITOR_CAMERA, DraggingJointContext, FLOW_EDITOR_VIEW_TYPE, FlowEditorPanelState, getActiveEditorCamera, JointLocationKey, PlanarCamera, Vec2 } from "../types";
+import { except } from "../utils/exceptions";
 import { clamp } from "../utils/math";
 import { getPanelState } from "../utils/panelManager";
 import { pointScreenToWorld, vectorScreenToWorld } from "../utils/planarCameraMath";
-import * as lang from 'noodle-language';
-import { except } from "../utils/exceptions";
 
 export const CAMERA_MIN_ZOOM = 1e-2;
 export const CAMERA_MAX_ZOOM = 1e+2;
 
 export const createFlowEditorPanelState: CreatePanelStateCallback<FlowEditorPanelState> = () => {
     const panelState: FlowEditorPanelState = {
-        viewType: FLOW_EDITOR_VIEW_TYPE,
         flowStack: [],
-        camera: { position: { x: 0, y: 0 }, zoom: 1, },
-        selection: { items: [] },
+        viewType: FLOW_EDITOR_VIEW_TYPE,
+        cameras: {},
         state: { type: 'neutral' },
         relativeJointPosition: new Map(),
-        clipboard: null,
     };
     return panelState;
 }
@@ -46,12 +43,16 @@ export const flowEditorPanelsSlice = createSlice({
             const ps = getPanelState(s, a);
             ps.flowStack.unshift(a.payload.flowId);
         },
-        updateCamera: (s, a: PayloadAction<{ panelId: string, newCamera: Partial<PlanarCamera> }>) => {
+        updateActiveCamera: (s, a: PayloadAction<{ panelId: string, camera: Partial<PlanarCamera> }>) => {
             const ps = getPanelState(s, a);
-
-            Object.assign(ps.camera, a.payload.newCamera);
-
-            ps.camera.zoom = clamp(ps.camera.zoom, CAMERA_MIN_ZOOM, CAMERA_MAX_ZOOM);
+            const activeFlow = ps.flowStack[0];
+            if (!activeFlow) return;
+            const newCamera: PlanarCamera = {
+                ...getActiveEditorCamera(ps),
+                ...a.payload.camera,
+            }
+            newCamera.zoom = clamp(newCamera.zoom, CAMERA_MIN_ZOOM, CAMERA_MAX_ZOOM);
+            ps.cameras[activeFlow] = newCamera;
         },
         setStateNeutral: (s, a: PayloadAction<{ panelId: string }>) => {
             const ps = getPanelState(s, a);
@@ -59,7 +60,8 @@ export const flowEditorPanelsSlice = createSlice({
         },
         setStateAddNodeAtPosition: (s, a: PayloadAction<{ panelId: string, clientPosition: Vec2, offsetPosition: Vec2 }>) => {
             const ps = getPanelState(s, a);
-            const worldPosition = pointScreenToWorld(ps.camera, a.payload.offsetPosition);
+            const cam = getActiveEditorCamera(ps);
+            const worldPosition = pointScreenToWorld(cam, a.payload.offsetPosition);
             ps.state = {
                 type: 'add-node-at-position',
                 location: {
@@ -81,11 +83,13 @@ export const flowEditorPanelsSlice = createSlice({
             if (ps.state.type !== 'dragging-link') {
                 return;
             }
-            ps.state.cursorWorldPosition = pointScreenToWorld(ps.camera, a.payload.offsetCursor);
+            const cam = getActiveEditorCamera(ps);
+            ps.state.cursorWorldPosition = pointScreenToWorld(cam, a.payload.offsetCursor);
         },
         setStateAddNodeWithConnection: (s, a: PayloadAction<{ panelId: string, clientPosition: Vec2, offsetPosition: Vec2 }>) => {
             const ps = getPanelState(s, a);
-            const worldPosition = pointScreenToWorld(ps.camera, a.payload.offsetPosition);
+            const cam = getActiveEditorCamera(ps);
+            const worldPosition = pointScreenToWorld(cam, a.payload.offsetPosition);
             const lastState = ps.state;
             if (lastState?.type !== 'dragging-link') {
                 except(`Tried to add node with connection but last state was not draggin-link`);
@@ -99,20 +103,13 @@ export const flowEditorPanelsSlice = createSlice({
                 draggingContext: lastState.draggingContext,
             };
         },
-        setSelection: (s, a: PayloadAction<{ panelId: string, selection: lang.FlowSelection }>) => {
-            const ps = getPanelState(s, a);
-            ps.selection = a.payload.selection;
-        },
         setRelativeClientJointPositions: (s, a: PayloadAction<{ panelId: string, updates: Array<{ jointKey: JointLocationKey, relativeClientPosition: Vec2 }> }>) => {
             const ps = getPanelState(s, a);
+            const cam = getActiveEditorCamera(ps);
             for (const { jointKey, relativeClientPosition } of a.payload.updates) {
-                const relativeWorldPos = vectorScreenToWorld(ps.camera, relativeClientPosition);
+                const relativeWorldPos = vectorScreenToWorld(cam, relativeClientPosition);
                 ps.relativeJointPosition.set(jointKey, relativeWorldPos);
             }
-        },
-        setClipboard: (s, a: PayloadAction<{ panelId: string, clipboard: EditorClipboardNodeContent }>) => {
-            const ps = getPanelState(s, a);
-            ps.clipboard = a.payload.clipboard;
         },
     }
 });
@@ -120,15 +117,13 @@ export const flowEditorPanelsSlice = createSlice({
 export const {
     setFlowId: flowEditorPanelsSetFlowId,
     pushFlowId: flowEditorPanelsPushFlowId,
-    updateCamera: flowEditorPanelsUpdateCamera,
+    updateActiveCamera: flowEditorPanelsUpdateActiveCamera,
     setStateNeutral: flowEditorSetStateNeutral,
     setStateAddNodeAtPosition: flowEditorSetStateAddNodeAtPosition,
     setStateDraggingLink: flowEditorSetStateDraggingLink,
     updateDragginLinkPosition: flowEditorUpdateDragginLinkPosition,
     setStateAddNodeWithConnection: flowEditorSetStateAddNodeWithConnection,
-    setSelection: flowEditorSetSelection,
     setRelativeClientJointPositions: flowEditorSetRelativeClientJointPositions,
-    setClipboard: flowEditorSetClipboard,
 } = flowEditorPanelsSlice.actions;
 
 const flowEditorPanelsReducer = panelStateEnhancer(
@@ -143,14 +138,6 @@ export const useSelectFlowEditorPanelActionState = (panelId: string) => {
     const panelStateSelector = useSelectFlowEditorPanel(panelId);
     return useCallback((state: RootState) =>
         panelStateSelector(state)?.state,
-        [panelStateSelector],
-    );
-}
-
-export const useFlowEditorSelection = (panelId: string) => {
-    const panelStateSelector = useSelectFlowEditorPanel(panelId);
-    return useCallback((state: RootState) =>
-        panelStateSelector(state)?.selection,
         [panelStateSelector],
     );
 }

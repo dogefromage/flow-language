@@ -12,6 +12,8 @@ export const documentSetDescription = createUndoAction
     <{ description: string }, 'document.setDescription'>('document.setDescription');
 export const documentReplace = createAction
     <{ document: lang.FlowDocument }, 'document.replace'>('document.replace');
+export const documentUpdateAndReplace = createAction
+    <{ document: lang.FlowDocument }, 'document.updateAndReplace'>('document.updateAndReplace');
 export const documentRenameFlow = createUndoAction
     <{ oldName: string, newName: string }, 'document.renameFlow'>('document.renameFlow');
 export const documentRenameGeneric = createUndoAction
@@ -47,8 +49,10 @@ function documentReducer(s: lang.FlowDocument | undefined, a: AnyAction): lang.F
         });
     }
     if (documentReplace.match(a)) {
-        // let reducer run on document, this will initialize newer members which are missing
-        return documentReducer(a.payload.document, { type: '' });
+        return a.payload.document;
+    }
+    if (documentUpdateAndReplace.match(a)) {
+        return lang.updateObsoleteDocument(a.payload.document);
     }
     if (documentRenameFlow.match(a)) {
         const builder = new lang.Builder(s);

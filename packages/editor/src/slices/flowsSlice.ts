@@ -5,7 +5,7 @@ import { useCallback } from "react";
 import { defaultFlows } from "../content/defaultDocument";
 import { RootState } from "../redux/rootReducer";
 import { FLOW_REGION_MIN_SIZE } from "../styles/flowStyles";
-import { EditorClipboardNodeContent, RowSignatureBlueprint, Size2, UndoAction, Vec2 } from "../types";
+import { EditorClipboardData, RowSignatureBlueprint, Size2, UndoAction, Vec2 } from "../types";
 import { except } from "../utils/exceptions";
 import { flowsIdRegex, listItemRegex } from "../utils/flows";
 import { selectDocument } from "./documentSlice";
@@ -327,10 +327,14 @@ export const flowsSlice = createSlice({
             if (!generic) except(`Could not find generic`);
             generic.constraint = a.payload.constraint;
         },
-        pasteNodes: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, clipboard: EditorClipboardNodeContent }>) => {
+        pasteNodes: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, clipboard: EditorClipboardData }>) => {
             const originalFlow = lang.assertDef(original(getFlow(s, a)));
+            const referenceFlow = a.payload.clipboard.snapshot.flows[a.payload.clipboard.selection.flowId];
+            if (!referenceFlow) {
+                except('Missing reference flow.');
+            }
             s[a.payload.flowId] = lang.pasteSelectedNodes(
-                a.payload.clipboard.flow,
+                referenceFlow,
                 originalFlow,
                 a.payload.clipboard.selection, 
                 { x: 20, y: 20 },

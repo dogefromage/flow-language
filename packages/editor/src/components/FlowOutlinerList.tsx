@@ -1,5 +1,7 @@
 import { PropsWithChildren, useState } from 'react';
 import styled from 'styled-components';
+import { flowOutlinerDeleteFlowEntryCommand } from '../content/commands/flowOutlinerCommands';
+import { defaultFlowSignature } from '../content/defaultDocument';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { selectDocument } from '../slices/documentSlice';
 import { editorSetActiveFlow, selectEditor } from '../slices/editorSlice';
@@ -7,7 +9,6 @@ import { flowsCreate } from '../slices/flowsSlice';
 import { useFlowNamingValidator } from '../utils/flows';
 import useContextMenu from '../utils/useContextMenu';
 import FormRenameField from './FormRenameField';
-import { defaultFlowSignature } from '../content/defaultDocument';
 
 const OutlinerListDiv = styled.div`
     display: flex;
@@ -48,7 +49,7 @@ const FlowOutlinerEntry = ({ panelId, flowId }: PropsWithChildren<EntryProps>) =
     const contextHandler = useContextMenu(
         panelId,
         'Flow',
-        [ 'FlowOutliner.deleteFlowEntry' ],
+        [ flowOutlinerDeleteFlowEntryCommand ],
         () => ({ flowId }),
     );
 

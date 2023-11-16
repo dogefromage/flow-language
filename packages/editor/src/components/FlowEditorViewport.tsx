@@ -1,12 +1,15 @@
 import styled from 'styled-components';
-import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
+import { flowEditorAddNodeAtPositionCommand, flowEditorAddRegionAtPositionCommand, flowEditorFitCameraCommand, flowEditorPasteCommand } from '../content/commands/flowEditorViewCommands';
+import { editCopySelectedCommand, editCutSelectedCommand, editDeleteSelectedCommand } from '../content/commands/globalEditorCommands';
+import { useAppSelector } from '../redux/stateHooks';
+import { useSelectFlowEditorPanel } from '../slices/panelFlowEditorSlice';
 import useContextMenu from '../utils/useContextMenu';
 import useDispatchCommand from '../utils/useDispatchCommand';
 import { CONTEXT_MENU_DIVIDER } from './ContextMenu';
 import FlowEditorLegend from './FlowEditorLegend';
 import FlowEditorTransform from './FlowEditorTransform';
 import FlowNodeCatalog from './FlowNodeCatalog';
-import { useSelectFlowEditorPanel } from '../slices/panelFlowEditorSlice';
+import { useEffect } from 'react';
 
 const EditorWrapper = styled.div`
     position: relative;
@@ -20,26 +23,35 @@ interface Props {
 }
 
 const FlowEditorViewport = ({ panelId }: Props) => {
-    const dispatch = useAppDispatch();
     const panelState = useAppSelector(useSelectFlowEditorPanel(panelId));
     const flowId = panelState?.flowStack[0];
     const dispatchCommand = useDispatchCommand();
+
+    useEffect(() => {
+        if (panelState?.cameras && flowId &&
+            panelState.cameras[flowId] == null) {
+            // initialize camera
+            dispatchCommand(flowEditorFitCameraCommand, {
+                targetPanelId: panelId,
+            });
+        }
+    }, [flowId]);
 
     const contextMenu = useContextMenu(
         panelId,
         'Flow Viewport',
         [
-            'flowEditor.addNodeAtPosition',
-            'flowEditor.addRegionAtPosition',
-            'flowEditor.deleteSelected',
+            flowEditorAddNodeAtPositionCommand,
+            flowEditorAddRegionAtPositionCommand,
+            editDeleteSelectedCommand,
             CONTEXT_MENU_DIVIDER,
-            'flowEditor.createFlow',
+            // 'flowEditor.createFlow',
+            // CONTEXT_MENU_DIVIDER,
+            editCopySelectedCommand,
+            editCutSelectedCommand,
+            flowEditorPasteCommand,
             CONTEXT_MENU_DIVIDER,
-            'flowEditor.copySelected',
-            'flowEditor.cutSelected',
-            'flowEditor.paste',
-            CONTEXT_MENU_DIVIDER,
-            'flowEditor.fitCamera',
+            flowEditorFitCameraCommand,
         ]
     );
 
@@ -48,9 +60,8 @@ const FlowEditorViewport = ({ panelId }: Props) => {
             onContextMenu={contextMenu}
             onDoubleClick={e => {
                 dispatchCommand(
-                    'flowEditor.addNodeAtPosition', {
-                        clientCursor: { x: e.clientX, y: e.clientY },
-                    }
+                    flowEditorAddNodeAtPositionCommand,
+                    { clientCursor: { x: e.clientX, y: e.clientY } }
                 );
             }}
         >

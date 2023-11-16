@@ -30,13 +30,13 @@ export default function useDispatchCommand() {
             returnedActions.push(command.actionCreator(baseArgs, customParams));
         } else {
             const panelManager = selectPanelManager(appState);
-            const activePanelId = customParams.activePanelId ?? panelManager.activePanelId;
-            const clientPanelRect = panelManager.clientRects.get(activePanelId);
+            const targetPanelId = customParams.targetPanelId ?? panelManager.activePanelId;
+            const clientPanelRect = panelManager.clientRects.get(targetPanelId);
             if (!clientPanelRect) {
                 return console.error(`Command panel client rect not found`);
             }
 
-            const panelState = selectPanelStateUnmemoized(command.viewType, activePanelId)(appState);
+            const panelState = selectPanelStateUnmemoized(command.viewType, targetPanelId)(appState);
 
             // center
             const offsetPanelCenter = {
@@ -55,7 +55,7 @@ export default function useDispatchCommand() {
 
             const viewArgs: ViewCommandParams<PanelState> = {
                 ...baseArgs,
-                activePanelId,
+                targetPanelId,
                 clientPanelRect,
                 panelState,
                 offsetPanelCenter, 

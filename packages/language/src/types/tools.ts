@@ -4,5 +4,6 @@ type SelectionItem =
     | { type: 'region', id: string }
 
 export interface FlowSelection {
+    flowId: string;
     items: SelectionItem[];
 }

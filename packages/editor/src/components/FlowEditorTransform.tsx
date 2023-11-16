@@ -1,23 +1,19 @@
 import { useDroppable, useMouseDrag } from 'dragzone';
-import * as lang from 'noodle-language';
 import _ from 'lodash';
+import * as lang from 'noodle-language';
 import React, { useCallback, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { Vector2 } from 'threejs-math';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
+import { editorSetSelection } from '../slices/editorSlice';
 import { flowsAddRegion } from '../slices/flowsSlice';
-import { CAMERA_MAX_ZOOM, CAMERA_MIN_ZOOM, flowEditorPanelsUpdateCamera, flowEditorSetSelection, flowEditorSetStateAddNodeWithConnection, flowEditorUpdateDragginLinkPosition, useSelectFlowEditorPanel } from '../slices/panelFlowEditorSlice';
+import { CAMERA_MAX_ZOOM, CAMERA_MIN_ZOOM, flowEditorPanelsUpdateActiveCamera, flowEditorSetStateAddNodeWithConnection, flowEditorUpdateDragginLinkPosition, useSelectFlowEditorPanel } from '../slices/panelFlowEditorSlice';
 import { FLOW_NODE_ROW_HEIGHT, MouseSelectionDiv } from '../styles/flowStyles';
-import { EDITOR_ITEM_ID_ATTR, EDITOR_SELECTABLE_ITEM_CLASS, EDITOR_SELECTABLE_ITEM_TYPE_ATTR, PlanarCamera, Rect, Vec2 } from '../types';
+import { EDITOR_ITEM_ID_ATTR, EDITOR_SELECTABLE_ITEM_CLASS, EDITOR_SELECTABLE_ITEM_TYPE_ATTR, PlanarCamera, Rect, Vec2, getActiveEditorCamera } from '../types';
 import { clamp, rectanglesIntersect } from '../utils/math';
 import { pointScreenToWorld, vectorScreenToWorld } from '../utils/planarCameraMath';
 import FlowEditorContent from './FlowEditorContent';
 import { DRAG_JOIN_DND_TAG } from './FlowJoint';
-
-const defaultPlanarCamera: PlanarCamera = {
-    position: { x: 0, y: 0 },
-    zoom: 1,
-}
 
 interface DivProps {
     camera: PlanarCamera;
@@ -104,7 +100,7 @@ const FlowEditorTransform = ({ flowId, panelId }: Props) => {
             };
             return rectanglesIntersect(offsetNode, box);
         });
-        const selection: lang.FlowSelection = { items: [] };
+        const selection: lang.FlowSelection = { flowId, items: [] };
         intersectingItems.forEach(div => {
             const id = div.getAttribute(EDITOR_ITEM_ID_ATTR);
             const type = div.getAttribute(EDITOR_SELECTABLE_ITEM_TYPE_ATTR);
@@ -112,14 +108,11 @@ const FlowEditorTransform = ({ flowId, panelId }: Props) => {
                 selection.items.push({ id, type: type as 'node' | 'region' });
             }
         });
-        dispatch(flowEditorSetSelection({
-            panelId,
-            selection,
-        }));
+        dispatch(editorSetSelection({ selection }));
     }
 
     const createRegionFromRect = (rect: Rect) => {
-        const cam = panelStateRef.current?.camera;
+        const cam = getActiveEditorCamera(panelStateRef.current);
         if (!cam) return;
         const worldPoint = pointScreenToWorld(cam, rect);
         const worldSizeVec = vectorScreenToWorld(cam, { x: rect.w, y: rect.h });
@@ -181,7 +174,7 @@ const FlowEditorTransform = ({ flowId, panelId }: Props) => {
                 if (!panelState || isActionOngoingRef.current) return;
                 panRef.current = {
                     lastMouse: { x: e.clientX, y: e.clientY },
-                    lastCamera: panelState.camera,
+                    lastCamera: getActiveEditorCamera(panelState),
                 }
             },
             move: e => {
@@ -191,9 +184,9 @@ const FlowEditorTransform = ({ flowId, panelId }: Props) => {
                     y: panRef.current.lastMouse.y - e.clientY,
                 };
                 const position = pointScreenToWorld(panRef.current.lastCamera, deltaScreen);
-                dispatch(flowEditorPanelsUpdateCamera({
-                    panelId,
-                    newCamera: { position }
+                dispatch(flowEditorPanelsUpdateActiveCamera({
+                    panelId, 
+                    camera: { position },
                 }));
                 e.preventDefault();
                 isActionOngoingRef.current = true;
@@ -208,7 +201,7 @@ const FlowEditorTransform = ({ flowId, panelId }: Props) => {
         const k = Math.pow(zoomFactor, -e.deltaY / 100);
         const ps = getOffsetPoint({ x: e.clientX, y: e.clientY });
         if (!ps) return;
-        const cam = panelState.camera;
+        const cam = getActiveEditorCamera(panelState);
         // taken from mycel\daw\views\node_editor\components\NodeEditorView\NodeEditorGUI.tsx
         const z1 = cam.zoom;
         const z2 = clamp(z1 * k, CAMERA_MIN_ZOOM, CAMERA_MAX_ZOOM);
@@ -222,9 +215,9 @@ const FlowEditorTransform = ({ flowId, panelId }: Props) => {
             },
             zoom: z2,
         };
-        dispatch(flowEditorPanelsUpdateCamera({
+        dispatch(flowEditorPanelsUpdateActiveCamera({
             panelId,
-            newCamera: newCamera,
+            camera: newCamera,
         }));
     };
 
@@ -281,7 +274,7 @@ const FlowEditorTransform = ({ flowId, panelId }: Props) => {
         <BackgroundDiv
             ref={wrapperRef}
             onWheel={onWheel}
-            camera={panelState?.camera || defaultPlanarCamera}
+            camera={getActiveEditorCamera(panelState)}
             {...panHandlers}
             {...dragJointHandler}
         >

@@ -1,8 +1,9 @@
-import Menus from "../components/Menus";
-import { defaultCommands } from "./commands/defaultCommands";
 import * as lang from 'noodle-language';
-import { defaultPanelReducers } from "./defaultPanels";
+import Menus from "../components/Menus";
 import { EditorConfig } from "../types";
+import { defaultCommands } from "./commands/defaultCommands";
+import { editClearSelectionCommand, editCutSelectedCommand, editDeleteSelectedCommand, editRedoCommand, editUndoCommand } from "./commands/globalEditorCommands";
+import { defaultPanelReducers } from "./defaultPanels";
 
 function getDefaultCommandMap() {
     return Object.fromEntries(
@@ -15,8 +16,12 @@ function getDefaultToolbar(): EditorConfig['toolbar'] {
     const DocumentSubmenu = () => (<></>);
 
     const EditSubmenu = () => (<>
-        <Menus.Command commandId='global.undo' />
-        <Menus.Command commandId='global.redo' />
+        <Menus.Command commandId={editUndoCommand} />
+        <Menus.Command commandId={editRedoCommand} />
+        <Menus.Divider />
+        <Menus.Command commandId={editClearSelectionCommand} />
+        <Menus.Command commandId={editDeleteSelectedCommand} />
+        <Menus.Command commandId={editCutSelectedCommand} />
     </>);
 
     return {
