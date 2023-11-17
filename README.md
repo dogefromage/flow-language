@@ -21,6 +21,5 @@ This pnpm mono-repo contains:
 - The [language package](/packages/language/). Type definitions, validators and compilers for noodle.
 - The [editor package](/packages/editor/). An example for a noodle editor built in react.
 
-
 ## License
 MIT
