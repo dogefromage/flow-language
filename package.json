@@ -8,8 +8,7 @@
         "dev-editor": "cd packages/editor && pnpm run dev",
         "dev-language": "cd packages/language && pnpm run dev",
         "dev-bytecode": "cd packages/bytecode && pnpm run dev",
-        "dev": "concurrently npm:dev-*",
-        "remove-tsbuildinfo": "find . -type f -name '.tsbuildinfo' -exec rm {} \\;"
+        "dev": "concurrently npm:dev-*"
     },
     "devDependencies": {
         "concurrently": "^8.2.0"
