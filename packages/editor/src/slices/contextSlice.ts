@@ -24,7 +24,7 @@ export const {
 } = contextSlice.actions;
 
 export const selectDocumentContext = (state: RootState) => state.context;
-export const selectFlowContext = (flowId: string) => {
+export const useSelectFlowContext = (flowId: string) => {
     return useCallback((state: RootState) =>
         selectDocumentContext(state).documentContext?.flowContexts[flowId],
         [flowId],

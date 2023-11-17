@@ -2,7 +2,7 @@ import { EdgeColor, FlowEdge, FlowGraph, JointLocation } from 'noodle-language';
 import styled from 'styled-components';
 import { Box2, Vector2 } from 'threejs-math';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { selectFlowContext } from '../slices/contextSlice';
+import { useSelectFlowContext } from '../slices/contextSlice';
 import { flowsRemoveConnection, useSelectSingleFlow } from '../slices/flowsSlice';
 import { useSelectFlowEditorPanel } from '../slices/panelFlowEditorSlice';
 import { FlowEditorPanelState } from '../types';
@@ -32,6 +32,8 @@ const FlowEdgesSVG = styled.svg.attrs<SVGProps>(({ box }) => {
 }) <SVGProps>`
     position: absolute;
     /* outline: solid 1px red; */
+
+    pointer-events: none;
 `;
 
 const FlowEdgeGroup = styled.g<{ color: EdgeColor, key: string }>`
@@ -41,6 +43,7 @@ const FlowEdgeGroup = styled.g<{ color: EdgeColor, key: string }>`
         /* stroke: #ff000033; */
         stroke-width: 10px;
         cursor: pointer;
+        pointer-events: visiblePainted;
     }
 
     .path-display {
@@ -48,7 +51,6 @@ const FlowEdgeGroup = styled.g<{ color: EdgeColor, key: string }>`
         stroke: ${({ color, theme }) => theme.colors.flowEditor.edgeColors[color]};
         stroke-width: 3px;
         transition: stroke-width 50ms, stroke 150ms;
-        pointer-events: none;
     }
 
     .path-catcher:hover:not([data-key="${NEW_LINK_KEY}"]) + .path-display {
@@ -64,7 +66,7 @@ interface Props {
 const FlowEdges = ({ panelId, flowId }: Props) => {
     const dispatch = useAppDispatch();
     const flow = useAppSelector(useSelectSingleFlow(flowId));
-    const context = useAppSelector(selectFlowContext(flowId));
+    const context = useAppSelector(useSelectFlowContext(flowId));
     const panelState = useAppSelector(useSelectFlowEditorPanel(panelId));
 
     const removeEdge = (edgeId: string) => {
@@ -75,7 +77,6 @@ const FlowEdges = ({ panelId, flowId }: Props) => {
             flowId,
             input: edge.target,
             undo: { desc: 'Removed an edge from current flow.' },
-            // strategy: 'static',
         }))
     }
 
