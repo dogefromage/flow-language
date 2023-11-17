@@ -5,6 +5,11 @@ import { MaterialSymbol } from '../styles/icons';
 import { Vec2 } from '../types';
 import Menus from './Menus';
 
+export interface SelectOptionContent {
+    names: Record<string, string>;
+    options: string[];
+}
+
 const SelectOptionDiv = styled.div<{ 
     disabled?: boolean, 
     $widthInline?: boolean,

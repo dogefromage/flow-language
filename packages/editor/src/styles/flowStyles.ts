@@ -8,6 +8,7 @@ export const FLOW_REGION_MIN_SIZE: Size2 = {
     w: FLOW_NODE_MIN_WIDTH,
     h: FLOW_NODE_ROW_HEIGHT,
 };
+export const REGION_DEFAULT_COLOR_HEX = '#cccccc';
 
 export interface FlowNodeDivProps {
     $position: Vec2;

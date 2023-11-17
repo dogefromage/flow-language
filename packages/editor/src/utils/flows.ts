@@ -5,7 +5,8 @@ import _ from "lodash";
 import { NameValidationError } from "../components/FormRenameField";
 import { useAppSelector } from "../redux/stateHooks";
 import { selectDocument } from "../slices/documentSlice";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
+import { SelectOptionContent } from "../components/FormSelectOption";
 
 export const flowsIdRegex = /^[A-Za-z_][A-Za-z_0-9]*$/;
 export const listItemRegex = /^[A-Za-z_][A-Za-z_0-9]*$/;
@@ -144,4 +145,23 @@ export const useFlowNamingValidator = (excludeId?: string) => {
             return { message: `There is already a flow named '${newValue}'. Please use a different name.` };
         }
     }, [document, excludeId]);
+}
+
+export function useAvailableSignatureOptionsData(env?: lang.FlowEnvironment): SelectOptionContent {
+    return useMemo(() => {
+        if (!env) {
+            const defaultData: SelectOptionContent = {
+                names: {},
+                options: [],
+            };
+            return defaultData;
+        }
+        const envContent = lang.collectTotalEnvironmentContent(env);
+        const paths = Object.keys(envContent.signatures);
+        const pathNames = paths.map<[string, string]>(path => [path, lang.pathTail({ path })]);
+        return {
+            names: Object.fromEntries(pathNames),
+            options: paths,
+        };
+    }, [env]);
 }

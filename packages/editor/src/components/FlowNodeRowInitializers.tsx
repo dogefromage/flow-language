@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { useAppDispatch } from '../redux/stateHooks';
 import { flowsSetRowValue } from '../slices/flowsSlice';
 import { FlowNodeRowDiv, FlowNodeRowNameP } from '../styles/flowStyles';
-import { formatFlowLabel } from '../utils/flows';
+import { formatFlowLabel, useAvailableSignatureOptionsData } from '../utils/flows';
 import { RowComponentProps } from './FlowNodeRowComponents';
 import FormCheckBox from './FormCheckBox';
 import FormSelectOption from './FormSelectOption';
@@ -29,15 +29,7 @@ const FunctionInitializer = (props: RowComponentProps<lang.InputRowSignature>) =
     const dispatch = useAppDispatch();
     const { panelId, type, env, flowId, nodeId, row, context } = props;
 
-    const [signaturePaths, signaturePathNames] = useMemo(() => {
-        const envContent = lang.collectTotalEnvironmentContent(env);
-        const paths = Object.keys(envContent.signatures);
-        const pathNames = paths.map<[string, string]>(path => [path, lang.pathTail({ path })]);
-        return [
-            paths,
-            Object.fromEntries(pathNames),
-        ];
-    }, [env]);
+    const { names, options } = useAvailableSignatureOptionsData(env);
 
     return (
         <FlowNodeRowErrorWrapper {...props}>
@@ -57,8 +49,8 @@ const FunctionInitializer = (props: RowComponentProps<lang.InputRowSignature>) =
                 <FlowNodeRowNameP $align="left">{formatFlowLabel(row.id)}</FlowNodeRowNameP>
                 <FormSelectOption
                     value={context?.ref?.value || ''}
-                    options={signaturePaths}
-                    mapName={signaturePathNames}
+                    options={options}
+                    mapName={names}
                     onChange={newSignatureId => {
                         dispatch(flowsSetRowValue({
                             flowId, nodeId, rowId: row.id,

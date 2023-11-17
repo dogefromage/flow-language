@@ -3,7 +3,7 @@ import { NamespacePath } from "noodle-language";
 import { useCallback, useMemo, useState } from "react";
 import { AppDispatch } from "../redux/rootReducer";
 import { useAppDispatch, useAppSelector } from "../redux/stateHooks";
-import { selectFlowContext } from "../slices/contextSlice";
+import { useSelectFlowContext } from "../slices/contextSlice";
 import { flowsAddConnection, flowsAddNode } from "../slices/flowsSlice";
 import { flowEditorSetStateNeutral, useSelectFlowEditorPanel } from "../slices/panelFlowEditorSlice";
 import { FLOW_NODE_MIN_WIDTH } from "../styles/flowStyles";
@@ -18,7 +18,7 @@ const FlowNodeCatalog = ({ panelId }: Props) => {
     const dispatch = useAppDispatch();
     const panelState = useAppSelector(useSelectFlowEditorPanel(panelId));
     const flowId = panelState?.flowStack[0];
-    const graphValidation = useAppSelector(selectFlowContext(flowId!));
+    const graphValidation = useAppSelector(useSelectFlowContext(flowId!));
 
     const [searchValue, setSearchValue] = useState('');
 

@@ -4,7 +4,7 @@ import { PropsWithChildren, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { flowsMoveSelection, flowsResizeRegion } from '../slices/flowsSlice';
-import { FlowRegionDiv } from '../styles/flowStyles';
+import { FlowRegionDiv, REGION_DEFAULT_COLOR_HEX } from '../styles/flowStyles';
 import { EDITOR_ITEM_ID_ATTR, EDITOR_SELECTABLE_ITEM_CLASS, EDITOR_SELECTABLE_ITEM_TYPE_ATTR, FlowEditorPanelState, SelectionStatus, Size2, Vec2, getActiveEditorCamera } from '../types';
 import { vectorScreenToWorld } from '../utils/planarCameraMath';
 import { MaterialSymbol } from '../styles/icons';
@@ -131,7 +131,7 @@ const FlowRegion = ({ panelId, flowId, region, getPanelState }: PropsWithChildre
         [EDITOR_ITEM_ID_ATTR]: region.id,
         [EDITOR_SELECTABLE_ITEM_TYPE_ATTR]: 'region',
     };
-    const color = region.attributes.color || 'white';
+    const color = region.attributes.color || REGION_DEFAULT_COLOR_HEX;
 
     return (
         <FlowRegionDiv $position={region.position} 

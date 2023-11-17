@@ -1,7 +1,7 @@
 import * as lang from 'noodle-language';
 import { PropsWithChildren } from 'react';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { selectFlowContext } from '../slices/contextSlice';
+import { useSelectFlowContext } from '../slices/contextSlice';
 import {
     flowsReplaceGeneric,
     flowsReplaceInput,
@@ -27,7 +27,7 @@ interface FlowInspectorPortDetailsProps {
 const FlowInspectorPortDetails = ({ panelId, flowId }: PropsWithChildren<FlowInspectorPortDetailsProps>) => {
     const dispatch = useAppDispatch();
     const flow = useAppSelector(useSelectSingleFlow(flowId));
-    const flowContext = useAppSelector(selectFlowContext(flowId));
+    const flowContext = useAppSelector(useSelectFlowContext(flowId));
     const panelState = useAppSelector(useSelectFlowInspectorPanel(panelId));
 
     const notSelected = <p>No Port selected.</p>;

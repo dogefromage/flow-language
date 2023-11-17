@@ -156,10 +156,9 @@ export const flowsSlice = createSlice({
             }
             removeConnectionsToNodes(g, removedNodeIds);
         },
-        // positionNode: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, nodeId: string, position: Vec2 }>) => {
-        //     const n = getNode(s, a);
-        //     n.position = { ...a.payload.position };
-        // },
+        updateNodeSignature: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, nodeId: string, signature: lang.NamespacePath }>) => {
+            getNode(s, a).signature = a.payload.signature;
+        },
         moveSelection: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, selection: lang.FlowSelection, delta: Vec2 }>) => {
             const g = getFlow(s, a);
             for (const selItem of a.payload.selection.items) {
@@ -352,6 +351,7 @@ export const {
     setAttribute: flowsSetAttribute,
     addNode: flowsAddNode,
     removeSelection: flowsRemoveNodes,
+    updateNodeSignature: flowsUpdateNodeSignature,
     moveSelection: flowsMoveSelection,
     addRegion: flowsAddRegion,
     resizeRegion: flowsResizeRegion,

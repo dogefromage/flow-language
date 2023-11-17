@@ -1,6 +1,6 @@
 import React, { PropsWithChildren } from 'react';
 import { useAppSelector } from '../redux/stateHooks';
-import { selectFlowContext } from '../slices/contextSlice';
+import { useSelectFlowContext } from '../slices/contextSlice';
 import { Bold } from '../styles/typography';
 import styled from 'styled-components';
 
@@ -20,7 +20,7 @@ interface FlowEditorLegendProps {
 
 const FlowEditorLegend = ({ flowId, }: PropsWithChildren<FlowEditorLegendProps>) => {
 
-    const flowContext = useAppSelector(selectFlowContext(flowId));
+    const flowContext = useAppSelector(useSelectFlowContext(flowId));
 
     return (
         <LegendWrapper>

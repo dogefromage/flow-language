@@ -43,7 +43,7 @@ const FlowRegionText = ({ flowId, region }: PropsWithChildren<FlowRegionTextProp
                 ref={textAreaRef}
                 onBlur={() => setWriteAction(undefined)}
                 onDoubleClick={e => e.stopPropagation()} 
-                // onWheel={e => e.stopPropagation()}    
+                onWheel={e => e.stopPropagation()}    
             />
         ) : (
             <RegionTextPara onClick={onStartWriting}>
