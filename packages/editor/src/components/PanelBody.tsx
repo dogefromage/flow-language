@@ -1,11 +1,10 @@
 import useResizeObserver from '@react-hook/resize-observer';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
 import styled from 'styled-components';
+import { useAppDispatch } from '../redux/stateHooks';
 import { panelManagerSetActive, panelManagerSetClientRect } from '../slices/panelManagerSlice';
 import { Rect, ViewProps } from '../types';
-import { useAppDispatch } from '../redux/stateHooks';
-import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
-import { MaterialSymbol } from '../styles/icons';
 import { getPanelDivId } from '../utils/panelManager';
 
 const PanelDiv = styled.div`
@@ -30,7 +29,7 @@ const PanelBody = ({ children, viewProps }: Props) => {
         if (!panelDiv.current) return;
         dispatch(panelManagerSetActive({
             activePanel: panelId,
-        }))
+        }));
     }, [dispatch]);
 
     useResizeObserver(panelDiv, div => {

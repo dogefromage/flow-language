@@ -116,11 +116,12 @@ const ContentSelectionNode = ({ flowId, nodeId }: ContentSelectionNodeProps) => 
     const node = flow?.nodes[nodeId];
     const context = useAppSelector(useSelectFlowContext(flowId));
     
+    const { names, options } = useAvailableSignatureOptionsData(context?.flowEnvironment);
+
     if (!node) {
         return <p>Invalid selection.</p>;
     }
 
-    const { names, options } = useAvailableSignatureOptionsData(context?.flowEnvironment);
 
     return (
         <FormSettingsTable>

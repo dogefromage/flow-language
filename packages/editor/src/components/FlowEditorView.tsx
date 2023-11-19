@@ -27,8 +27,10 @@ const FlowEditorView = (viewProps: ViewProps) => {
     }, [ editorState.activeFlow ]);
 
     return (
-        <PanelBody viewProps={viewProps}>
+        <PanelBody viewProps={viewProps}> {
+            editorState &&
             <FlowEditorViewport panelId={panelId} />
+        }
         </PanelBody>
     )
 }

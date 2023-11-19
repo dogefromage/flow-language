@@ -46,31 +46,23 @@ const makeDocumentNamespace = mem((
 ): FlowEnvironmentNamespace => {
     const outputConstructorTypes: Record<string, TypeSpecifier> = {};
     for (const signature of signatureList) {
+
+        if (signature.generics.length > 0) {
+            // will not provide generic type for now
+            continue;
+        }
+
         const signatureType = getTemplatedSignatureType(signature);
-        const templatedOutput = memoizeTemplatedType(
-            createReducedTemplateType(
-                signatureType.generics,
-                signatureType.specifier.output,
-            )
-        );
-        
-        const dummyEnvironment = createEnvironment({ content: {
-            types: {},
-            signatures: [],
-        }, name: '' });
-        const crudeInstantiatedType = instantiateTemplatedType(
-            new TypeTreePath(), templatedOutput, instantiationMap,
-            templatedOutput.generics, dummyEnvironment);
-        
+        const outputType = signatureType.specifier.output;
         
         const typeName = _.capitalize(signature.id);
-        outputConstructorTypes[typeName] = templatedOutput;
+        outputConstructorTypes[typeName] = outputType;
     }
     return {
         name: 'document',
         content: {
             signatures: signatureList,
-            types: {},
+            types: outputConstructorTypes,
         },
     };
 }, undefined, { tag: 'makeDocumentNamespace' });

@@ -273,14 +273,15 @@ function pushFlowEnvironmentContentInitial(
 
     const outputInputs: InputRowSignature[] = [];
     if (flowOutput != null) {
-        let rowType: 'input-simple' | 'input-variable' = 'input-simple';
-        if (flowOutput.rowType === 'output-destructured') {
-            rowType = 'input-variable';
-        }
+        // let rowType: 'input-simple' | 'input-variable' = 'input-simple';
+        // if (flowOutput.rowType === 'output-destructured') {
+        //     rowType = 'input-variable';
+        // }
         outputInputs.push({
             id: flowOutput.id,
             specifier: flowOutput.specifier,
-            rowType,
+            rowType: 'input-variable', // test 
+            // rowType,
             defaultValue: null,
         });
     }

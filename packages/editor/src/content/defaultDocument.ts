@@ -27,6 +27,17 @@ const mainSignature: lang.AnonymousFlowSignature = {
     },
 }
 
+const howToText = 
+`Welcome to your new project, here's how you can start:
+
+- Add node with spacebar or right-click for menu.
+- Connect joints by dragging them.
+- Box select multiple elements by draggin a square.
+- Edit various settings and attributes in inspector on the right.
+- Add new flows on the left.
+- Run program using Ctrl-Enter or the toolbar menu.
+`;
+
 const defaultRootFlow: lang.FlowGraph = {
     id: lang.MAIN_FLOW_ID,
     ...mainSignature,
@@ -36,18 +47,15 @@ const defaultRootFlow: lang.FlowGraph = {
             id: 'a',
             signature: { path: `document::${lang.MAIN_FLOW_ID}::output` },
             rowStates: {},
-            position: { x: 400, y: 294 }
+            position: { x: 500, y: 300 }
         },
     },
     regions: {
         a: {
             id: 'a',
-            attributes: {
-                text: `Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.`,
-                color: '#00bdc7',
-            },
-            position: { x: 200, y: 100 },
-            size: { w: 200, h: 150 },
+            attributes: { text: howToText, },
+            position: { x: 0, y: 0 },
+            size: { w: 700, h: 180 },
         }
     },
     imports: [ 'standard' ],

@@ -12,8 +12,8 @@ export const documentSetDescription = createUndoAction
     <{ description: string }, 'document.setDescription'>('document.setDescription');
 export const documentReplace = createAction
     <{ document: lang.FlowDocument }, 'document.replace'>('document.replace');
-export const documentUpdateAndReplace = createAction
-    <{ document: lang.FlowDocument }, 'document.updateAndReplace'>('document.updateAndReplace');
+export const documentUpgradeAndReplace = createAction
+    <{ document: lang.FlowDocument }, 'document.upgradeAndReplace'>('document.upgradeAndReplace');
 export const documentRenameFlow = createUndoAction
     <{ oldName: string, newName: string }, 'document.renameFlow'>('document.renameFlow');
 export const documentRenameGeneric = createUndoAction
@@ -51,7 +51,7 @@ function documentReducer(s: lang.FlowDocument | undefined, a: AnyAction): lang.F
     if (documentReplace.match(a)) {
         return a.payload.document;
     }
-    if (documentUpdateAndReplace.match(a)) {
+    if (documentUpgradeAndReplace.match(a)) {
         return lang.updateObsoleteDocument(a.payload.document);
     }
     if (documentRenameFlow.match(a)) {
