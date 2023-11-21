@@ -1,6 +1,6 @@
-import { InputRowSignature, NamespacePath, OutputRowSignature } from "./signatures";
-import { TemplateParameter, InitializerValue } from "./typeSystem";
-import { Obj, Vec2, Size2 } from "./internal";
+import { InitializerValue, TemplateParameter } from './typeSystem';
+import { InputRowSignature, NamespacePath, OutputRowSignature } from './signatures';
+import { Obj, Size2, Vec2 } from './internal';
 
 export interface InputJointLocation {
     direction: 'input';
@@ -21,16 +21,27 @@ export interface FlowConnection {
     accessor?: string; // used for destructured outputs
 }
 
-export interface RowState {
-    connections: Obj<FlowConnection>;
+export interface FlowInputArgument {
+    typeRef?: FlowConnection;
+    valueRef?: FlowConnection;
+}
+
+export interface InputRowState {
+    rowArguments: Obj<FlowInputArgument>;
     value: InitializerValue | null;
+    destructure?: boolean;
+}
+
+export interface OutputRowState {
+    destructure?: boolean;
 }
 
 export interface FlowNode {
     id: string;
     position: Vec2;
-    signature: NamespacePath;
-    rowStates: Obj<RowState>;
+    protoPath: NamespacePath;
+    inputs: Obj<InputRowState>;
+    output: OutputRowState;
 }
 export interface FlowRegion {
     id: string;

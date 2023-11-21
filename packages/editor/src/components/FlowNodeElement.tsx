@@ -34,7 +34,7 @@ const FlowNodeElement = ({ panelId, flowId, context, getPanelState, env }: Props
         selectionStatus = 'selected';
     }
 
-    const referencedFlow = useAppSelector(useSelectSingleFlow(context.templateSignature?.id!)) as lang.FlowGraph | undefined;
+    const referencedFlow = useAppSelector(useSelectSingleFlow(context.proto?.id!)) as lang.FlowGraph | undefined;
 
     const debouncedContext = useDebouncedValue(context, 300);
     useEffect(() => {
@@ -143,16 +143,16 @@ const FlowNodeElement = ({ panelId, flowId, context, getPanelState, env }: Props
             }}
         >
             {
-                context.templateSignature ? (
+                context.proto ? (
                     <FlowNodeContent
                         panelId={panelId}
                         flowId={flowId}
                         context={context}
-                        signature={context.templateSignature}
+                        signature={context.proto}
                         env={env}
                     />
                 ) : (
-                    <FlowNodeMissingContent signaturePath={context.ref.signature} />
+                    <FlowNodeMissingContent signaturePath={context.ref.protoPath} />
                 )
             }
             {catcher}

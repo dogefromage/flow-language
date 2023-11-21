@@ -1,5 +1,5 @@
 import { createAnyType, createMapType, createReducedTemplateType, memoizeTemplatedType } from "../typeSystem";
-import { EdgeColor, FlowEdge, FlowEnvironment, FlowGraph, FlowGraphContext, FlowModule, FlowSignature, InputRowSignature, TemplatedTypeSpecifier, pathTail } from "../types";
+import { EdgeStatus, EdgeSyntacticType, FlowConnection, FlowEdge, FlowEnvironment, FlowGraph, FlowGraphContext, FlowModule, FlowSignature, InputRowSignature, TemplatedTypeSpecifier, pathTail } from "../types";
 import { assertDef, deepFreeze } from "../utils";
 import { findDependencies, sortTopologically } from "../utils/algorithms";
 import { memoObjectByFlatEntries } from "../utils/functional";
@@ -37,34 +37,41 @@ export const validateFlowGraph = mem((
         const [inputNodeId, inputNode] = nodeEntries[inputNodeIndex];
         const inputNodeDepIndices = new Set<number>();
 
-        for (const [inputRowId, inputRow] of Object.entries(inputNode.rowStates)) {
-            const { connections } = inputRow!;
-            for (const [inputAccessor, connection] of Object.entries(connections)) {
-                const {
-                    nodeId: outputNodeId,
-                    accessor: outputAccessor
-                } = connection;
-                // check if present
-                const depIndex = nodeEntries
-                    .findIndex(entry => entry[0] === outputNodeId);
-                if (depIndex < 0) {
-                    // missingNodes.add(outputNodeId);
-                    continue;
+        for (const [inputRowId, inputRow] of Object.entries(inputNode.inputs)) {
+            const { rowArguments: nodeArguments } = inputRow!;
+            for (const [inputAccessor, nodeArg] of Object.entries(nodeArguments)) {
+
+                const connections: [EdgeSyntacticType, FlowConnection][] = [];
+                if (nodeArg.typeRef != null) {
+                    connections.push(['type-only', nodeArg.typeRef]);
                 }
-                // adjacency
-                inputNodeDepIndices.add(depIndex);
-                // edge list
-                const edgeId = `${outputNodeId}.${outputAccessor || '@'}_${inputNodeId}.${inputRowId}.${inputAccessor}`;
-                uncoloredEdges.push(
-                    makeUncoloredEdge(
+                if (nodeArg.valueRef != null) {
+                    connections.push(['value-and-type', nodeArg.valueRef]);
+                }
+
+                for (const [syntacticType, connection] of connections) {
+                    const {
+                        nodeId: outputNodeId,
+                        accessor: outputAccessor
+                    } = connection;
+                    // check if present
+                    const depIndex = nodeEntries
+                        .findIndex(entry => entry[0] === outputNodeId);
+                    if (depIndex < 0) {
+                        // missingNodes.add(outputNodeId);
+                        continue;
+                    }
+                    // adjacency
+                    inputNodeDepIndices.add(depIndex);
+                    // edge list
+                    const edgeId = `${outputNodeId}.${outputAccessor || '*'}_${inputNodeId}.${inputRowId}.${inputAccessor}`;
+                    uncoloredEdges.push(makeUncoloredEdge(
                         edgeId,
-                        outputNodeId,
-                        outputAccessor,
-                        inputNodeId,
-                        inputRowId,
-                        inputAccessor,
-                    )
-                );
+                        outputNodeId, outputAccessor,
+                        inputNodeId, inputRowId, inputAccessor,
+                        syntacticType,
+                    ));
+                }
             }
         }
         for (const depIndex of inputNodeDepIndices) {
@@ -81,7 +88,7 @@ export const validateFlowGraph = mem((
     const outputIndices: number[] = [];
     for (let i = 0; i < nodeEntries.length; i++) {
         const node = nodeEntries[i][1];
-        if (pathTail(node.signature) === 'output') {
+        if (pathTail(node.protoPath) === 'output') {
             outputIndices.push(i);
         }
     }
@@ -129,7 +136,7 @@ export const validateFlowGraph = mem((
 
     // color edges
     const coloredEdges = uncoloredEdges.map(almostEdge => {
-        let edgeColor: EdgeColor = 'normal';
+        let edgeColor: EdgeStatus = 'normal';
         const targetNode = almostEdge.target.nodeId;
         // redundant
         if (!usedNodeIds.has(targetNode)) {
@@ -215,6 +222,7 @@ const makeUncoloredEdge = mem((
     inputNode: string,
     inputRow: string,
     inputAccessor: string,
+    syntacticType: EdgeSyntacticType,
 ) => ({
     id,
     source: {
@@ -228,11 +236,12 @@ const makeUncoloredEdge = mem((
         rowId: inputRow,
         accessor: inputAccessor,
     },
+    syntacticType,
 }) satisfies Partial<FlowEdge>, undefined, { tag: 'makeUncoloredEdge' });
 
 const finalizeEdge = mem(
-    (edge: ReturnType<typeof makeUncoloredEdge>, color: EdgeColor): FlowEdge => ({
-        ...edge, color,
+    (edge: ReturnType<typeof makeUncoloredEdge>, color: EdgeStatus): FlowEdge => ({
+        ...edge, status: color,
     }),
     undefined,
     { tag: 'finalizeEdge' },
@@ -254,7 +263,7 @@ function pushFlowEnvironmentContentInitial(
 ): FlowEnvironment {
     const input: FlowSignature = {
         id: 'input',
-        attributes: { 
+        attributes: {
             category: 'In/Out',
             description: 'The Input provides the arguments passed into the flow. It can also be placed multiple times.',
         },
@@ -267,7 +276,8 @@ function pushFlowEnvironmentContentInitial(
                     flowInputs.map(input => [input.id, input.specifier])
                 )
             ),
-            rowType: 'output-destructured',
+            rowType: 'output',
+            defaultDestructure: true,
         },
     }
 
@@ -287,7 +297,7 @@ function pushFlowEnvironmentContentInitial(
     }
     const output: FlowSignature = {
         id: 'output',
-        attributes: { 
+        attributes: {
             category: 'In/Out',
             description: 'Symbolizes the output value of this flow. Only one output should ever be placed at once.',
         },
@@ -295,8 +305,9 @@ function pushFlowEnvironmentContentInitial(
         inputs: outputInputs,
         output: {
             id: 'output',
-            rowType: 'output-hidden',
+            rowType: 'output',
             specifier: createAnyType(),
+            hidden: true,
         },
     }
 

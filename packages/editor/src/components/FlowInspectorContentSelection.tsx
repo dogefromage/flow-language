@@ -1,7 +1,7 @@
 import { PropsWithChildren } from 'react';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { selectEditor } from '../slices/editorSlice';
-import { flowsSetAttribute, flowsSetRegionAttribute, flowsSetRowValue, flowsUpdateNodeSignature, useSelectSingleFlow } from '../slices/flowsSlice';
+import { flowsSetAttribute, flowsSetRegionAttribute, flowsSetRowValue, flowsUpdateNodePrototype, useSelectSingleFlow } from '../slices/flowsSlice';
 import { FormSettingsTable } from '../styles/formStyles';
 import FormColorPicker from './FormColorPicker';
 import FormExpandableRegion from './FormExpandableRegion';
@@ -127,11 +127,11 @@ const ContentSelectionNode = ({ flowId, nodeId }: ContentSelectionNodeProps) => 
         <FormSettingsTable>
             <p>Function</p>
             <FormSelectOption
-                value={node.signature.path}
+                value={node.protoPath.path}
                 options={options}
                 mapName={names}
                 onChange={newSignatureId => {
-                    dispatch(flowsUpdateNodeSignature({
+                    dispatch(flowsUpdateNodePrototype({
                         flowId, nodeId,
                         signature: { path: newSignatureId },
                         undo: { desc: 'Updated selected nodes signature.' },

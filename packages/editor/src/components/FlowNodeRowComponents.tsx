@@ -23,15 +23,15 @@ export const FlowOutputRowSwitch = (props: RowComponentProps<lang.OutputRowSigna
         case 'hidden':
             return null;
         case 'destructured':
-            return <FlowOutputRowDestructurings {...props as RowComponentProps<lang.DestructuredOutputRowSignature>} />
+            return <FlowOutputRowDestructurings {...props as RowComponentProps<lang.OutputRowSignature>} />
         case 'simple':
-            return <FlowOutputRowSimple {...props as RowComponentProps<lang.SimpleOutputRowSignature>} />
+            return <FlowOutputRowSimple {...props as RowComponentProps<lang.OutputRowSignature>} />
     }
     console.error(`Unknown display type '${props.context?.display}.`);
     return null;
 }
 
-export const FlowOutputRowSimple = (props: RowComponentProps<lang.SimpleOutputRowSignature>) => {
+export const FlowOutputRowSimple = (props: RowComponentProps<lang.OutputRowSignature>) => {
     const { panelId, flowId, nodeId, row, context, type, env } = props;
 
     return (

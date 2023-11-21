@@ -1,44 +1,60 @@
 import { createAliasType } from "../typeSystem";
-import { AnonymousFlowSignature, DestructuredOutputRowSignature, FunctionTypeSpecifier, GenericTypeSpecifier, ListTypeSpecifier, OutputRowSignature, SimpleInputRowSignature, TemplateParameter, TupleTypeSpecifier, TypeSpecifier, VariableInputRowSignature } from "../types";
+import { FunctionTypeSpecifier, GenericTypeSpecifier, ListTypeSpecifier, MapTypeSpecifier, OutputRowSignature, SimpleInputRowSignature, TemplateParameter, TupleTypeSpecifier, TypeSpecifier, VariableInputRowSignature } from "../types";
+
+interface VarRowOptions<T = VariableInputRowSignature['defaultValue']> {
+    defaultValue: T;
+    defaultDestructure: boolean;
+}
 
 const varRow = {
-    string: (id: string, defaultValue: string): VariableInputRowSignature => ({
+    string: (id: string, ops?: Partial<VarRowOptions<string>>): VariableInputRowSignature => ({
         id,
         rowType: 'input-variable',
         specifier: createAliasType('string'),
-        defaultValue,
+        ...ops,
     }),
-    number: (id: string, defaultValue: number): VariableInputRowSignature => ({
+    number: (id: string, ops?: Partial<VarRowOptions<number>>): VariableInputRowSignature => ({
         id,
         rowType: 'input-variable',
         specifier: createAliasType('number'),
-        defaultValue,
+        ...ops,
     }),
-    boolean: (id: string, defaultValue: boolean): VariableInputRowSignature => ({
+    boolean: (id: string, ops?: Partial<VarRowOptions<boolean>>): VariableInputRowSignature => ({
         id,
         rowType: 'input-variable',
         specifier: createAliasType('boolean'),
-        defaultValue,
+        ...ops,
     }),
-    list: (id: string, specifier: ListTypeSpecifier | GenericTypeSpecifier): VariableInputRowSignature => ({
+    list: (id: string, specifier: ListTypeSpecifier | GenericTypeSpecifier, ops?: Partial<VarRowOptions>): VariableInputRowSignature => ({
         id,
         rowType: 'input-variable',
         specifier,
+        ...ops,
         defaultValue: null,
     }),
-    tuple: (id: string, specifier: TupleTypeSpecifier | GenericTypeSpecifier): VariableInputRowSignature => ({
+    tuple: (id: string, specifier: TupleTypeSpecifier | GenericTypeSpecifier, ops?: Partial<VarRowOptions>): VariableInputRowSignature => ({
         id,
         rowType: 'input-variable',
         specifier,
+        ...ops,
         defaultValue: null,
     }),
-    func: (id: string, specifier: FunctionTypeSpecifier | GenericTypeSpecifier): VariableInputRowSignature => ({
+    map: (id: string, specifier: MapTypeSpecifier | GenericTypeSpecifier, ops?: Partial<VarRowOptions>): VariableInputRowSignature => ({
         id,
         rowType: 'input-variable',
         specifier,
+        ...ops,
+        defaultValue: null,
+    }),
+    func: (id: string, specifier: FunctionTypeSpecifier | GenericTypeSpecifier, ops?: Partial<VarRowOptions>): VariableInputRowSignature => ({
+        id,
+        rowType: 'input-variable',
+        specifier,
+        ...ops,
         defaultValue: null,
     }),
 };
+
 const simpleRow = {
     string: (id: string): SimpleInputRowSignature => ({
         id,
@@ -62,36 +78,44 @@ const simpleRow = {
     }),
 };
 
+interface OutputRowOptions {
+    defaultDestructure: boolean;
+    defaultHidden: boolean;
+}
+
 const outputRow = {
-    string: (id: string): OutputRowSignature => ({
+    alias: (id: string, alias: string, ops?: Partial<OutputRowOptions>): OutputRowSignature => ({
         id,
-        rowType: 'output-simple',
-        // label: autoName(id),
-        specifier: createAliasType('string'),
+        rowType: 'output',
+        specifier: createAliasType(alias),
+        ...ops,
     }),
-    number: (id: string): OutputRowSignature => ({
+    custom: (id: string, specifier: TypeSpecifier, ops?: Partial<OutputRowOptions>): OutputRowSignature => ({
         id,
-        rowType: 'output-simple',
-        // label: autoName(id),
-        specifier: createAliasType('number'),
-    }),
-    boolean: (id: string): OutputRowSignature => ({
-        id,
-        rowType: 'output-simple',
-        // label: autoName(id),
-        specifier: createAliasType('boolean'),
-    }),
-    generic: (id: string, specifier: TypeSpecifier): OutputRowSignature => ({
-        id,
-        rowType: 'output-simple',
-        // label: autoName(id),
+        rowType: 'output',
         specifier,
+        ...ops,
     }),
-    destructured: (id: string, specifier: TypeSpecifier): DestructuredOutputRowSignature => ({
-        id,
-        rowType: 'output-destructured',
-        specifier,
-    }),
+    // string: (id: string): OutputRowSignature => ({
+    //     id,
+    //     rowType: 'output',
+    //     specifier: createAliasType('string'),
+    // }),
+    // number: (id: string): OutputRowSignature => ({
+    //     id,
+    //     rowType: 'output',
+    //     specifier: createAliasType('number'),
+    // }),
+    // boolean: (id: string): OutputRowSignature => ({
+    //     id,
+    //     rowType: 'output',
+    //     specifier: createAliasType('boolean'),
+    // }),
+    // destructured: (id: string, specifier: TypeSpecifier): DestructuredOutputRowSignature => ({
+    //     id,
+    //     rowType: 'output-destructured',
+    //     specifier,
+    // }),
 };
 const genParam = (name: string, constraint: TypeSpecifier | null = null): TemplateParameter => ({ id: name, constraint });
 

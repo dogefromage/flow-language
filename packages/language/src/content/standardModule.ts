@@ -7,17 +7,6 @@ const { varRow, simpleRow, outputRow, genParam } = shorthands;
 
 const signatures: FlowSignature[] = [];
 
-// length: Returns the number of elements in a list or the length of a string.
-// evaluate: Executes a specified function or expression and returns its result.
-
-
-
-
-
-
-
-
-
 signatures.push({
     id: 'add',
     attributes: {
@@ -25,8 +14,8 @@ signatures.push({
         description: 'Takes two numbers and returns their sum.'
     },
     generics: [],
-    inputs: [varRow.number('a', 0), varRow.number('b', 0)],
-    output: outputRow.number('sum'),
+    inputs: [varRow.number('a', { defaultValue: 0 }), varRow.number('b', { defaultValue: 0 })],
+    output: outputRow.alias('sum', 'number'),
 });
 signatures.push({
     id: 'subtract',
@@ -35,8 +24,8 @@ signatures.push({
         description: 'Takes two numbers and returns their difference.'
     },
     generics: [],
-    inputs: [varRow.number('a', 0), varRow.number('b', 0)],
-    output: outputRow.number('difference'),
+    inputs: [varRow.number('a', { defaultValue: 0 }), varRow.number('b', { defaultValue: 0 })],
+    output: outputRow.alias('difference', 'number'),
 });
 signatures.push({
     id: 'logical_and',
@@ -45,8 +34,8 @@ signatures.push({
         description: 'Takes two boolean values and returns true if both values are true, otherwise, it returns false.'
     },
     generics: [],
-    inputs: [varRow.boolean('a', false), varRow.boolean('b', false)],
-    output: outputRow.boolean('a_and_b'),
+    inputs: [varRow.boolean('a', { defaultValue: false }), varRow.boolean('b', { defaultValue: false })],
+    output: outputRow.alias('a_and_b', 'boolean'),
 });
 signatures.push({
     id: 'logical_or',
@@ -55,8 +44,8 @@ signatures.push({
         description: 'Takes two boolean values and returns true if at least one of the values is true, otherwise, it returns false.'
     },
     generics: [],
-    inputs: [varRow.boolean('a', false), varRow.boolean('b', false)],
-    output: outputRow.boolean('a_or_b'),
+    inputs: [varRow.boolean('a', { defaultValue: false }), varRow.boolean('b', { defaultValue: false })],
+    output: outputRow.alias('a_or_b', 'boolean'),
 });
 signatures.push({
     id: 'truncate',
@@ -65,8 +54,8 @@ signatures.push({
         description: 'Takes a number and removes the decimal portion, returning the integer part.'
     },
     generics: [],
-    inputs: [varRow.number('a', 0)],
-    output: outputRow.number('a_truncated'),
+    inputs: [varRow.number('a', { defaultValue: 0 })],
+    output: outputRow.alias('a_truncated', 'number'),
 });
 signatures.push({
     id: 'multiply',
@@ -75,8 +64,8 @@ signatures.push({
         description: 'Takes two numbers and returns their product.'
     },
     generics: [],
-    inputs: [varRow.number('a', 1), varRow.number('b', 1)],
-    output: outputRow.number('product'),
+    inputs: [varRow.number('a', { defaultValue: 1 }), varRow.number('b', { defaultValue: 1 })],
+    output: outputRow.alias('product', 'number'),
 });
 signatures.push({
     id: 'divide',
@@ -85,8 +74,8 @@ signatures.push({
         description: 'Takes two numbers and returns their quotient.'
     },
     generics: [],
-    inputs: [varRow.number('a', 1), varRow.number('b', 1)],
-    output: outputRow.number('quotient'),
+    inputs: [varRow.number('a', { defaultValue: 1 }), varRow.number('b', { defaultValue: 1 })],
+    output: outputRow.alias('quotient', 'number'),
 });
 signatures.push({
     id: 'choose',
@@ -98,11 +87,11 @@ signatures.push({
         genParam('T'),
     ],
     inputs: [
-        varRow.boolean('condition', true),
+        varRow.boolean('condition', { defaultValue: false }),
         simpleRow.generic('match_true', createGenericType('T')),
         simpleRow.generic('match_false', createGenericType('T')),
     ],
-    output: outputRow.generic('choice', createGenericType('T')),
+    output: outputRow.custom('choice', createGenericType('T')),
 });
 signatures.push({
     id: 'number',
@@ -111,8 +100,8 @@ signatures.push({
         description: 'An input field for a number.'
     },
     generics: [],
-    inputs: [varRow.number('n', 0)],
-    output: outputRow.number('output'),
+    inputs: [varRow.number('n', { defaultValue: 0 })],
+    output: outputRow.alias('output', 'number'),
 
 });
 signatures.push({
@@ -122,8 +111,8 @@ signatures.push({
         description: 'An input field for a boolean. A booleans value is either true or false.',
     },
     generics: [],
-    inputs: [varRow.boolean('b', false)],
-    output: outputRow.boolean('output'),
+    inputs: [varRow.boolean('b', { defaultValue: false })],
+    output: outputRow.alias('output', 'boolean'),
 
 });
 signatures.push({
@@ -133,8 +122,8 @@ signatures.push({
         description: 'An input field for a string. A string is any sequence of characters.'
     },
     generics: [],
-    inputs: [varRow.string('s', '')],
-    output: outputRow.string('output'),
+    inputs: [varRow.string('s', { defaultValue: '' })],
+    output: outputRow.alias('output', 'string'),
 
 });
 signatures.push({
@@ -145,7 +134,7 @@ signatures.push({
     },
     generics: [genParam('F', createFunctionType(createAnyType(), createAnyType()))],
     inputs: [varRow.func('_function', createGenericType('F'))],
-    output: outputRow.generic('output', createGenericType('F')),
+    output: outputRow.custom('output', createGenericType('F')),
 });
 signatures.push({
     id: 'greater',
@@ -154,8 +143,8 @@ signatures.push({
         description: 'Takes two numbers and returns true if the first value is greater than the second, otherwise, it returns false.',
     },
     generics: [],
-    inputs: [varRow.number('a', 0), varRow.number('b', 0)],
-    output: outputRow.boolean('output'),
+    inputs: [varRow.number('a', { defaultValue: 0 }), varRow.number('b', { defaultValue: 0 })],
+    output: outputRow.alias('output', 'boolean'),
 });
 signatures.push({
     id: 'greater_equal',
@@ -164,8 +153,8 @@ signatures.push({
         description: 'Takes two numbers and returns true if the first value is greater than or equal to the second, otherwise, it returns false.',
     },
     generics: [],
-    inputs: [varRow.number('a', 0), varRow.number('b', 0)],
-    output: outputRow.boolean('output'),
+    inputs: [varRow.number('a', { defaultValue: 0 }), varRow.number('b', { defaultValue: 0 })],
+    output: outputRow.alias('output', 'boolean'),
 });
 signatures.push({
     id: 'less',
@@ -174,8 +163,8 @@ signatures.push({
         description: 'Takes two numbers and returns true if the first value is less than the second, otherwise, it returns false.',
     },
     generics: [],
-    inputs: [varRow.number('a', 0), varRow.number('b', 0)],
-    output: outputRow.boolean('output'),
+    inputs: [varRow.number('a', { defaultValue: 0 }), varRow.number('b', { defaultValue: 0 })],
+    output: outputRow.alias('output', 'boolean'),
 });
 signatures.push({
     id: 'less_equal',
@@ -184,8 +173,8 @@ signatures.push({
         description: 'Takes two numbers and returns true if the first value is less than or equal to the second, otherwise, it returns false.',
     },
     generics: [],
-    inputs: [varRow.number('a', 0), varRow.number('b', 0)],
-    output: outputRow.boolean('output'),
+    inputs: [varRow.number('a', { defaultValue: 0 }), varRow.number('b', { defaultValue: 0 })],
+    output: outputRow.alias('output', 'boolean'),
 });
 signatures.push({
     id: 'concat_strings',
@@ -195,10 +184,10 @@ signatures.push({
     },
     generics: [],
     inputs: [
-        varRow.string('left', ''),
-        varRow.string('right', ''),
+        varRow.string('left', { defaultValue: '' }),
+        varRow.string('right', { defaultValue: '' }),
     ],
-    output: outputRow.string('concatenated'),
+    output: outputRow.alias('concatenated', 'string'),
 });
 signatures.push({
     id: 'substring',
@@ -208,23 +197,23 @@ signatures.push({
     },
     generics: [],
     inputs: [
-        varRow.string('string', ''),
-        varRow.number('start', 0),
-        varRow.number('length', 1),
+        varRow.string('string', { defaultValue: '' }),
+        varRow.number('start', { defaultValue: 0 }),
+        varRow.number('length', { defaultValue: 1 }),
     ],
-    output: outputRow.string('substring'),
+    output: outputRow.alias('substring', 'string'),
 });
 signatures.push({
-    id: 'pack',
+    id: 'list',
     attributes: {
         category: 'Lists',
-        description: 'Combines multiple elements into a list in the given order.',
+        description: 'Constructs multiple elements into a list in the given order.',
     },
     generics: [genParam('T')],
     inputs: [
-        varRow.list('elements', createListType(createGenericType('T')))
+        varRow.list('elements', createListType(createGenericType('T')), { defaultDestructure: true }),
     ],
-    output: outputRow.generic('list', createListType(createGenericType('T'))),
+    output: outputRow.custom('list', createListType(createGenericType('T'))),
 });
 signatures.push({
     id: 'concat_lists',
@@ -237,7 +226,7 @@ signatures.push({
         simpleRow.generic('left', createListType(createGenericType('T'))),
         simpleRow.generic('right', createListType(createGenericType('T'))),
     ],
-    output: outputRow.generic('concatenated', createListType(createGenericType('T'))),
+    output: outputRow.custom('concatenated', createListType(createGenericType('T'))),
 });
 signatures.push({
     id: 'sublist',
@@ -248,10 +237,10 @@ signatures.push({
     generics: [genParam('T')],
     inputs: [
         simpleRow.generic('list', createListType(createGenericType('T'))),
-        varRow.number('start', 0),
-        varRow.number('length', 1),
+        varRow.number('start', { defaultValue: 0 }),
+        varRow.number('length', { defaultValue: 1 }),
     ],
-    output: outputRow.generic('sublist', createListType(createGenericType('T'))),
+    output: outputRow.custom('sublist', createListType(createGenericType('T'))),
 });
 signatures.push({
     id: 'access_list',
@@ -262,9 +251,9 @@ signatures.push({
     generics: [genParam('T')],
     inputs: [
         simpleRow.generic('list', createListType(createGenericType('T'))),
-        varRow.number('index', 0),
+        varRow.number('index', { defaultValue: 0 }),
     ],
-    output: outputRow.generic('element', createGenericType('T')),
+    output: outputRow.custom('element', createGenericType('T')),
 });
 signatures.push({
     id: 'pop',
@@ -276,8 +265,10 @@ signatures.push({
     inputs: [
         simpleRow.generic('list', createListType(createGenericType('T'))),
     ],
-    output: outputRow.destructured('popped',
-        createMapType({ head: createGenericType('T'), tail: createListType(createGenericType('T')) })),
+    output: outputRow.custom('popped',
+        createMapType({ head: createGenericType('T'), tail: createListType(createGenericType('T')) }),
+        { defaultDestructure: true },
+    ),
 });
 signatures.push({
     id: 'push',
@@ -290,7 +281,7 @@ signatures.push({
         simpleRow.generic('head', createGenericType('T')),
         simpleRow.generic('tail', createListType(createGenericType('T'))),
     ],
-    output: outputRow.generic('combined', createListType(createGenericType('T'))),
+    output: outputRow.custom('combined', createListType(createGenericType('T'))),
 });
 signatures.push({
     id: 'length',
@@ -302,7 +293,7 @@ signatures.push({
     inputs: [
         simpleRow.generic('list', createListType(createGenericType('T'))),
     ],
-    output: outputRow.number('length'),
+    output: outputRow.alias('length', 'number'),
 });
 signatures.push({
     id: 'evaluate',
@@ -315,7 +306,7 @@ signatures.push({
         varRow.func('_function', createFunctionType(createGenericType('P'), createGenericType('R'))),
         varRow.tuple('_arguments', createGenericType('P')),
     ],
-    output: outputRow.generic('return_value', createGenericType('R')),
+    output: outputRow.custom('return_value', createGenericType('R')),
 });
 signatures.push({
     id: 'destructure',
@@ -327,8 +318,22 @@ signatures.push({
     inputs: [
         simpleRow.generic('structure', createGenericType('T')),
     ],
-    output: outputRow.destructured('destructured', createGenericType('T')),
+    output: outputRow.custom('destructured', createGenericType('T'), { defaultDestructure: true }),
 });
+signatures.push({
+    id: 'dictionary',
+    attributes: {
+        category: 'Dictionaries',
+        description: 'Constructs a dictionary containing pairs of keys and values.',
+    },
+    generics: [{ id: 'M', constraint: createMapType({}) }],
+    inputs: [
+        varRow.map('elements', createGenericType('M'), { defaultDestructure: true }),
+    ],
+    output: outputRow.custom('dictionary', createGenericType('M')),
+});
+
+
 
 export const primitiveTypes = {
     number: createPrimitiveType('number'),

@@ -1,11 +1,11 @@
-import { EdgeColor, FlowEdge, FlowGraph, JointLocation } from 'noodle-language';
+import * as lang from 'noodle-language';
 import styled from 'styled-components';
 import { Box2, Vector2 } from 'threejs-math';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { useSelectFlowContext } from '../slices/contextSlice';
 import { flowsRemoveConnection, useSelectSingleFlow } from '../slices/flowsSlice';
 import { useSelectFlowEditorPanel } from '../slices/panelFlowEditorSlice';
-import { FlowEditorPanelState } from '../types';
+import { EditorActionDraggingLinkState, FlowEditorPanelState } from '../types';
 import { getJointLocationKey } from '../utils/flows';
 
 const NEW_LINK_KEY = `NEW_LINK`;
@@ -36,7 +36,7 @@ const FlowEdgesSVG = styled.svg.attrs<SVGProps>(({ box }) => {
     pointer-events: none;
 `;
 
-const FlowEdgeGroup = styled.g<{ color: EdgeColor, key: string }>`
+const FlowEdgeGroup = styled.g<{ $status: lang.EdgeStatus, $syntax: lang.EdgeSyntacticType, key: string }>`
     .path-catcher {
         fill: none;
         stroke: transparent;
@@ -48,8 +48,12 @@ const FlowEdgeGroup = styled.g<{ color: EdgeColor, key: string }>`
 
     .path-display {
         fill: none;
-        stroke: ${({ color, theme }) => theme.colors.flowEditor.edgeColors[color]};
         stroke-width: 3px;
+
+        stroke: ${({ $status, theme }) => theme.colors.flowEditor.edgeColors[$status]};
+
+        ${({ $syntax }) => $syntax === 'type-only' && `stroke-dasharray: 6px 4px;` }
+
         transition: stroke-width 50ms, stroke 150ms;
     }
 
@@ -76,6 +80,7 @@ const FlowEdges = ({ panelId, flowId }: Props) => {
         dispatch(flowsRemoveConnection({
             flowId,
             input: edge.target,
+            syntax: edge.syntacticType,
             undo: { desc: 'Removed an edge from current flow.' },
         }))
     }
@@ -89,19 +94,26 @@ const FlowEdges = ({ panelId, flowId }: Props) => {
     if (handleQuadruples.length === 0) return null;
 
     return (
-        <FlowEdgesSVG
-            box={svgBox}
-        >
+        <FlowEdgesSVG box={svgBox}>
             {
                 handleQuadruples.map(({ key, points, edge }) => {
                     const [A, B, C, D] = points.map(p => `${p.x},${p.y}`);
                     const d = `M${A} C${B} ${C} ${D}`;
 
+                    let status = edge?.status || 'normal';
+                    let syntax = edge?.syntacticType || 'value-and-type';
+
+                    if (key == NEW_LINK_KEY) {
+                        syntax = (panelState.state as EditorActionDraggingLinkState)
+                            .draggingContext?.syntax || syntax;
+                    }
+
                     return (
                         <FlowEdgeGroup
                             key={key}
                             id={key}
-                            color={edge?.color || 'normal'}
+                            $status={status}
+                            $syntax={syntax}
                             onClick={() => removeEdge(key)}
                             onMouseDown={e => e.stopPropagation()}
                         >
@@ -117,13 +129,13 @@ const FlowEdges = ({ panelId, flowId }: Props) => {
 
 export default FlowEdges;
 
-function generateVectorData(edges: Record<string, FlowEdge>, flow: FlowGraph, panelState: FlowEditorPanelState) {
+function generateVectorData(edges: Record<string, lang.FlowEdge>, flow: lang.FlowGraph, panelState: FlowEditorPanelState) {
 
     const handleEndPoints: Array<{
         key: string;
         A: Vector2;
         D: Vector2;
-        edge?: FlowEdge;
+        edge?: lang.FlowEdge;
     }> = [];
 
     for (const [edgeId, edge] of Object.entries(edges)) {
@@ -193,7 +205,7 @@ function generateVectorData(edges: Record<string, FlowEdge>, flow: FlowGraph, pa
     }
 }
 
-function getJointPosition(jointLocation: JointLocation, panelState: FlowEditorPanelState, flow: FlowGraph) {
+function getJointPosition(jointLocation: lang.JointLocation, panelState: FlowEditorPanelState, flow: lang.FlowGraph) {
     const key = getJointLocationKey(jointLocation);
     const offset = panelState.relativeJointPosition.get(key);
     const node = flow.nodes[jointLocation.nodeId];

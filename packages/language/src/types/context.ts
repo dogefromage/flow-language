@@ -6,7 +6,7 @@ import {
     FlowNode,
     InputJointLocation,
     OutputJointLocation,
-    RowState
+    InputRowState
 } from './state';
 import { FunctionTypeSpecifier, InitializerValue, TemplatedTypeSpecifier, TypeSpecifier } from './typeSystem';
 import { Obj } from './internal';
@@ -28,13 +28,15 @@ export interface FlowNamedEnvironmentContent {
     types: Record<string, TypeSpecifier>;
 }
 
-export type EdgeColor = 'normal' | 'redundant' | 'cyclic';
+export type EdgeStatus = 'normal' | 'redundant' | 'cyclic';
+export type EdgeSyntacticType = 'value-and-type' | 'type-only';
 
 export interface FlowEdge {
     id: string;
     source: OutputJointLocation;
     target: InputJointLocation;
-    color: EdgeColor;
+    status: EdgeStatus;
+    syntacticType: EdgeSyntacticType;
 }
 
 export interface FlowDocumentContext {
@@ -64,7 +66,7 @@ export interface FlowNodeContext {
     criticalSubProblems: number;
     inputRows: Obj<RowContext>;
     outputRow: RowContext;
-    templateSignature: FlowSignature | null;
+    proto: FlowSignature | null;
     inferredType: TemplatedTypeSpecifier<FunctionTypeSpecifier> | null;
     isUsed: boolean;
 }
@@ -77,7 +79,7 @@ export interface GenericTypeInference {
 export type RowDisplay = 'hidden' | 'simple' | 'initializer' | 'destructured';
 
 export interface RowContext {
-    ref?: RowState;
+    ref?: InputRowState;
     display: RowDisplay;
     value?: InitializerValue;
     problems: RowProblem[];

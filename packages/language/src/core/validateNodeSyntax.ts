@@ -1,3 +1,4 @@
+import _ from "lodash";
 import { createAnyType, createFunctionType, createMapType, createReducedTemplateType, createTemplatedType, createTupleType, findAllGenericLiterals, getTemplatedSignatureType, memoizeTemplatedType } from "../typeSystem";
 import { assertSubsetType } from "../typeSystem/comparison";
 import { TypeSystemException, TypeSystemExceptionData, TypeTreePath } from "../typeSystem/exceptionHandling";
@@ -5,7 +6,7 @@ import { generateDefaultValue } from "../typeSystem/generateDefaultValue";
 import { closeTemplatedSpecifier, disjoinTemplateLiterals, instantiateTemplatedType, mapTypeInference } from "../typeSystem/generics";
 import { tryResolveTypeAlias } from "../typeSystem/resolution";
 import { checkElementOfType } from "../typeSystem/validateElement";
-import { FlowConnection, FlowEnvironment, FlowSignature, FunctionTypeSpecifier, InputRowSignature, NamespacePath, RowContext, RowProblem, RowState, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier } from "../types";
+import { FlowConnection, FlowEnvironment, FlowSignature, FunctionTypeSpecifier, InputRowSignature, NamespacePath, RowContext, RowProblem, InputRowState, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier, RowDisplay, FlowInputArgument } from "../types";
 import { Obj } from "../types/internal";
 import { assertDef, assertTruthy } from "../utils";
 import { mapObj, objToArr, zipInner } from "../utils/functional";
@@ -13,7 +14,7 @@ import { mem } from '../utils/mem';
 import { findEnvironmentSignature } from "./environment";
 
 export const validateNodeSyntax = mem((
-    rowStates: Obj<RowState>,
+    rowStates: Obj<InputRowState>,
     signature: FlowSignature,
     inferredNodeOutputs: Obj<TemplatedTypeSpecifier>,
     env: FlowEnvironment,
@@ -28,7 +29,7 @@ export const validateNodeSyntax = mem((
 
     for (let inputIndex = 0; inputIndex < signature.inputs.length; inputIndex++) {
         const input = signature.inputs[inputIndex];
-        const rowState = rowStates[input.id] as RowState | undefined;
+        const rowState = rowStates[input.id] as InputRowState | undefined;
 
         const closedInputType = getFunctionParamType(closedAccumulatedType, inputIndex);
         const { incomingTemplate, rowProblems: incomingProblems } =
@@ -86,13 +87,13 @@ export const validateNodeSyntax = mem((
     }
 
     const finalInferredType = memoizeTemplatedType(templatedAccumulatedType);
-    
+
     return { inferredType: finalInferredType, rowContexts };
 }, undefined, { tag: 'validateNodeSyntax' });
 
 function findIncomingType(
     input: InputRowSignature,
-    rowState: RowState | undefined,
+    rowState: InputRowState | undefined,
     env: FlowEnvironment,
     previousOutputTypes: Obj<TemplatedTypeSpecifier>,
     resolvedInputType: TypeSpecifier,
@@ -100,11 +101,15 @@ function findIncomingType(
     const rowProblems: RowProblem[] = [];
     const fallbackType = createTemplatedType(createAnyType());
 
-    const incomingTypeMap = mapObj(rowState?.connections || {}, connection => {
-        const { connectedType, accessorProblem } = resolveRowConnection(connection, previousOutputTypes, env);
-        accessorProblem && rowProblems.push(accessorProblem);
-        return connectedType || fallbackType;
-    });
+    const incomingTypeMap: Record<string, TemplatedTypeSpecifier> = {};
+    for (const [ argKey, arg ] of Object.entries(rowState?.rowArguments || {})) {
+        let connection = arg.typeRef || arg.valueRef;
+        if (connection != null) {
+            const { connectedType, accessorProblem } = resolveRowConnection(connection, previousOutputTypes, env);
+            accessorProblem && rowProblems.push(accessorProblem);
+            incomingTypeMap[argKey] = connectedType || fallbackType;
+        }
+    }
     const firstConnectedType = incomingTypeMap[0];
 
     const inputType = tryResolveTypeAlias(resolvedInputType, env);
@@ -281,11 +286,11 @@ function bundleRowContext(
     input: InputRowSignature,
     closedSpecifier: TypeSpecifier,
     env: FlowEnvironment,
-    rowState: RowState | undefined,
+    rowState: InputRowState | undefined,
     problems: RowProblem[],
 ): RowContext {
     const resolvedSpec = tryResolveTypeAlias(closedSpecifier, env);
-    const isUnconnected = rowState?.connections[0] == null;
+    const isUnconnected = rowState?.rowArguments[0] == null;
 
     if (input.rowType === 'input-variable' && isUnconnected) {
         if (resolvedSpec?.type === 'function') {
@@ -321,16 +326,14 @@ function bundleRowContext(
         }
     }
 
+    let rowDisplay: RowDisplay = 'simple';
+
     if (input.rowType === 'input-variable' &&
-        ['list', 'tuple', 'map'].includes(resolvedSpec?.type!)) {
-        return {
-            ref: rowState,
-            problems,
-            display: 'destructured',
-        };
+        (rowState?.destructure ?? input.defaultDestructure)) {
+        rowDisplay = 'destructured';
     }
 
-    return { ref: rowState, problems, display: 'simple' };
+    return { ref: rowState, problems, display: rowDisplay };
 }
 
 function getRowsTypeProblem(typeComparisonProblem: TypeSystemExceptionData | undefined, rowId: string): RowProblem | undefined {

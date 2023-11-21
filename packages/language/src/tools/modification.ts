@@ -84,10 +84,13 @@ export function pasteSelectedNodes(
 
         // rename references
         for (const node of nodes) {
-            for (const rowState of Object.values(node.rowStates)) {
-                for (const connection of Object.values(rowState.connections)) {
-                    if (connection.nodeId === oldId) {
-                        connection.nodeId = newId;
+            for (const rowState of Object.values(node.inputs)) {
+                for (const connection of Object.values(rowState.rowArguments)) {
+                    if (connection.valueRef?.nodeId === oldId) {
+                        connection.valueRef.nodeId = newId;
+                    }
+                    if (connection.typeRef?.nodeId === oldId) {
+                        connection.typeRef.nodeId = newId;
                     }
                 }
             }
@@ -96,11 +99,16 @@ export function pasteSelectedNodes(
 
     for (const node of nodes) {
         // remove external references (UPDATE IN FUTURE)
-        for (const rowState of Object.values(node.rowStates)) {
-            for (const key of Object.keys(rowState.connections)) {
-                const conn = rowState.connections[key];
-                if (!newIds.has(conn.nodeId)) {
-                    delete rowState.connections[key];
+        for (const rowState of Object.values(node.inputs)) {
+            for (const key of Object.keys(rowState.rowArguments)) {
+                const conn = rowState.rowArguments[key];
+                if (!newIds.has(conn.typeRef?.nodeId!)) {
+                    delete conn.typeRef;
+                }
+                if (!newIds.has(conn.valueRef?.nodeId!)) {
+                    // fix this later
+                    // @ts-ignore
+                    delete conn.valueRef;
                 }
             }
         }

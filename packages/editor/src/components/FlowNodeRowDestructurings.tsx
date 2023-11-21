@@ -1,10 +1,13 @@
+import _ from 'lodash';
 import * as lang from 'noodle-language';
-import { RowComponentProps } from './FlowNodeRowComponents';
-import { FlowNodeRowErrorWrapper } from './FlowNodeErrorWrapper';
+import { useAppDispatch } from '../redux/stateHooks';
+import { flowsRenameConnectionAccessor } from '../slices/flowsSlice';
 import { FlowNodeRowDiv, FlowNodeRowNameP } from '../styles/flowStyles';
-import React from 'react';
+import { bracketSymbol, dictionaryRegex, formatFlowLabel } from '../utils/flows';
 import FlowJoint from './FlowJoint';
-import { bracketSymbol, formatFlowLabel } from '../utils/flows';
+import { FlowNodeRowErrorWrapper } from './FlowNodeErrorWrapper';
+import { RowComponentProps } from './FlowNodeRowComponents';
+import FormRenameField from './FormRenameField';
 
 export const FlowInputRowDestructurings = (props: RowComponentProps<lang.InputRowSignature>) => {
     const resType = lang.tryResolveTypeAlias(props.type, props.env);
@@ -14,15 +17,15 @@ export const FlowInputRowDestructurings = (props: RowComponentProps<lang.InputRo
             return <InputListDestructuring {...props} />;
         case 'tuple':
             return <InputTupleDestructuring {...props} />;
-        // case 'map':
-        //     return <MapDestructuring {...props} />;
+        case 'map':
+            return <InputMapDestructuring {...props} />;
     }
 
     console.error(`Could not find destructuring for type '${resType?.type}'.`);
     return null;
 }
 
-export const FlowOutputRowDestructurings = (props: RowComponentProps<lang.DestructuredOutputRowSignature>) => {
+export const FlowOutputRowDestructurings = (props: RowComponentProps<lang.OutputRowSignature>) => {
     const resType = lang.tryResolveTypeAlias(props.type, props.env);
 
     switch (resType?.type) {
@@ -49,32 +52,29 @@ const InputListDestructuring = (props: RowComponentProps<lang.InputRowSignature>
     const listType = lang.tryResolveTypeAlias(type, env) as lang.ListTypeSpecifier;
     // holey array of connections
     // always add hole for last additional
-    const connections = lang.utils.objToArr(context?.ref?.connections || {});
-    const originalLen = connections.length;
-    connections.push(undefined);
+    const args = lang.utils.objToArr(context?.ref?.rowArguments || {});
+    const originalLen = args.length;
+    args.push(undefined);
 
     return (
         <FlowNodeRowErrorWrapper {...props}> {
-            connections.map((conn, index) =>
-                <FlowNodeRowDiv
-                    key={[index, conn?.nodeId, conn?.accessor].join('-')}
-                >
+            args.map((arg, index) =>
+                <FlowNodeRowDiv key={index}>
                     <FlowJoint
                         panelId={panelId}
                         flowId={flowId}
                         type={listType?.element || lang.createAnyType()}
-                        additional={conn == null}
+                        additional={arg == null}
                         location={{
                             direction: 'input',
                             nodeId,
                             accessor: index.toString(),
                             rowId: row.id,
-                            // initializer: 'list-like',
                         }}
                         env={env}
                     />
                     <FlowNodeRowNameP $align='left'> {
-                        (index < connections.length - 1) ?
+                        (index < args.length - 1) ?
                             `${formatFlowLabel(row.id)}[${index}] ${bracketSymbol(index, originalLen, 'input', 'sharp')}` : ''
                     }
                     </FlowNodeRowNameP>
@@ -90,21 +90,20 @@ const InputTupleDestructuring = (props: RowComponentProps<lang.InputRowSignature
 
     const tupleType = lang.tryResolveTypeAlias(type, env) as lang.TupleTypeSpecifier;
     // holey array of connections
-    const connections = lang.utils.objToArr(context?.ref?.connections || {});
-    while (connections.length < tupleType.elements.length) {
-        connections.push(undefined);
+    const args = lang.utils.objToArr(context?.ref?.rowArguments || {});
+    while (args.length < tupleType.elements.length) {
+        args.push(undefined);
     }
 
     return (
         <FlowNodeRowErrorWrapper {...props}> {
-            connections.map((conn, index) =>
-                <FlowNodeRowDiv
-                    key={[index, conn?.nodeId, conn?.accessor].join('-')}>
+            args.map((arg, index) =>
+                <FlowNodeRowDiv key={index}>
                     <FlowJoint
                         panelId={panelId}
                         flowId={flowId}
                         type={tupleType?.elements?.[index] || lang.createAnyType()}
-                        additional={conn == null}
+                        additional={arg == null}
                         location={{
                             direction: 'input',
                             nodeId,
@@ -114,7 +113,7 @@ const InputTupleDestructuring = (props: RowComponentProps<lang.InputRowSignature
                         env={env}
                     />
                     <FlowNodeRowNameP $align='left'> {
-                        `${formatFlowLabel(row.id)}[${index}] ${bracketSymbol(index, connections.length, 'input', 'sharp')}`
+                        `${formatFlowLabel(row.id)}[${index}] ${bracketSymbol(index, args.length, 'input', 'sharp')}`
                     }
                     </FlowNodeRowNameP>
                 </FlowNodeRowDiv>
@@ -124,7 +123,93 @@ const InputTupleDestructuring = (props: RowComponentProps<lang.InputRowSignature
     );
 }
 
-export const OutputTupleDestructuring = (props: RowComponentProps<lang.DestructuredOutputRowSignature>) => {
+const InputMapDestructuring = (props: RowComponentProps<lang.InputRowSignature>) => {
+    const { panelId, flowId, nodeId, row, context, type, env } = props;
+    const dispatch = useAppDispatch();
+
+    const mapType = lang.tryResolveTypeAlias(type, env) as lang.MapTypeSpecifier;
+
+    const emptyKeys = _.mapValues(mapType.elements, x => undefined);
+    const args = {
+        ...emptyKeys,
+        ...context?.ref?.rowArguments,
+    };
+
+    const numArgs = Object.keys(args).length;
+    const additionalKey = `key_${numArgs}`;
+
+    return (
+        <FlowNodeRowErrorWrapper {...props}> {
+            Object.entries(args).map(([dictionaryKey, arg]) => {
+
+                const inputLocation: lang.JointLocation = {
+                    direction: 'input',
+                    nodeId,
+                    accessor: dictionaryKey,
+                    rowId: row.id,
+                };
+
+                return (
+                    <FlowNodeRowDiv key={dictionaryKey}>
+                        <FlowJoint
+                            panelId={panelId}
+                            flowId={flowId}
+                            type={mapType?.elements?.[dictionaryKey] || lang.createAnyType()}
+                            additional={arg == null}
+                            location={inputLocation}
+                            env={env}
+                        />
+                        <FormRenameField
+                            nodeRowHeight
+                            value={dictionaryKey}
+                            onValidate={newValue => {
+                                if (newValue.length == 0) {
+                                    return { message: 'Please provide a key.' };
+                                }
+                                if (!dictionaryRegex.test(newValue)) {
+                                    return { message: 'Please provide a valid key. A key should only contain letters, digits, underscores and should not start with a number. Example: "add_5"' };
+                                }
+                                if (args[newValue] != null && newValue != dictionaryKey) {
+                                    return { message: `Duplicate key '${newValue}'.` };
+                                }
+                                return undefined;
+                            }}
+                            onChange={newDictionaryKey => {
+                                dispatch(flowsRenameConnectionAccessor({
+                                    flowId,
+                                    input: inputLocation,
+                                    newAccessor: newDictionaryKey,
+                                    undo: { desc: 'Renamed map input accessor on node.' },
+                                }))
+                            }}
+                        />
+                    </FlowNodeRowDiv>
+                )
+            }
+            )
+        }
+            <FlowNodeRowDiv>
+                <FlowJoint
+                    panelId={panelId}
+                    flowId={flowId}
+                    type={lang.createAnyType()}
+                    additional={true}
+                    location={{
+                        direction: 'input',
+                        nodeId,
+                        accessor: additionalKey,
+                        rowId: row.id,
+                    }}
+                    env={env}
+                />
+                <FlowNodeRowNameP $align='left' />
+            </FlowNodeRowDiv>
+
+        </FlowNodeRowErrorWrapper >
+    );
+}
+
+export const OutputTupleDestructuring = (props: RowComponentProps<lang.OutputRowSignature>) => {
     const { panelId, flowId, nodeId, row, context, type, env } = props;
     const resolvedType = lang.tryResolveTypeAlias(type, env);
     if (resolvedType?.type !== 'tuple') {
@@ -157,7 +242,7 @@ export const OutputTupleDestructuring = (props: RowComponentProps<lang.Destructu
     );
 }
 
-export const OutputMapDestructuring = (props: RowComponentProps<lang.DestructuredOutputRowSignature>) => {
+export const OutputMapDestructuring = (props: RowComponentProps<lang.OutputRowSignature>) => {
     const { panelId, flowId, nodeId, row, context, type, env } = props;
     const resolvedType = lang.tryResolveTypeAlias(type, env);
     if (resolvedType?.type !== 'map') {

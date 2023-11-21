@@ -12,18 +12,18 @@ export const defaultFlowSignature: lang.AnonymousFlowSignature = {
     ],
     output: {
         id: 'y',
-        rowType: 'output-simple',
+        rowType: 'output',
         specifier: lang.createAliasType('number'),
     },
 }
 
 const mainSignature: lang.AnonymousFlowSignature = {
-    generics: [{ id: 'T', constraint: null }],
+    generics: [],
     inputs: [],
     output: {
         id: 'value',
-        rowType: 'output-simple',
-        specifier: lang.createGenericType('T'),
+        rowType: 'output',
+        specifier: lang.createAnyType(),
     },
 }
 
@@ -45,8 +45,9 @@ const defaultRootFlow: lang.FlowGraph = {
     nodes: {
         a: {
             id: 'a',
-            signature: { path: `document::${lang.MAIN_FLOW_ID}::output` },
-            rowStates: {},
+            protoPath: { path: `document::${lang.MAIN_FLOW_ID}::output` },
+            inputs: {},
+            output: {},
             position: { x: 500, y: 300 }
         },
     },

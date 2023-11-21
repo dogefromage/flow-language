@@ -9,19 +9,25 @@ interface BaseRow<R extends string> {
 
 export interface SimpleInputRowSignature extends BaseRow<'input-simple'> {};
 export interface VariableInputRowSignature extends BaseRow<'input-variable'> {
-    defaultValue: InitializerValue | null;
+    defaultDestructure?: boolean;
+    defaultValue?: InitializerValue;
 }
-export type SimpleOutputRowSignature = BaseRow<'output-simple'>;
-export type DestructuredOutputRowSignature = BaseRow<'output-destructured'>;
-export type HiddenOutputRowSignature = BaseRow<'output-hidden'>;
-
 export type InputRowSignature =
     | SimpleInputRowSignature
     | VariableInputRowSignature
-export type OutputRowSignature =
-    | SimpleOutputRowSignature
-    | DestructuredOutputRowSignature
-    | HiddenOutputRowSignature
+
+// export type SimpleOutputRowSignature = BaseRow<'output-simple'>;
+// export type DestructuredOutputRowSignature = BaseRow<'output-destructured'>;
+// export type HiddenOutputRowSignature = BaseRow<'output-hidden'>;
+
+    // | SimpleOutputRowSignature
+    // | DestructuredOutputRowSignature
+    // | HiddenOutputRowSignature
+
+export interface OutputRowSignature extends BaseRow<'output'> {
+    defaultDestructure?: boolean;
+    hidden?: boolean;
+}
 
 export interface AnonymousFlowSignature {
     generics: TemplateParameter[];

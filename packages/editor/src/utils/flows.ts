@@ -10,6 +10,7 @@ import { SelectOptionContent } from "../components/FormSelectOption";
 
 export const flowsIdRegex = /^[A-Za-z_][A-Za-z_0-9]*$/;
 export const listItemRegex = /^[A-Za-z_][A-Za-z_0-9]*$/;
+export const dictionaryRegex = /^[A-Za-z_][A-Za-z_0-9]*$/;
 
 export function getJointLocationKey(location: lang.JointLocation): JointLocationKey {
     if (location.direction === 'input') {
@@ -83,14 +84,9 @@ export function getJointStyling(argX: lang.TypeSpecifier, env: lang.FlowEnvironm
 
 type RowTypes = AllRowSignatures['rowType'];
 export const flowRowTypeNames: Record<RowTypes, string> = {
-    'output-simple': 'Simple Output',
-    'output-destructured': 'Destructured Output',
-    'output-hidden': 'Hidden Output',
+    'output': 'Output',
     'input-simple': 'Simple Input',
-    // 'input-list': 'List Input',
     'input-variable': 'Variable Input',
-    // 'input-function': 'Function Input',
-    // 'input-tuple': 'Tuple Input',
 };
 
 export function formatFlowLabel(label: string) {

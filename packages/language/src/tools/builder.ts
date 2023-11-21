@@ -146,7 +146,7 @@ export class Builder {
             for (const node of Object.values(flow.nodes)) {
 
                 // flow id
-                const pathMatch = node.signature.path.match(/^document::([\d\w]+)(?:::([\d\w]+))?$/);
+                const pathMatch = node.protoPath.path.match(/^document::([\d\w]+)(?:::([\d\w]+))?$/);
                 const refFlow = this.doc.flows[pathMatch?.[1]!];
                 const syntaxType = pathMatch?.[2];
                 const refFlowSymbol = refFlow && this.symbols.get(refFlow);
@@ -154,35 +154,37 @@ export class Builder {
                 if (refFlowSymbol != null) { // is flow instance node
                     // link signature path
                     refFlowSymbol.valueReferences.push(valueRef(
-                        node.signature, 'path',
+                        node.protoPath, 'path',
                         'document::',
                         syntaxType && `::${syntaxType}`
                     ));
 
                     if (syntaxType === 'output') {
                         // link rowstate key to output id
-                        if (node.rowStates[refFlow.output.id] != null) {
+                        if (node.inputs[refFlow.output.id] != null) {
                             const outputSymbol = assertDef(this.symbols.get(refFlow.output));
-                            outputSymbol.keyReferences.push(keyRef(node.rowStates));
+                            outputSymbol.keyReferences.push(keyRef(node.inputs));
                         }
                     }
 
                     if (syntaxType == null) {
                         // link node instance row ids to flow inputs
                         for (const input of refFlow.inputs) {
-                            if (node.rowStates[input.id] != null) {
+                            if (node.inputs[input.id] != null) {
                                 const inputSymbol = assertDef(this.symbols.get(input));
-                                inputSymbol.keyReferences.push(keyRef(node.rowStates));
+                                inputSymbol.keyReferences.push(keyRef(node.inputs));
                             }
                         }
                     }
                 }
 
                 // link connections to nodes
-                for (const [_, rowState] of Object.entries(node.rowStates)) {
-                    for (const [_, conn] of Object.entries(rowState.connections)) {
-                        const refNode = flow.nodes[conn.nodeId];
-                        if (refNode != null) {
+                for (const [_, rowState] of Object.entries(node.inputs)) {
+                    for (const [_, args] of Object.entries(rowState.rowArguments)) {
+                        for (const conn of [args.typeRef, args.valueRef]) {
+                            if (!conn) continue;
+                            const refNode = flow.nodes[conn.nodeId];
+                            if (!refNode) continue;
                             const refNodeSymbol = assertDef(this.symbols.get(refNode));
                             refNodeSymbol.valueReferences.push(valueRef(conn, 'nodeId'));
                         }

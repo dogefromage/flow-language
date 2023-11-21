@@ -17,7 +17,7 @@ import TypeBuilder from './TypeBuilder';
 type RowTypes = AllRowSignatures['rowType'];
 
 const inputRowTypes: RowTypes[] = ['input-simple', 'input-variable'];
-const outputRowTypes: RowTypes[] = ['output-simple', 'output-destructured'];
+const outputRowTypes: RowTypes[] = ['output'];
 
 interface FlowInspectorPortDetailsProps {
     panelId: string;
@@ -112,7 +112,7 @@ const FlowInspectorPortDetails = ({ panelId, flowId }: PropsWithChildren<FlowIns
                 X={selectedTag.constraint || lang.createAnyType()}
                 env={flowContext?.flowEnvironment}
                 // atm cannot use generics for other generic constraints / maybe implement
-                generics={[]} 
+                generics={[]}
                 onChange={newType => {
                     dispatch(flowsReplaceGeneric({
                         flowId,

@@ -144,7 +144,7 @@ export const FlowNodeHeaderToolTipContent = ({ signature, context, env }: FlowNo
                 <p>
                     Signature:&nbsp;
                     <Bold $color={colors.title}>
-                        {context.ref.signature.path}
+                        {context.ref.protoPath.path}
                     </Bold>
                 </p>
                 <p>

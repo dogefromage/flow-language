@@ -13,12 +13,12 @@ export const validateNode = mem((
     inferredNodeOutputs: Obj<TemplatedTypeSpecifier>,
     isUsed: boolean,
 ): FlowNodeContext => {
-    const templateSignature = findEnvironmentSignature(env, node.signature);
+    const templateSignature = findEnvironmentSignature(env, node.protoPath);
     if (templateSignature == null) {
         return noSignatureContext(node, isUsed);
     }
     const { inferredType, rowContexts } =
-        validateNodeSyntax(node.rowStates, templateSignature, inferredNodeOutputs, env);
+        validateNodeSyntax(node.inputs, templateSignature, inferredNodeOutputs, env);
 
     return bundleNodeContext(
         node,
@@ -41,12 +41,12 @@ const noSignatureContext = mem(
         ref: node,
         problems: [{
             type: 'missing-signature',
-            signature: node.signature,
-            message: `Cannot find nodes signature '${node.signature}'.`,
+            signature: node.protoPath,
+            message: `Cannot find nodes signature '${node.protoPath}'.`,
         }],
         criticalSubProblems: 0,
         inferredType: null,
-        templateSignature: null,
+        proto: null,
         inputRows: {},
         outputRow: {
             display: 'hidden',
@@ -58,12 +58,6 @@ const noSignatureContext = mem(
     { tag: 'noSignatureContext' },
 );
 
-const outputDisplayTypes: Record<OutputRowSignature['rowType'], RowDisplay> = {
-    'output-destructured': 'destructured',
-    'output-hidden': 'hidden',
-    'output-simple': 'simple',
-}
-
 const bundleNodeContext = mem((
     node: FlowNode,
     isUsed: boolean,
@@ -71,16 +65,30 @@ const bundleNodeContext = mem((
     inferredType: TemplatedTypeSpecifier<FunctionTypeSpecifier>,
     inputContexts: RowContext[],
 ): FlowNodeContext => {
+
+    const shouldDestructure = 
+        node.output.destructure 
+        ?? templateSignature.output.defaultDestructure 
+        ?? false;
+
+    let rowDisplay: RowDisplay = 'simple';
+    if (shouldDestructure) {
+        rowDisplay = 'destructured';
+    }
+    if (templateSignature.output.hidden) {
+        rowDisplay = 'hidden';
+    }
+
     const result: FlowNodeContext = {
         ref: node,
         problems: [],
         criticalSubProblems: 0,
-        templateSignature,
+        proto: templateSignature,
         inferredType,
         inputRows: {},
         outputRow: {
-            display: outputDisplayTypes[templateSignature.output.rowType],
-            problems: []
+            display: rowDisplay,
+            problems: [],
         },
         isUsed,
     };

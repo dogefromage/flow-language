@@ -155,6 +155,7 @@ function createAddFlowAction(flowId: string, signaturePath: NamespacePath,
         flowId,
         locations: [drag.fromJoint, newLocation],
         undo: { desc: 'Added link to newly created node.' },
+        syntax: drag.syntax,
     }));
 }
 

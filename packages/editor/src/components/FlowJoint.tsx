@@ -33,6 +33,7 @@ const FlowJoint = ({ panelId, flowId, location, env, type, additional, }: Props)
                     fromJoint: location,
                     dataType: type || lang.createAnyType(),
                     environment: env,
+                    syntax: e.ctrlKey ? 'type-only' : 'value-and-type',
                 }
             }));
             return {}; // remove in future, bug currently
@@ -61,6 +62,7 @@ const FlowJoint = ({ panelId, flowId, location, env, type, additional, }: Props)
                 flowId,
                 locations: [location, actionState.draggingContext.fromJoint],
                 undo: { desc: `Linked two nodes in active flow.` },
+                syntax: actionState.draggingContext.syntax,
             }));
             dispatch(flowEditorSetStateNeutral({
                 panelId,

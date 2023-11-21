@@ -15,6 +15,7 @@ interface EditorActionLocation {
 }
 export interface DraggingJointContext {
     fromJoint: lang.JointLocation;
+    syntax: lang.EdgeSyntacticType;
     dataType: lang.TypeSpecifier;
     environment: lang.FlowEnvironment;
 }
