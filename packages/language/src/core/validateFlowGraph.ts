@@ -1,7 +1,7 @@
 import { createAnyType, createMapType, createReducedTemplateType, memoizeTemplatedType } from "../typeSystem";
 import { EdgeStatus, EdgeSyntacticType, FlowConnection, FlowEdge, FlowEnvironment, FlowGraph, FlowGraphContext, FlowModule, FlowSignature, InputRowSignature, TemplatedTypeSpecifier, pathTail } from "../types";
 import { assertDef, deepFreeze } from "../utils";
-import { findDependencies, sortTopologically } from "../utils/algorithms";
+import { findDependencies, sortTopologically } from "../utils/graphAlgorithms";
 import { memoObjectByFlatEntries } from "../utils/functional";
 import { mem } from '../utils/mem';
 import { pushContent } from "./environment";

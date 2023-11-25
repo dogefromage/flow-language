@@ -1,35 +1,7 @@
 import { FlowGraph, FlowSelection } from "../types";
 import { Vec2 } from "../types/internal";
+import { base26StringToIndex, indexToBase26String } from "../utils";
 import { maximum } from "../utils/functional";
-
-function base26StringToIndex(id: string) {
-    let acc = 0;
-    while (id.length) {
-        const x = id.charCodeAt(0) - 'a'.charCodeAt(0);
-        id = id.slice(1);
-        acc = 26 * acc + x;
-    }
-    return acc;
-}
-function convertToBase(x: number, base: number) {
-    if (base <= 1) {
-        throw new Error(`Invalid base`);
-    }
-    if (x === 0) return [ 0 ];
-    const result: number[] = [];
-    while (x > 0) {
-        let remainder = x % base;
-        result.push(remainder);
-        x = (x - remainder) / base;
-    }
-    return result;
-}
-function indexToBase26String(n: number) {
-    return convertToBase(n, 26)
-        .reverse()
-        .map(x => String.fromCharCode('a'.charCodeAt(0) + x))
-        .join('');
-}
 
 // TODO optimize here with better algorithm
 export function compareIdStrings(a: string, b: string) {

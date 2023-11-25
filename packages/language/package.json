@@ -7,7 +7,8 @@
     "main": "lib/cjs/index.js",
     "scripts": {
         "dev": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json --watch",
-        "build": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json"
+        "build": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json",
+        "type-test": "ts-node ./src/types/inference.ts -w"   
     },
     "dependencies": {
         "lodash": "^4.17.21"
@@ -16,6 +17,7 @@
     "license": "MIT",
     "devDependencies": {
         "@types/lodash": "^4.14.195",
+        "ts-node": "^10.9.1",
         "typescript": "*"
     }
 }
