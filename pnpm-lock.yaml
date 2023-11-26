@@ -1,4 +1,4 @@
-lockfileVersion: '6.0'
+lockfileVersion: '6.1'
 
 settings:
   autoInstallPeers: true
@@ -130,6 +130,22 @@ importers:
         version: 0.61.0
 
   packages/language:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+    devDependencies:
+      '@types/lodash':
+        specifier: ^4.14.195
+        version: 4.14.195
+      ts-node:
+        specifier: ^10.9.1
+        version: 10.9.1(@types/node@16.18.59)(typescript@5.2.2)
+      typescript:
+        specifier: '*'
+        version: 5.2.2
+
+  packages/typesystem:
     dependencies:
       lodash:
         specifier: ^4.17.21

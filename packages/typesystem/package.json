@@ -1,0 +1,23 @@
+{
+    "name": "noodle-typesystem",
+    "version": "1.0.0",
+    "description": "",
+    "types": "lib/types/index.d.ts",
+    "module": "lib/esm/index.js",
+    "main": "lib/cjs/index.js",
+    "scripts": {
+        "dev": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json --watch",
+        "build": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json",
+        "test": "ts-node ./src/test.ts"   
+    },
+    "dependencies": {
+        "lodash": "^4.17.21"
+    },
+    "author": "dogefromage",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/lodash": "^4.14.195",
+        "ts-node": "^10.9.1",
+        "typescript": "*"
+    }
+}
