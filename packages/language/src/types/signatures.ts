@@ -1,11 +1,12 @@
-import { assertDef } from "../utils";
-import { TemplateParameter, InitializerValue, TypeSpecifier } from "./typeSystem";
+import { TExpr } from "../typesystem/typeExpr";
 
 interface BaseRow<R extends string> {
     id: string;
-    specifier: TypeSpecifier;
+    specifier: TExpr;
     rowType: R;
 }
+
+export type InitializerValue = string | number | boolean;
 
 export interface SimpleInputRowSignature extends BaseRow<'input-simple'> {};
 export interface VariableInputRowSignature extends BaseRow<'input-variable'> {
@@ -16,37 +17,19 @@ export type InputRowSignature =
     | SimpleInputRowSignature
     | VariableInputRowSignature
 
-// export type SimpleOutputRowSignature = BaseRow<'output-simple'>;
-// export type DestructuredOutputRowSignature = BaseRow<'output-destructured'>;
-// export type HiddenOutputRowSignature = BaseRow<'output-hidden'>;
-
-    // | SimpleOutputRowSignature
-    // | DestructuredOutputRowSignature
-    // | HiddenOutputRowSignature
-
 export interface OutputRowSignature extends BaseRow<'output'> {
     defaultDestructure?: boolean;
     hidden?: boolean;
 }
 
-export interface AnonymousFlowSignature {
-    generics: TemplateParameter[];
-    inputs: InputRowSignature[];
-    output: OutputRowSignature;
-}
+// export interface AnonymousFlowSignature {
+//     generics: string[];
+//     inputs: InputRowSignature[];
+//     output: OutputRowSignature;
+// }
 
-export const reserverNodeIds = ['input', 'output'] as const;
-export type ReservedNodeIds = (typeof reserverNodeIds)[number];
-
-export interface FlowSignature extends AnonymousFlowSignature {
+export interface FlowSignature /* extends AnonymousFlowSignature */ {
     id: string;
     attributes: Record<string, string>;
+    type: TExpr;
 }
-
-export interface NamespacePath {
-    // should look like:
-    // [document/module_name]::[slug_1]:: … ::[slug_n]::[flowId]
-    path: string;
-}
-export const pathTail = (path: NamespacePath) =>
-    assertDef(path.path.split('::').at(-1), 'Path empty');

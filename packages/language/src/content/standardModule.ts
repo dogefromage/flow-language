@@ -1,4 +1,4 @@
-import { createAnyType, createFunctionType, createGenericType, createListType, createMapType, createPrimitiveType } from "../typeSystem";
+import { createAnyType, createFunctionType, createGenericType, createListType, createMapType, createPrimitiveType } from "../typeSystemOld";
 import { FlowSignature } from "../types";
 import { FlowModule } from "../types/module";
 import shorthands from "./shorthands";

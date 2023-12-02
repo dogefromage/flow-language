@@ -1,5 +1,4 @@
 
-
 interface Literal {
     kind: 'LITERAL';
     value: any;
@@ -10,47 +9,47 @@ interface Identifier {
 }
 interface Call {
     kind: 'CALL';
-    head: Expr;
-    args: Expr[];
+    head: DemoExpr;
+    args: DemoExpr[];
 }
 interface Fun {
     kind: 'FUN';
     params: string[];
-    body: Expr;
+    body: DemoExpr;
 }
 interface Let {
     kind: 'LET';
     x: string;
-    defn: Expr;
-    body: Expr;
+    defn: DemoExpr;
+    body: DemoExpr;
 }
 interface LetRec {
     kind: 'LETREC';
     x: string;
-    defn: Expr;
-    body: Expr;
+    defn: DemoExpr;
+    body: DemoExpr;
 }
 interface RecordSelect {
     kind: 'RECORDSELECT';
-    rec: Expr;
+    rec: DemoExpr;
     key: string;
 }
 interface RecordExtend {
     kind: 'RECORDEXTEND';
     key: string;
-    value: Expr;
-    rest: Expr;
+    value: DemoExpr;
+    rest: DemoExpr;
 }
 interface RecordRestrict {
     kind: 'RECORDRESTRICT';
-    rec: Expr;
+    rec: DemoExpr;
     key: string;
 }
 interface RecordEmpty {
     kind: 'RECORDEMPTY';
 }
 
-export type Expr =
+export type DemoExpr =
     | Literal
     | Identifier
     | Call
@@ -64,13 +63,13 @@ export type Expr =
 
 
 // print expr as a string and put brackets if contains space
-function exprToStringBrackets(expr: Expr): string {
-    const str = exprToString(expr);
+function exprToStringBrackets(expr: DemoExpr): string {
+    const str = demoExprToString(expr);
     return str.indexOf(' ') >= 0 ? `(${str})` : str;
 }
 
 // Print an expression as a string
-export function exprToString(expr: Expr): string {
+export function demoExprToString(expr: DemoExpr): string {
     switch (expr.kind) {
         case 'LITERAL': {
             switch (typeof expr.value) {

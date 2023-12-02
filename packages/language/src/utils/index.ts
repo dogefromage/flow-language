@@ -1,5 +1,10 @@
 import _ from "lodash";
 
+export function assert<T>(condition: T, message?: string): asserts condition {
+    if (!condition) {
+        throw new Error(message || "Assertion failed");
+    }
+}
 export function assertDef<T>(element: T | null | undefined, msg?: string) {
     if (element == null) {
         throw new Error(msg || `Assertion failed, not defined`);
@@ -13,15 +18,6 @@ export function assertTruthy(value: any, msg?: string) {
 }
 export function assertNever(msg?: string): never {
     throw new Error(msg || `Assertion failed, code was reached.`);
-}
-export function assertAddress(value: any, msg?: string) {
-    if (typeof value !== 'number' || 
-        !isFinite(value) ||
-        Math.floor(value) != value 
-    ) {
-        throw new Error(msg || `Assertion failed, value not valid address '${value}'.`);
-    }
-    return value;
 }
 
 export function wrapDefined<T>(...items: T[]) {

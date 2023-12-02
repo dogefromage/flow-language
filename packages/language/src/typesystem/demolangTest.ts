@@ -1,9 +1,9 @@
-import { Expr, exprToString } from "./demolang/expr";
-import { infer } from "./hindleymilner/infer";
-import { Ty, TypeEnvironment, newGenericVar, tyToString } from "./hindleymilner/types";
+import { demoInfer } from "./core";
+import { DemoExpr, demoExprToString } from "./demolang";
+import { TExpr, TypeEnvironment, newGenericVar, tyToString } from "./typeExpr";
 
-const bool: Ty = { kind: 'CONST', name: 'boolean' };
-const num: Ty = { kind: 'CONST', name: 'number' };
+const bool: TExpr = { kind: 'CONST', name: 'boolean' };
+const num: TExpr = { kind: 'CONST', name: 'number' };
 
 const varA = newGenericVar();
 
@@ -35,7 +35,7 @@ const testEnv = new TypeEnvironment({
     },
 });
 
-const johnRecord: Expr = {
+const johnRecord: DemoExpr = {
     kind: 'RECORDEXTEND',
     key: 'name',
     value: {
@@ -55,7 +55,7 @@ const johnRecord: Expr = {
     },
 };
 
-const examples: Expr[] = [
+const examples: DemoExpr[] = [
     // FACTORIAL FUNCTION
     {
         kind: 'LETREC',
@@ -248,10 +248,10 @@ const examples: Expr[] = [
     },
 ]
 
-function tryInfer(env: TypeEnvironment, expr: Expr) {
-    const exprStr = exprToString(expr);
+function tryInfer(env: TypeEnvironment, expr: DemoExpr) {
+    const exprStr = demoExprToString(expr);
     try {
-        console.log(`${exprStr} : ${tyToString(infer(env, 0, expr))}`);
+        console.log(`${exprStr} : ${tyToString(demoInfer(env, 0, expr))}`);
     } catch (e: any) {
         console.log(`${exprStr} : ${e.message}`);
     }

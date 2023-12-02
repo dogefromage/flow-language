@@ -1,12 +1,12 @@
 import _ from "lodash";
-import { createAnyType, createFunctionType, createMapType, createReducedTemplateType, createTemplatedType, createTupleType, findAllGenericLiterals, getTemplatedSignatureType, memoizeTemplatedType } from "../typeSystem";
-import { assertSubsetType } from "../typeSystem/comparison";
-import { TypeSystemException, TypeSystemExceptionData, TypeTreePath } from "../typeSystem/exceptionHandling";
-import { generateDefaultValue } from "../typeSystem/generateDefaultValue";
-import { closeTemplatedSpecifier, disjoinTemplateLiterals, instantiateTemplatedType, mapTypeInference } from "../typeSystem/generics";
-import { tryResolveTypeAlias } from "../typeSystem/resolution";
-import { checkElementOfType } from "../typeSystem/validateElement";
-import { FlowConnection, FlowEnvironment, FlowSignature, FunctionTypeSpecifier, InputRowSignature, NamespacePath, RowContext, RowProblem, InputRowState, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier, RowDisplay, FlowInputArgument } from "../types";
+import { createAnyType, createFunctionType, createMapType, createReducedTemplateType, createTemplatedType, createTupleType, findAllGenericLiterals, getTemplatedSignatureType, memoizeTemplatedType } from "../typeSystemOld";
+import { assertSubsetType } from "../typeSystemOld/comparison";
+import { TypeSystemException, TypeSystemExceptionData, TypeTreePath } from "../typeSystemOld/exceptionHandling";
+import { generateDefaultValue } from "../typeSystemOld/generateDefaultValue";
+import { closeTemplatedSpecifier, disjoinTemplateLiterals, instantiateTemplatedType, mapTypeInference } from "../typeSystemOld/generics";
+import { tryResolveTypeAlias } from "../typeSystemOld/resolution";
+import { checkElementOfType } from "../typeSystemOld/validateElement";
+import { FlowConnection, FlowEnvironment, FlowSignature, FunctionTypeSpecifier, InputRowSignature, NamespacePath, RowContext, RowProblem, InputRowState, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier, RowDisplay, FlowConnectionJoint } from "../types";
 import { Obj } from "../types/internal";
 import { assertDef, assertTruthy } from "../utils";
 import { mapObj, objToArr, zipInner } from "../utils/functional";
@@ -102,7 +102,7 @@ function findIncomingType(
     const fallbackType = createTemplatedType(createAnyType());
 
     const incomingTypeMap: Record<string, TemplatedTypeSpecifier> = {};
-    for (const [ argKey, arg ] of Object.entries(rowState?.rowArguments || {})) {
+    for (const [ argKey, arg ] of Object.entries(rowState?.connections || {})) {
         let connection = arg.typeRef || arg.valueRef;
         if (connection != null) {
             const { connectedType, accessorProblem } = resolveRowConnection(connection, previousOutputTypes, env);
@@ -290,7 +290,7 @@ function bundleRowContext(
     problems: RowProblem[],
 ): RowContext {
     const resolvedSpec = tryResolveTypeAlias(closedSpecifier, env);
-    const isUnconnected = rowState?.rowArguments[0] == null;
+    const isUnconnected = rowState?.connections[0] == null;
 
     if (input.rowType === 'input-variable' && isUnconnected) {
         if (resolvedSpec?.type === 'function') {

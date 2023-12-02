@@ -1,15 +1,12 @@
-import { TypeSystemExceptionData } from '../typeSystem/exceptionHandling';
-import { FlowSignature, NamespacePath } from './signatures';
+import { TypeSystemExceptionData } from '../typeSystemOld/exceptionHandling';
+import { TExpr } from '../typesystem/typeExpr';
+import { Obj } from './internal';
+import { FlowSignature, InitializerValue } from './signatures';
 import {
     FlowDocument,
-    FlowGraph,
-    FlowNode,
     InputJointLocation,
-    OutputJointLocation,
-    InputRowState
+    OutputJointLocation
 } from './state';
-import { FunctionTypeSpecifier, InitializerValue, TemplatedTypeSpecifier, TypeSpecifier } from './typeSystem';
-import { Obj } from './internal';
 
 export type FlowEnvironment = {
     parent: FlowEnvironment | null;
@@ -21,11 +18,11 @@ export interface FlowEnvironmentNamespace {
 }
 export interface FlowEnvironmentContent {
     signatures: FlowSignature[];
-    types: Record<string, TypeSpecifier>;
+    types: Record<string, TExpr>;
 }
 export interface FlowNamedEnvironmentContent {
     signatures: Record<string, FlowSignature>;
-    types: Record<string, TypeSpecifier>;
+    types: Record<string, TExpr>;
 }
 
 export type EdgeStatus = 'normal' | 'redundant' | 'cyclic';
@@ -40,7 +37,7 @@ export interface FlowEdge {
 }
 
 export interface FlowDocumentContext {
-    ref: FlowDocument;
+    // ref: FlowDocument;
     problems: DocumentProblem[];
     criticalSubProblems: number;
     flowContexts: Obj<FlowGraphContext>;
@@ -50,36 +47,38 @@ export interface FlowDocumentContext {
 }
 
 export interface FlowGraphContext {
-    ref: FlowGraph;
+    // ref: FlowGraph;
     problems: FlowGraphProblem[];
     criticalSubProblems: number;
-    nodeContexts: Obj<FlowNodeContext>;
+    nodeContexts: Obj<ApplicationFlowElementContext>;
     edges: Obj<FlowEdge>;
     flowSignature: FlowSignature;
     flowEnvironment: FlowEnvironment;
     sortedUsedNodes: string[];
 }
 
-export interface FlowNodeContext {
-    ref: FlowNode;
+export interface ApplicationFlowElementContext {
+    kind: 'application';
+    // ref: ApplicationFlowElement;
     problems: NodeProblem[];
     criticalSubProblems: number;
     inputRows: Obj<RowContext>;
     outputRow: RowContext;
-    proto: FlowSignature | null;
-    inferredType: TemplatedTypeSpecifier<FunctionTypeSpecifier> | null;
+    // proto: FlowSignature | null;
+    // inferredType: TemplatedTypeSpecifier<FunctionTypeSpecifier> | null;
     isUsed: boolean;
 }
-
-export interface GenericTypeInference {
-    id: string;
-    resolvedSpecifier: TypeSpecifier;
+export interface FunctionFlowElementContext {
+    kind: 'function';
+    // ref: FunctionFlowElement;
+    problems: NodeProblem[];
+    criticalSubProblems: number;
 }
 
 export type RowDisplay = 'hidden' | 'simple' | 'initializer' | 'destructured';
 
 export interface RowContext {
-    ref?: InputRowState;
+    // ref?: InputRowState;
     display: RowDisplay;
     value?: InitializerValue;
     problems: RowProblem[];
@@ -114,7 +113,7 @@ export type FlowGraphProblem =
 interface MissingSignature {
     type: 'missing-signature';
     message: string;
-    signature: NamespacePath;
+    signature: string;
 }
 export type NodeProblem =
     | MissingSignature

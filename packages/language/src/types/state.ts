@@ -1,6 +1,5 @@
-import { InitializerValue, TemplateParameter } from './typeSystem';
-import { InputRowSignature, NamespacePath, OutputRowSignature } from './signatures';
 import { Obj, Size2, Vec2 } from './internal';
+import { InitializerValue } from './signatures';
 
 export interface InputJointLocation {
     direction: 'input';
@@ -21,44 +20,57 @@ export interface FlowConnection {
     accessor?: string; // used for destructured outputs
 }
 
-export interface FlowInputArgument {
+export interface FlowConnectionJoint {
+    typeOnly?: boolean;
     typeRef?: FlowConnection;
     valueRef?: FlowConnection;
 }
 
+
 export interface InputRowState {
-    rowArguments: Obj<FlowInputArgument>;
-    value: InitializerValue | null;
     destructure?: boolean;
+    value?: InitializerValue;
+    connections: Obj<FlowConnectionJoint>;
 }
 
 export interface OutputRowState {
     destructure?: boolean;
 }
 
-export interface FlowNode {
+export interface ApplicationFlowElement {
+    kind: 'application';
     id: string;
     position: Vec2;
-    protoPath: NamespacePath;
+    funName: string;
     inputs: Obj<InputRowState>;
     output: OutputRowState;
 }
-export interface FlowRegion {
+export interface FunctionFlowElement {
+    kind: 'function';
+    id: string;
+    position: Vec2;
+    size: Size2;
+    parameters: Obj<FlowConnectionJoint>;
+    children: string[];
+}
+export interface RegionFlowElement {
+    kind: 'region';
     id: string;
     position: Vec2;
     size: Size2;
     attributes: Record<string, string>;
 }
 
+export type FlowElement = ApplicationFlowElement | FunctionFlowElement | RegionFlowElement;
+
 export interface FlowGraph {
     id: string;
-    nodes: Obj<FlowNode>;
-    regions: Obj<FlowRegion>;
+    elements: Obj<FlowElement>;
     attributes: Record<string, string>;
-    generics: TemplateParameter[];
-    inputs: InputRowSignature[];
-    output: OutputRowSignature;
     imports: string[];
+    // generics: TemplateParameter[];
+    // inputs: InputRowSignature[];
+    // output: OutputRowSignature;
 }
 
 export interface FlowDocument {

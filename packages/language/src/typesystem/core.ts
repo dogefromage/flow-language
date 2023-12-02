@@ -1,8 +1,8 @@
-import { Expr } from "../demolang/expr";
 import { assert } from "../utils";
-import { InferenceError, TArrow, Ty, TypeEnvironment, VarRefUnbound, newUnboundVar, tyToString } from "./types";
+import { DemoExpr } from "./demolang";
+import { InferenceError, TArrow, TExpr, TypeEnvironment, VarRefUnbound, newUnboundVar, tyToString } from "./typeExpr";
 
-export function unify(a: Ty, b: Ty) {
+export function unify(a: TExpr, b: TExpr) {
     if (a === b) {
         return;
     }
@@ -69,7 +69,7 @@ export function unify(a: Ty, b: Ty) {
 }
 
 
-function rewriteRow(row2: Ty, key1: string, field1: Ty): Ty {
+function rewriteRow(row2: TExpr, key1: string, field1: TExpr): TExpr {
     if (row2.kind === 'ROWEMPTY') {
         throw new InferenceError(`Could not find row '${key1}'.`);
     }
@@ -91,7 +91,7 @@ function rewriteRow(row2: Ty, key1: string, field1: Ty): Ty {
     }
     if (row2.kind === 'VAR' && row2.ref.kind === 'UNBOUND') {
         const restRow2 = newUnboundVar(row2.ref.level);
-        const ty2: Ty = { kind: 'ROWEXTEND', key: key1, field: field1, row: restRow2 };
+        const ty2: TExpr = { kind: 'ROWEXTEND', key: key1, field: field1, row: restRow2 };
         row2.ref = { kind: 'LINK', type: ty2 };
         return restRow2;
     }
@@ -99,8 +99,8 @@ function rewriteRow(row2: Ty, key1: string, field1: Ty): Ty {
 }
 
 
-function occursCheckAdjustLevels(ref: VarRefUnbound, ty: Ty) {
-    function f(ty: Ty) {
+function occursCheckAdjustLevels(ref: VarRefUnbound, ty: TExpr) {
+    function f(ty: TExpr) {
         if (ty.kind === 'VAR' && ty.ref.kind === 'LINK') {
             return f(ty.ref.type);
         }
@@ -145,9 +145,9 @@ function occursCheckAdjustLevels(ref: VarRefUnbound, ty: Ty) {
     f(ty);
 }
 
-function instantiate(level: number, ty: Ty): Ty {
-    const idVarMap = new Map<number, Ty>();
-    const f = (ty: Ty): Ty => {
+function instantiate(level: number, ty: TExpr): TExpr {
+    const idVarMap = new Map<number, TExpr>();
+    const f = (ty: TExpr): TExpr => {
         switch (ty.kind) {
             case 'CONST':
             case 'ROWEMPTY':
@@ -180,7 +180,7 @@ function instantiate(level: number, ty: Ty): Ty {
     return f(ty);
 }
 
-function generalize(level: number, ty: Ty): Ty {
+function generalize(level: number, ty: TExpr): TExpr {
     switch (ty.kind) {
         case 'APP':
             return { kind: 'APP', head: generalize(level, ty.head), args: ty.args.map(t => generalize(level, t)) };
@@ -205,7 +205,7 @@ function generalize(level: number, ty: Ty): Ty {
     assert(false);
 }
 
-function matchFunctionType(paramCount: number, ty: Ty): TArrow {
+function matchFunctionType(paramCount: number, ty: TExpr): TArrow {
     if (ty.kind === 'ARROW') {
         if (ty.params.length !== paramCount) {
             throw new InferenceError(`Expected ${ty.params.length} parameters, got ${paramCount}.`);
@@ -230,7 +230,7 @@ function matchFunctionType(paramCount: number, ty: Ty): TArrow {
     throw new InferenceError(`Expected a function.`);
 }
 
-export function infer(env: TypeEnvironment, level: number, expr: Expr): Ty {
+export function demoInfer(env: TypeEnvironment, level: number, expr: DemoExpr): TExpr {
     switch (expr.kind) {
         case 'IDENTIFIER': {
             if (env.has(expr.value)) {
@@ -247,28 +247,28 @@ export function infer(env: TypeEnvironment, level: number, expr: Expr): Ty {
                 (envAcc, param, index) => envAcc.extend(param, paramTypes[index]),
                 env
             );
-            const returnTy = infer(funcEnv, level, expr.body);
+            const returnTy = demoInfer(funcEnv, level, expr.body);
             return { kind: 'ARROW', params: paramTypes, ret: returnTy };
         }
         case 'LET': {
-            const varTy = infer(env, level + 1, expr.defn);
+            const varTy = demoInfer(env, level + 1, expr.defn);
             const generalTy = generalize(level, varTy);
             const newEnv = env.extend(expr.x, generalTy);
-            return infer(newEnv, level, expr.body);
+            return demoInfer(newEnv, level, expr.body);
         }
         case 'LETREC': {
             const varTy = newUnboundVar(level);
             const newEnv = env.extend(expr.x, varTy);
-            const defnTy = infer(newEnv, level + 1, expr.defn);
+            const defnTy = demoInfer(newEnv, level + 1, expr.defn);
             const generalDefnTy = generalize(level, defnTy);
             unify(varTy, generalDefnTy);
-            return infer(newEnv, level, expr.body);
+            return demoInfer(newEnv, level, expr.body);
         }
         case 'CALL': {
-            const headTy = infer(env, level, expr.head);
+            const headTy = demoInfer(env, level, expr.head);
             const { params, ret } = matchFunctionType(expr.args.length, headTy);
             for (let i = 0; i < expr.args.length; i++) {
-                const argTy = infer(env, level, expr.args[i]);
+                const argTy = demoInfer(env, level, expr.args[i]);
                 unify(params[i], argTy);
             }
             return ret;
@@ -279,23 +279,23 @@ export function infer(env: TypeEnvironment, level: number, expr: Expr): Ty {
 			// (* inlined code for Call of function with type "forall[a r] {label : a | r} -> a" *)
             const restRowTy = newUnboundVar(level);
             const fieldTy = newUnboundVar(level);
-            const paramTy: Ty = { kind: 'RECORD', row: { kind: 'ROWEXTEND', key: expr.key, field: fieldTy, row: restRowTy } };
-            unify(paramTy, infer(env, level, expr.rec));
+            const paramTy: TExpr = { kind: 'RECORD', row: { kind: 'ROWEXTEND', key: expr.key, field: fieldTy, row: restRowTy } };
+            unify(paramTy, demoInfer(env, level, expr.rec));
             return fieldTy;
         }
         case 'RECORDRESTRICT':
 			// inlined code for Call of function with type "forall[a r] {label : a | r} -> {r}"
             const restRowTy = newUnboundVar(level);
             const fieldTy = newUnboundVar(level);
-            const paramTy: Ty = { kind: 'RECORD', row: { kind: 'ROWEXTEND', key: expr.key, field: fieldTy, row: restRowTy } };
-            unify(paramTy, infer(env, level, expr.rec));
+            const paramTy: TExpr = { kind: 'RECORD', row: { kind: 'ROWEXTEND', key: expr.key, field: fieldTy, row: restRowTy } };
+            unify(paramTy, demoInfer(env, level, expr.rec));
             return { kind: 'RECORD', row: restRowTy };
         case 'RECORDEXTEND': {
 			// (* inlined code for Call of function with type "forall[a r] (a, {r}) -> {label : a | r}" *)
             const fieldVar = newUnboundVar(level);
-            unify(fieldVar, infer(env, level, expr.value));
+            unify(fieldVar, demoInfer(env, level, expr.value));
             const restRowVar = newUnboundVar(level);
-            unify({ kind: 'RECORD', row: restRowVar }, infer(env, level, expr.rest));
+            unify({ kind: 'RECORD', row: restRowVar }, demoInfer(env, level, expr.rest));
             return { kind: 'RECORD', row: { kind: 'ROWEXTEND', key: expr.key, field: fieldVar, row: restRowVar } };
         }
     }

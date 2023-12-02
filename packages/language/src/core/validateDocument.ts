@@ -1,12 +1,10 @@
 import _ from "lodash";
-import { createReducedTemplateType, getTemplatedSignatureType, memoizeTemplatedType } from "../typeSystem";
-import { DocumentProblem, FlowDocument, FlowDocumentContext, FlowEnvironmentNamespace, FlowGraphContext, FlowSignature, LanguageConfiguration, TypeSpecifier } from "../types";
+import { getTemplatedSignatureType } from "../typeSystemOld";
+import { DocumentProblem, FlowDocument, FlowDocumentContext, FlowEnvironmentNamespace, FlowGraphContext, FlowSignature, LanguageConfiguration } from "../types";
 import { ListCache } from "../utils/ListCache";
 import { mem } from '../utils/mem';
 import { createEnvironment } from "./environment";
 import { getFlowSignature, validateFlowGraph } from "./validateFlowGraph";
-import { instantiateTemplatedType } from "../typeSystem/generics";
-import { TypeTreePath } from "../typeSystem/exceptionHandling";
 
 export const validateDocument = mem((document: FlowDocument, configuration: LanguageConfiguration) => {
     const { flows: rawFlowMap } = document;

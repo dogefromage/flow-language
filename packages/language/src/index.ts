@@ -21,26 +21,26 @@ export {
     findEnvironmentType,
 } from './core/environment';
 
-export {
-    createAnyType,
-    createPrimitiveType,
-    createListType,
-    createTupleType,
-    createFunctionType,
-    createMapType,
-    getTemplatedSignatureType,
-    createAliasType,
-    createGenericType,
-    createTemplateParameter,
-} from './typeSystem';
+// export {
+//     createAnyType,
+//     createPrimitiveType,
+//     createListType,
+//     createTupleType,
+//     createFunctionType,
+//     createMapType,
+//     getTemplatedSignatureType,
+//     createAliasType,
+//     createGenericType,
+//     createTemplateParameter,
+// } from './typeSystemOld';
 
 export {
     tryResolveTypeAlias,
-} from './typeSystem/resolution';
+} from './typeSystemOld/resolution';
 
 export {
     isSubsetType,
-} from './typeSystem/comparison';
+} from './typeSystemOld/comparison';
 export {
     assertDef,
     assertNever,

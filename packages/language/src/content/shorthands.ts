@@ -1,4 +1,4 @@
-import { createAliasType } from "../typeSystem";
+import { createAliasType } from "../typeSystemOld";
 import { FunctionTypeSpecifier, GenericTypeSpecifier, ListTypeSpecifier, MapTypeSpecifier, OutputRowSignature, SimpleInputRowSignature, TemplateParameter, TupleTypeSpecifier, TypeSpecifier, VariableInputRowSignature } from "../types";
 
 interface VarRowOptions<T = VariableInputRowSignature['defaultValue']> {

@@ -1,4 +1,4 @@
-import { createAnyType, createMapType, createReducedTemplateType, memoizeTemplatedType } from "../typeSystem";
+import { createAnyType, createMapType, createReducedTemplateType, memoizeTemplatedType } from "../typeSystemOld";
 import { EdgeStatus, EdgeSyntacticType, FlowConnection, FlowEdge, FlowEnvironment, FlowGraph, FlowGraphContext, FlowModule, FlowSignature, InputRowSignature, TemplatedTypeSpecifier, pathTail } from "../types";
 import { assertDef, deepFreeze } from "../utils";
 import { findDependencies, sortTopologically } from "../utils/graphAlgorithms";

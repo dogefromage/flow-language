@@ -1,6 +1,6 @@
 import { findEnvironmentSignature } from "./environment";
-import { FlowEnvironment, FlowNode, FlowSignature, FunctionTypeSpecifier, OutputRowSignature, TemplatedTypeSpecifier } from "../types";
-import { FlowNodeContext, RowContext, RowDisplay } from "../types/context";
+import { FlowEnvironment, ApplicationNode, FlowSignature, FunctionTypeSpecifier, OutputRowSignature, TemplatedTypeSpecifier } from "../types";
+import { ApplicationFlowElementContext, RowContext, RowDisplay } from "../types/context";
 import { Obj } from "../types/internal";
 import { assertTruthy } from "../utils";
 import { memoList } from "../utils/functional";
@@ -8,11 +8,11 @@ import { mem } from '../utils/mem';
 import { validateNodeSyntax } from "./validateNodeSyntax";
 
 export const validateNode = mem((
-    node: FlowNode,
+    node: ApplicationNode,
     env: FlowEnvironment,
     inferredNodeOutputs: Obj<TemplatedTypeSpecifier>,
     isUsed: boolean,
-): FlowNodeContext => {
+): ApplicationFlowElementContext => {
     const templateSignature = findEnvironmentSignature(env, node.protoPath);
     if (templateSignature == null) {
         return noSignatureContext(node, isUsed);
@@ -37,7 +37,7 @@ export const validateNode = mem((
 });
 
 const noSignatureContext = mem(
-    (node: FlowNode, isUsed: boolean): FlowNodeContext => ({
+    (node: ApplicationNode, isUsed: boolean): ApplicationFlowElementContext => ({
         ref: node,
         problems: [{
             type: 'missing-signature',
@@ -59,12 +59,12 @@ const noSignatureContext = mem(
 );
 
 const bundleNodeContext = mem((
-    node: FlowNode,
+    node: ApplicationNode,
     isUsed: boolean,
     templateSignature: FlowSignature,
     inferredType: TemplatedTypeSpecifier<FunctionTypeSpecifier>,
     inputContexts: RowContext[],
-): FlowNodeContext => {
+): ApplicationFlowElementContext => {
 
     const shouldDestructure = 
         node.output.destructure 
@@ -79,7 +79,7 @@ const bundleNodeContext = mem((
         rowDisplay = 'hidden';
     }
 
-    const result: FlowNodeContext = {
+    const result: ApplicationFlowElementContext = {
         ref: node,
         problems: [],
         criticalSubProblems: 0,
