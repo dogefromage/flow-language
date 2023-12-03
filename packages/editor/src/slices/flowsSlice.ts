@@ -2,7 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import { Draft, original } from "immer";
 import * as lang from "noodle-language";
 import { useCallback } from "react";
-import { defaultFlows } from "../content/defaultDocument";
+import { defaultDocument } from "../content/defaultDocument";
 import { RootState } from "../redux/rootReducer";
 import { FLOW_REGION_MIN_SIZE } from "../styles/flowStyles";
 import { EditorClipboardData, RowSignatureBlueprint, Size2, UndoAction, Vec2 } from "../types";
@@ -42,7 +42,7 @@ function removeConnectionsToNodes(g: lang.FlowGraph, nodes: Set<string>) {
     }
 }
 
-const initialState: FlowsSliceState = { ...defaultFlows };
+const initialState: FlowsSliceState = { /* ...defaultDocument.flows */ };
 
 // function findUniquePortId<T extends { id: string }>(ports: T[]) {
 //     for (let i = 0; true; i++) {

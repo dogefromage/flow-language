@@ -7,6 +7,7 @@ import { EditorConfig, RecursivePartial, UndoAction } from "../types";
 import createFullReducer, { RootState } from "./rootReducer";
 import { createValidatorMiddleware } from "./validatorMiddleware";
 import { catchRejectedMiddleware } from "./catchRejectedMiddleware";
+import { defaultDocument } from "../content/defaultDocument";
 
 
 function createMiddleware(getDefaultMiddleWare: CurriedGetDefaultMiddleware, config: EditorConfig) {
@@ -49,6 +50,11 @@ function createMiddleware(getDefaultMiddleWare: CurriedGetDefaultMiddleware, con
 function generatePreloadedState(config: EditorConfig): RecursivePartial<RootState> {
     return {
         config,
+        document: {
+            past: [],
+            present: defaultDocument,
+            future: [],
+        }
     };
 }
 
