@@ -1,7 +1,6 @@
 import { createAnyType, createMapType, createReducedTemplateType, memoizeTemplatedType } from "../typeSystemOld";
-import { EdgeStatus, EdgeSyntacticType, FlowConnection, FlowEdge, FlowEnvironment, FlowGraph, FlowGraphContext, FlowModule, FlowSignature, InputRowSignature, TemplatedTypeSpecifier, pathTail } from "../types";
+import { EdgeStatus, EdgeSyntacticType, FlowEdge, FlowEnvironment, FlowGraph, FlowGraphContext, FlowModule, FlowSignature, InputRowSignature, TemplatedTypeSpecifier } from "../types";
 import { assertDef, deepFreeze } from "../utils";
-import { findDependencies, sortTopologically } from "../utils/graphAlgorithms";
 import { memoObjectByFlatEntries } from "../utils/functional";
 import { mem } from '../utils/mem';
 import { pushContent } from "./environment";
@@ -13,11 +12,12 @@ export const validateFlowGraph = mem((
     availableModules: FlowModule[],
 ): FlowGraphContext => {
 
-    const flowEnvironment = pushFlowEnvironmentContent(baseEnvironment, flow.id,
-        flow.generics, flow.inputs, flow.output, flow.imports, availableModules);
+    const flowEnvironment = baseEnvironment;
+    // const flowEnvironment = pushFlowEnvironmentContent(baseEnvironment, flow.id,
+    //     flow.generics, flow.inputs, flow.output, flow.imports, availableModules);
 
     const result: FlowGraphContext = {
-        ref: flow,
+        // ref: flow,
         problems: [],
         criticalSubProblems: 0,
         nodeContexts: {},
@@ -27,112 +27,112 @@ export const validateFlowGraph = mem((
         sortedUsedNodes: [],
     };
 
-    // edge information and adjacency list
-    // const missingNodes = new Set<string>();
-    const nodeEntries = Object.entries(flow.nodes);
-    const numberedAdjacency = new Array(nodeEntries.length)
-        .fill([]).map(_ => [] as number[]);
-    const uncoloredEdges: ReturnType<typeof makeUncoloredEdge>[] = [];
-    for (let inputNodeIndex = 0; inputNodeIndex < nodeEntries.length; inputNodeIndex++) {
-        const [inputNodeId, inputNode] = nodeEntries[inputNodeIndex];
-        const inputNodeDepIndices = new Set<number>();
+    // // edge information and adjacency list
+    // // const missingNodes = new Set<string>();
+    // const nodeEntries = Object.entries(flow.nodes);
+    // const numberedAdjacency = new Array(nodeEntries.length)
+    //     .fill([]).map(_ => [] as number[]);
+    // const uncoloredEdges: ReturnType<typeof makeUncoloredEdge>[] = [];
+    // for (let inputNodeIndex = 0; inputNodeIndex < nodeEntries.length; inputNodeIndex++) {
+    //     const [inputNodeId, inputNode] = nodeEntries[inputNodeIndex];
+    //     const inputNodeDepIndices = new Set<number>();
 
-        for (const [inputRowId, inputRow] of Object.entries(inputNode.inputs)) {
-            const { rowArguments: nodeArguments } = inputRow!;
-            for (const [inputAccessor, nodeArg] of Object.entries(nodeArguments)) {
+    //     for (const [inputRowId, inputRow] of Object.entries(inputNode.inputs)) {
+    //         const { rowArguments: nodeArguments } = inputRow!;
+    //         for (const [inputAccessor, nodeArg] of Object.entries(nodeArguments)) {
 
-                const connections: [EdgeSyntacticType, FlowConnection][] = [];
-                if (nodeArg.typeRef != null) {
-                    connections.push(['type-only', nodeArg.typeRef]);
-                }
-                if (nodeArg.valueRef != null) {
-                    connections.push(['value-and-type', nodeArg.valueRef]);
-                }
+    //             const connections: [EdgeSyntacticType, FlowConnection][] = [];
+    //             if (nodeArg.typeRef != null) {
+    //                 connections.push(['type-only', nodeArg.typeRef]);
+    //             }
+    //             if (nodeArg.valueRef != null) {
+    //                 connections.push(['value-and-type', nodeArg.valueRef]);
+    //             }
 
-                for (const [syntacticType, connection] of connections) {
-                    const {
-                        nodeId: outputNodeId,
-                        accessor: outputAccessor
-                    } = connection;
-                    // check if present
-                    const depIndex = nodeEntries
-                        .findIndex(entry => entry[0] === outputNodeId);
-                    if (depIndex < 0) {
-                        // missingNodes.add(outputNodeId);
-                        continue;
-                    }
-                    // adjacency
-                    inputNodeDepIndices.add(depIndex);
-                    // edge list
-                    const edgeId = `${outputNodeId}.${outputAccessor || '*'}_${inputNodeId}.${inputRowId}.${inputAccessor}`;
-                    uncoloredEdges.push(makeUncoloredEdge(
-                        edgeId,
-                        outputNodeId, outputAccessor,
-                        inputNodeId, inputRowId, inputAccessor,
-                        syntacticType,
-                    ));
-                }
-            }
-        }
-        for (const depIndex of inputNodeDepIndices) {
-            numberedAdjacency[depIndex].push(inputNodeIndex);
-        }
-    }
+    //             for (const [syntacticType, connection] of connections) {
+    //                 const {
+    //                     nodeId: outputNodeId,
+    //                     accessor: outputAccessor
+    //                 } = connection;
+    //                 // check if present
+    //                 const depIndex = nodeEntries
+    //                     .findIndex(entry => entry[0] === outputNodeId);
+    //                 if (depIndex < 0) {
+    //                     // missingNodes.add(outputNodeId);
+    //                     continue;
+    //                 }
+    //                 // adjacency
+    //                 inputNodeDepIndices.add(depIndex);
+    //                 // edge list
+    //                 const edgeId = `${outputNodeId}.${outputAccessor || '*'}_${inputNodeId}.${inputRowId}.${inputAccessor}`;
+    //                 uncoloredEdges.push(makeUncoloredEdge(
+    //                     edgeId,
+    //                     outputNodeId, outputAccessor,
+    //                     inputNodeId, inputRowId, inputAccessor,
+    //                     syntacticType,
+    //                 ));
+    //             }
+    //         }
+    //     }
+    //     for (const depIndex of inputNodeDepIndices) {
+    //         numberedAdjacency[depIndex].push(inputNodeIndex);
+    //     }
+    // }
 
-    const topSortResult = sortTopologically(numberedAdjacency);
-    const namedTopSort = topSortResult.topologicalSorting
-        .map(i => nodeEntries[i][0]);
+    // const topSortResult = sortTopologically(numberedAdjacency);
+    // const namedTopSort = topSortResult.topologicalSorting
+    //     .map(i => nodeEntries[i][0]);
 
-    const usedNodeIds = new Set<string>();
-    // output and outputs dependencies
-    const outputIndices: number[] = [];
-    for (let i = 0; i < nodeEntries.length; i++) {
-        const node = nodeEntries[i][1];
-        if (pathTail(node.protoPath) === 'output') {
-            outputIndices.push(i);
-        }
-    }
-    if (outputIndices.length == 0) {
-        result.problems.push({
-            type: 'output-missing',
-            message: 'Flow does not contain an output.',
-        });
-    } else if (outputIndices.length > 1) {
-        result.problems.push({
-            type: 'output-missing',
-            message: 'Flow contains multiple outputs.',
-        });
-    } else {
-        const outputIndex = outputIndices[0];
-        // mark nodes redundant
-        const numberedOutputDeps = findDependencies(numberedAdjacency, outputIndex);
-        for (const numberedDep of numberedOutputDeps) {
-            usedNodeIds.add(nodeEntries[numberedDep][0]);
-        }
-        result.sortedUsedNodes = namedTopSort.filter(nodeId => usedNodeIds.has(nodeId));
-    }
+    // const usedNodeIds = new Set<string>();
+    // // output and outputs dependencies
+    // const outputIndices: number[] = [];
+    // for (let i = 0; i < nodeEntries.length; i++) {
+    //     const node = nodeEntries[i][1];
+    //     if (pathTail(node.protoPath) === 'output') {
+    //         outputIndices.push(i);
+    //     }
+    // }
+    // if (outputIndices.length == 0) {
+    //     result.problems.push({
+    //         type: 'output-missing',
+    //         message: 'Flow does not contain an output.',
+    //     });
+    // } else if (outputIndices.length > 1) {
+    //     result.problems.push({
+    //         type: 'output-missing',
+    //         message: 'Flow contains multiple outputs.',
+    //     });
+    // } else {
+    //     const outputIndex = outputIndices[0];
+    //     // mark nodes redundant
+    //     const numberedOutputDeps = findDependencies(numberedAdjacency, outputIndex);
+    //     for (const numberedDep of numberedOutputDeps) {
+    //         usedNodeIds.add(nodeEntries[numberedDep][0]);
+    //     }
+    //     result.sortedUsedNodes = namedTopSort.filter(nodeId => usedNodeIds.has(nodeId));
+    // }
 
-    // mark cycles
-    type GraphEdgeKey = `${string}:${string}`;
-    const cyclicGraphEdges = new Set<GraphEdgeKey>();
-    if (topSortResult.cycles.length) {
-        const namedCycles = topSortResult.cycles
-            .map(cycle => cycle.map(i => nodeEntries[i][0]));
-        // collect all edges (u,v) which are somewhere in a cycle
-        for (const cycle of namedCycles) {
-            result.problems.push({
-                type: 'cyclic-nodes',
-                cycle,
-                message: `${cycle.length} nodes form a cycle. This is not allowed.`
-            });
+    // // mark cycles
+    // type GraphEdgeKey = `${string}:${string}`;
+    // const cyclicGraphEdges = new Set<GraphEdgeKey>();
+    // if (topSortResult.cycles.length) {
+    //     const namedCycles = topSortResult.cycles
+    //         .map(cycle => cycle.map(i => nodeEntries[i][0]));
+    //     // collect all edges (u,v) which are somewhere in a cycle
+    //     for (const cycle of namedCycles) {
+    //         result.problems.push({
+    //             type: 'cyclic-nodes',
+    //             cycle,
+    //             message: `${cycle.length} nodes form a cycle. This is not allowed.`
+    //         });
 
-            for (let i = 0; i < cycle.length; i++) {
-                let j = (i + 1) % cycle.length;
-                const key: GraphEdgeKey = `${cycle[i]}:${cycle[j]}`;
-                cyclicGraphEdges.add(key);
-            }
-        }
-    }
+    //         for (let i = 0; i < cycle.length; i++) {
+    //             let j = (i + 1) % cycle.length;
+    //             const key: GraphEdgeKey = `${cycle[i]}:${cycle[j]}`;
+    //             cyclicGraphEdges.add(key);
+    //         }
+    //     }
+    // }
 
     // color edges
     const coloredEdges = uncoloredEdges.map(almostEdge => {
