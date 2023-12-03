@@ -1,7 +1,6 @@
 {
     "name": "noodle-language",
-    "version": "1.0.0",
-    "description": "",
+    "version": "0.1.0",
     "types": "lib/types/index.d.ts",
     "module": "lib/esm/index.js",
     "main": "lib/cjs/index.js",
@@ -9,13 +8,17 @@
         "dev": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json --watch",
         "build": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json"
     },
+    "author": "dogefromage",
+    "license": "MIT",
+    "homepage": "https://github.com/dogefromage/noodle",
     "dependencies": {
         "lodash": "^4.17.21"
     },
-    "author": "dogefromage",
-    "license": "MIT",
     "devDependencies": {
         "@types/lodash": "^4.14.195",
-        "typescript": "*"
-    }
+        "typescript": "^5"
+    },
+    "files": [
+        "lib"
+    ]
 }
