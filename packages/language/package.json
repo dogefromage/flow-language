@@ -1,6 +1,6 @@
 {
     "name": "noodle-language",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "types": "lib/types/index.d.ts",
     "module": "lib/esm/index.js",
     "main": "lib/cjs/index.js",
