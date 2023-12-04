@@ -1,4 +1,4 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -26,10 +26,10 @@ importers:
         specifier: ^4.14.195
         version: 4.14.195
       noodle-language:
-        specifier: workspace:^
+        specifier: 0.1.1
         version: link:../language
       typescript:
-        specifier: '*'
+        specifier: ^5
         version: 5.2.2
 
   packages/editor:
@@ -56,7 +56,7 @@ importers:
         specifier: ^4.17.21
         version: 4.17.21
       noodle-language:
-        specifier: workspace:^
+        specifier: 0.1.1
         version: link:../language
       react:
         specifier: 18.2.0
@@ -126,7 +126,7 @@ importers:
         specifier: ^2.4.1
         version: 2.4.1
       typescript:
-        specifier: '*'
+        specifier: ^5
         version: 5.2.2
       typescript-json-schema:
         specifier: ^0.61.0
@@ -142,7 +142,7 @@ importers:
         specifier: ^4.14.195
         version: 4.14.195
       typescript:
-        specifier: '*'
+        specifier: ^5
         version: 5.2.2
 
 packages:
