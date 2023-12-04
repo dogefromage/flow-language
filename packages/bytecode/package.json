@@ -1,6 +1,6 @@
 {
     "name": "noodle-bytecode-runtime",
-    "version": "0.1.13",
+    "version": "0.1.14",
     "types": "lib/types/index.d.ts",
     "module": "lib/esm/index.js",
     "main": "lib/cjs/index.js",

@@ -1,6 +1,6 @@
 {
     "name": "noodle-editor",
-    "version": "0.1.13",
+    "version": "0.1.14",
     "main": "lib/index.js",
     "scripts": {
         "dev": "tsc --watch",

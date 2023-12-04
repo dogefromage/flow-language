@@ -1,10 +1,10 @@
 
+sh scripts/build.sh
 
-sh scripts/remove-tsbuildinfo.sh
-pnpm -r --workspace-concurrency 1 rebuild
+echo "Publishing patch..."
 
 pnpm -r run patch
 git add -A
 git commit -m "Publish patch: $(date)"
 
-# pnpm -r publish
+pnpm -r publish

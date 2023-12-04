@@ -67,7 +67,7 @@ export interface ContextSliceState {
 
 export const EDITOR_ITEM_ID_ATTR = 'data-id';
 export const EDITOR_SELECTABLE_ITEM_CLASS = 'editor-selectable-items';
-export const EDITOR_SELECTABLE_ITEM_TYPE_ATTR = 'selectable-type';
+export const EDITOR_SELECTABLE_ITEM_TYPE_ATTR = 'data-selectable-type';
 
 export const DEFAULT_EDITOR_CAMERA = { position: { x: 0, y: 0 }, zoom: 1, };
 

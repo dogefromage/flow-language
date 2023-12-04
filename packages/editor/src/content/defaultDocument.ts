@@ -1,6 +1,6 @@
 import * as lang from "noodle-language";
 
-import demoDocFromJson from './demoDocString.json?raw';
+import demoDocFromJson from './demoDocString.json';
 
 export const defaultDocument = demoDocFromJson as lang.FlowDocument;
 
