@@ -1,8 +1,8 @@
 import * as lang from "noodle-language";
 
-import demoDocString from './demoDocString.json?raw';
+import demoDocFromJson from './demoDocString.json?raw';
 
-export const defaultDocument: lang.FlowDocument = JSON.parse(demoDocString);
+export const defaultDocument = demoDocFromJson as lang.FlowDocument;
 
 export const defaultFlowSignature: lang.AnonymousFlowSignature = {
     generics: [],

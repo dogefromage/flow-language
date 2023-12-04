@@ -1,5 +1,5 @@
 
-declare module '*?raw' {
-    const file: string;
+declare module '*.json?raw' {
+    const file: object;
     export default file;
 }
