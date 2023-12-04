@@ -134,7 +134,7 @@ class Compiler {
         // TODO replace with more sophisticated algorithm
         for (const nodeId of flow.sortedUsedNodes) {
             const node = lang.assertDef(flow.nodeContexts[nodeId]);
-            const inputRows = node.proto!.inputs;
+            const inputRows = node.templateSignature!.inputs;
             const paramsTuple = node.inferredType?.specifier.parameter as lang.TupleTypeSpecifier;
             lang.assertTruthy(paramsTuple.type === 'tuple');
             lang.assertTruthy(paramsTuple.elements.length === inputRows.length);
@@ -153,7 +153,7 @@ class Compiler {
             const nextLocalIndex = localsCounter++;
             nodeIdLocals.set(node.ref.id, nextLocalIndex);
             // compute node and store
-            this.useRoutine(bs, node.ref.protoPath);
+            this.useRoutine(bs, node.ref.signature);
             bs.push(
                 data(nextLocalIndex),
                 op(ByteOperation.setlocal),
@@ -182,10 +182,10 @@ class Compiler {
         env: lang.FlowEnvironment,
         nodeIdLocals: Map<string, number>,
     ) {
-        const connectionMap = context.ref?.rowArguments || {};
+        const connectionMap = context.ref?.connections || {};
 
         const placeConnection = (accessors: string) => {
-            const conn = lang.assertDef(connectionMap[accessors].valueRef);
+            const conn = lang.assertDef(connectionMap[accessors]);
             const neededLocalIndex = lang.assertDef(nodeIdLocals.get(conn.nodeId));
             bs.push(
                 data(neededLocalIndex),
