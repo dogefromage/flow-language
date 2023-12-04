@@ -1,5 +1,5 @@
 import * as lang from "noodle-language";
-import _ from 'lodash';
+import range from 'lodash/range';
 import { shorthands } from "./shorthands";
 import { DocumentSource, StandardSource } from "./sources";
 import { ByteCompilerArgs, ByteInstructionStream, ByteOperation, ByteProgram, ByteSource, CallableChunk, MACHINE_ENTRY_LABEL } from "./types";
@@ -134,7 +134,7 @@ class Compiler {
         // TODO replace with more sophisticated algorithm
         for (const nodeId of flow.sortedUsedNodes) {
             const node = lang.assertDef(flow.nodeContexts[nodeId]);
-            const inputRows = node.templateSignature!.inputs;
+            const inputRows = node.proto!.inputs;
             const paramsTuple = node.inferredType?.specifier.parameter as lang.TupleTypeSpecifier;
             lang.assertTruthy(paramsTuple.type === 'tuple');
             lang.assertTruthy(paramsTuple.elements.length === inputRows.length);
@@ -153,7 +153,7 @@ class Compiler {
             const nextLocalIndex = localsCounter++;
             nodeIdLocals.set(node.ref.id, nextLocalIndex);
             // compute node and store
-            this.useRoutine(bs, node.ref.signature);
+            this.useRoutine(bs, node.ref.protoPath);
             bs.push(
                 data(nextLocalIndex),
                 op(ByteOperation.setlocal),
@@ -182,10 +182,10 @@ class Compiler {
         env: lang.FlowEnvironment,
         nodeIdLocals: Map<string, number>,
     ) {
-        const connectionMap = context.ref?.connections || {};
+        const connectionMap = context.ref?.rowArguments || {};
 
         const placeConnection = (accessors: string) => {
-            const conn = lang.assertDef(connectionMap[accessors]);
+            const conn = lang.assertDef(connectionMap[accessors].valueRef);
             const neededLocalIndex = lang.assertDef(nodeIdLocals.get(conn.nodeId));
             bs.push(
                 data(neededLocalIndex),
@@ -222,7 +222,7 @@ class Compiler {
                     lang.assertTruthy(listLength === resType.elements.length);
                 }
                 // access in reverse over range
-                _.range(0, listLength, 1).reverse()
+                range(0, listLength, 1).reverse()
                     .forEach(index => placeConnection(index.toString()))
                 bs.push(
                     // pack into list of length

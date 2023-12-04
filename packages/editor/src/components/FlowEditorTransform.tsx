@@ -1,5 +1,5 @@
 import { useDroppable, useMouseDrag } from 'dragzone';
-import _ from 'lodash';
+import throttle from 'lodash/throttle';
 import * as lang from 'noodle-language';
 import React, { useCallback, useRef, useState } from 'react';
 import styled from 'styled-components';
@@ -234,7 +234,7 @@ const FlowEditorTransform = ({ flowId, panelId }: Props) => {
     }
 
     const updatePosition = useCallback(
-        _.throttle((clientPos: Vec2) => {
+        throttle((clientPos: Vec2) => {
             const offsetCursor = getOffsetCursor(clientPos);
             if (!offsetCursor) return;
             dispatch(flowEditorUpdateDragginLinkPosition({

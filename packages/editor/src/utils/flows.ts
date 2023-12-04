@@ -1,7 +1,6 @@
 import * as lang from "noodle-language";
 import { FlowJointStyling, JointLocationKey } from "../types";
 import { AllRowSignatures } from "../types/flowInspectorView";
-import _ from "lodash";
 import { NameValidationError } from "../components/FormRenameField";
 import { useAppSelector } from "../redux/stateHooks";
 import { selectDocument } from "../slices/documentSlice";

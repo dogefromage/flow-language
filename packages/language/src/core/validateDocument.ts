@@ -1,4 +1,4 @@
-import _ from "lodash";
+import capitalize from "lodash/capitalize";
 import { getTemplatedSignatureType } from "../typeSystem";
 import { DocumentProblem, FlowDocument, FlowDocumentContext, FlowEnvironmentNamespace, FlowGraphContext, FlowSignature, LanguageConfiguration, TypeSpecifier } from "../types";
 import { ListCache } from "../utils/ListCache";
@@ -53,7 +53,7 @@ const makeDocumentNamespace = mem((
         const signatureType = getTemplatedSignatureType(signature);
         const outputType = signatureType.specifier.output;
         
-        const typeName = _.capitalize(signature.id);
+        const typeName = capitalize(signature.id);
         outputConstructorTypes[typeName] = outputType;
     }
     return {

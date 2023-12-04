@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { assertTruthy } from '.';
 import { Obj } from '../types/internal';
 import { mem } from './mem';

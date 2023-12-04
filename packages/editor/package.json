@@ -1,6 +1,6 @@
 {
     "name": "noodle-editor",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "main": "lib/index.js",
     "scripts": {
         "dev": "tsc --watch",
@@ -16,7 +16,7 @@
         "@react-hook/resize-observer": "^1.2.6",
         "@reduxjs/toolkit": "^1.9.7",
         "@uiw/react-color": "^1.4.2",
-        "dragzone": "^1.0.2",
+        "dragzone": "^1",
         "emittery": "^1.0.1",
         "immer": "*",
         "lodash": "^4.17.21",

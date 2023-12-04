@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import mapValues from 'lodash/mapValues';
 import { AppDispatch, RootState } from '../redux/rootReducer';
 import { PanelState } from './panelManager';
 import { Rect, Vec2 } from './utils';
@@ -82,13 +82,13 @@ export function createCommandGroup<Keys extends string>(
     group: Record<Keys, Omit<GlobalCommand, 'id'> | Omit<ViewCommand, 'id'>>,
 ) {
     const relabledCommands = 
-        _.mapValues(group, (group, key) => ({
+        mapValues(group, (group, key) => ({
             ...group,
             id: `${groupName}:${key}`,
         })) as Record<Keys, Command>;
     const commands = Object.values<Command>(relabledCommands);
     const labels =
-        _.mapValues(relabledCommands, group => group.id);
+        mapValues(relabledCommands, group => group.id);
 
     return { commands, labels }
 }

@@ -1,7 +1,7 @@
 import { configureStore, Middleware } from "@reduxjs/toolkit";
 import { CurriedGetDefaultMiddleware } from "@reduxjs/toolkit/dist/getDefaultMiddleware";
 import { enableMapSet } from "immer";
-import _ from "lodash";
+import memoize from "lodash/memoize";
 import { createLogger } from "redux-logger";
 import { EditorConfig, RecursivePartial, UndoAction } from "../types";
 import createFullReducer, { RootState } from "./rootReducer";
@@ -58,7 +58,7 @@ function generatePreloadedState(config: EditorConfig): RecursivePartial<RootStat
     };
 }
 
-export const initStore = _.memoize((config: EditorConfig) => {
+export const initStore = memoize((config: EditorConfig) => {
     enableMapSet();
 
     const reducer = createFullReducer(config);

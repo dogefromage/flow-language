@@ -1,10 +1,10 @@
-import _ from "lodash";
+import mapValues from "lodash/mapValues";
 import { FlowDocument, FlowGraph } from "../types";
 
 export function updateObsoleteDocument(doc: FlowDocument): FlowDocument {
     return {
         ...doc,
-        flows: _.mapValues(doc.flows || {}, updateObsoleteFlow) as Record<string, FlowGraph>,
+        flows: mapValues(doc.flows || {}, updateObsoleteFlow) as Record<string, FlowGraph>,
     }
 }
 

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import styled from 'styled-components';
 import { FLOW_NODE_ROW_HEIGHT } from '../styles/flowStyles';
-import _ from 'lodash';
+import truncate from 'lodash/truncate';
 
 const SlidableInputDiv = styled.div`
     position: relative;
@@ -59,7 +59,7 @@ const SlidableInputDiv = styled.div`
 function formatShort(nameLength: number, text: string) {
     const maxLength = 14;
     const length = Math.floor(maxLength - 1.2 * nameLength);
-    return `"${_.truncate(text, { length })}"`;
+    return `"${truncate(text, { length })}"`;
 }
 
 type Props = {

@@ -1,4 +1,4 @@
-import _ from "lodash";
+import startCase from "lodash/startCase";
 
 export function assertDef<T>(element: T | null | undefined, msg?: string) {
     if (element == null) {
@@ -43,5 +43,5 @@ export function deepFreeze<T extends any>(obj: T): void {
 };
 
 export function prettifyLabel(propertyName: string) {
-    return _.startCase(propertyName.replaceAll('_', ' ').trim());
+    return startCase(propertyName.replaceAll('_', ' ').trim());
 }
