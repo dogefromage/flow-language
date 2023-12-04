@@ -1,6 +1,6 @@
 
 
-sh scripts/remove-ts-buildinfo.sh
+sh scripts/remove-tsbuildinfo.sh
 pnpm -r --workspace-concurrency 1 rebuild
 
 pnpm -r run patch
