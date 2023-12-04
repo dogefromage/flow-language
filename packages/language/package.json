@@ -1,12 +1,12 @@
 {
     "name": "noodle-language",
-    "version": "0.1.12",
+    "version": "0.1.13",
     "types": "lib/types/index.d.ts",
     "module": "lib/esm/index.js",
     "main": "lib/cjs/index.js",
     "scripts": {
         "dev": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json --watch",
-        "rebuild": "rm -rf lib/**/* && pnpm run build",
+        "rebuild": "rm -rf lib && pnpm run build",
         "build": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json",
         "patch": "npm version patch"
     },

@@ -9,7 +9,6 @@ import { createValidatorMiddleware } from "./validatorMiddleware";
 import { catchRejectedMiddleware } from "./catchRejectedMiddleware";
 import { defaultDocument } from "../content/defaultDocument";
 
-
 function createMiddleware(getDefaultMiddleWare: CurriedGetDefaultMiddleware, config: EditorConfig) {
     const middleware: Middleware[] = [];
 
@@ -58,7 +57,7 @@ function generatePreloadedState(config: EditorConfig): RecursivePartial<RootStat
     };
 }
 
-export const initStore = memoize((config: EditorConfig) => {
+const _initStore = (config: EditorConfig) => {
     enableMapSet();
 
     const reducer = createFullReducer(config);
@@ -71,7 +70,8 @@ export const initStore = memoize((config: EditorConfig) => {
         preloadedState: generatePreloadedState(config),
     });
     return store;
-});
+};
+export const initStore = memoize(_initStore) as typeof _initStore;
 
 // function yjs() {
 //     const yDoc = new Y.Doc();

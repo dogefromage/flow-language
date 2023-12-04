@@ -1,10 +1,10 @@
 
 
 sh scripts/remove-ts-buildinfo.sh
-pnpm -r run rebuild
-pnpm -r run patch
+pnpm -r --workspace-concurrency 1 rebuild
 
+pnpm -r run patch
 git add -A
-git commit -m "Automatic publish"
+git commit -m "Publish patch"
 
 pnpm -r publish
