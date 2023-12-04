@@ -1,8 +1,7 @@
 
 
 sh scripts/remove-ts-buildinfo.sh
-
-pnpm -r run build
+pnpm -r run rebuild
 pnpm -r run patch
 
 git add -A

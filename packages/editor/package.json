@@ -1,9 +1,10 @@
 {
     "name": "noodle-editor",
-    "version": "0.1.8",
+    "version": "0.1.9",
     "main": "lib/index.js",
     "scripts": {
         "dev": "tsc --watch",
+        "rebuild": "rm -rf lib/**/* && pnpm run build",
         "build": "tsc && pnpm run copyfiles",
         "schemagen": "sh src/dev/schemagen.sh",
         "copyfiles": "copyfiles -u 1 src/**/*.json lib",
