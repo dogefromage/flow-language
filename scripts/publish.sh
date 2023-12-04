@@ -5,6 +5,6 @@ pnpm -r --workspace-concurrency 1 rebuild
 
 pnpm -r run patch
 git add -A
-git commit -m "Publish patch"
+git commit -m "Publish patch: $(date)"
 
-pnpm -r publish
+# pnpm -r publish
