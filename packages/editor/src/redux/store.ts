@@ -1,7 +1,7 @@
 import { configureStore, Middleware } from "@reduxjs/toolkit";
 import { CurriedGetDefaultMiddleware } from "@reduxjs/toolkit/dist/getDefaultMiddleware";
 import { enableMapSet } from "immer";
-import memoize from "lodash/memoize";
+import memoize from "lodash-es/memoize";
 import { createLogger } from "redux-logger";
 import { EditorConfig, RecursivePartial, UndoAction } from "../types";
 import createFullReducer, { RootState } from "./rootReducer";

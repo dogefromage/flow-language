@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import styled from 'styled-components';
 import { FLOW_NODE_ROW_HEIGHT } from '../styles/flowStyles';
-import truncate from 'lodash/truncate';
+import truncate from 'lodash-es/truncate';
 
 const SlidableInputDiv = styled.div`
     position: relative;

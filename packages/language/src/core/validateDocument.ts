@@ -1,4 +1,4 @@
-import capitalize from "lodash/capitalize";
+import capitalize from "lodash-es/capitalize";
 import { getTemplatedSignatureType } from "../typeSystem";
 import { DocumentProblem, FlowDocument, FlowDocumentContext, FlowEnvironmentNamespace, FlowGraphContext, FlowSignature, LanguageConfiguration, TypeSpecifier } from "../types";
 import { ListCache } from "../utils/ListCache";

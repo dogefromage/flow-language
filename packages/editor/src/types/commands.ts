@@ -1,4 +1,4 @@
-import mapValues from 'lodash/mapValues';
+import mapValues from 'lodash-es/mapValues';
 import { AppDispatch, RootState } from '../redux/rootReducer';
 import { PanelState } from './panelManager';
 import { Rect, Vec2 } from './utils';

@@ -1,6 +1,6 @@
 {
     "name": "noodle-bytecode-runtime",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "types": "lib/types/index.d.ts",
     "module": "lib/esm/index.js",
     "main": "lib/cjs/index.js",
@@ -14,16 +14,16 @@
     "homepage": "https://github.com/dogefromage/noodle",
     "devDependencies": {
         "noodle-language": "*",
-        "@types/lodash": "^4.14.195",
         "typescript": "^5"
-    },
-    "dependencies": {
-        "lodash": "^4.17.21"
     },
     "files": [
         "lib/cjs",
         "lib/esm",
         "lib/types",
         "src"
-    ]
+    ],
+    "dependencies": {
+        "@types/lodash-es": "^4.17.12",
+        "lodash-es": "^4.17.21"
+    }
 }

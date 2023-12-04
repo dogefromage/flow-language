@@ -1,5 +1,5 @@
 import { useDroppable, useMouseDrag } from 'dragzone';
-import throttle from 'lodash/throttle';
+import throttle from 'lodash-es/throttle';
 import * as lang from 'noodle-language';
 import React, { useCallback, useRef, useState } from 'react';
 import styled from 'styled-components';

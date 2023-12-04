@@ -1,5 +1,5 @@
 import * as lang from "noodle-language";
-import range from 'lodash/range';
+import range from 'lodash-es/range';
 import { shorthands } from "./shorthands";
 import { DocumentSource, StandardSource } from "./sources";
 import { ByteCompilerArgs, ByteInstructionStream, ByteOperation, ByteProgram, ByteSource, CallableChunk, MACHINE_ENTRY_LABEL } from "./types";

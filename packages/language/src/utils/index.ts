@@ -1,4 +1,4 @@
-import startCase from "lodash/startCase";
+import startCase from "lodash-es/startCase";
 
 export function assertDef<T>(element: T | null | undefined, msg?: string) {
     if (element == null) {

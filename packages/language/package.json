@@ -1,6 +1,6 @@
 {
     "name": "noodle-language",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "types": "lib/types/index.d.ts",
     "module": "lib/esm/index.js",
     "main": "lib/cjs/index.js",
@@ -12,11 +12,7 @@
     "author": "dogefromage",
     "license": "MIT",
     "homepage": "https://github.com/dogefromage/noodle",
-    "dependencies": {
-        "lodash": "^4.17.21"
-    },
     "devDependencies": {
-        "@types/lodash": "^4.14.195",
         "typescript": "^5"
     },
     "files": [
@@ -24,5 +20,9 @@
         "lib/esm",
         "lib/types",
         "src"
-    ]
+    ],
+    "dependencies": {
+        "@types/lodash-es": "^4.17.12",
+        "lodash-es": "^4.17.21"
+    }
 }
