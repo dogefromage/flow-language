@@ -1,13 +1,13 @@
 {
     "name": "noodle-editor",
-    "version": "0.2.0",
+    "version": "0.1.2",
     "main": "lib/index.js",
     "scripts": {
         "dev": "tsc --watch",
         "build": "tsc && pnpm run copyfiles",
         "schemagen": "sh src/dev/schemagen.sh",
         "copyfiles": "copyfiles -u 1 src/**/*.json lib",
-        "minor": "npm version minor"
+        "patch": "npm version patch"
     },
     "author": "dogefromage",
     "license": "MIT",

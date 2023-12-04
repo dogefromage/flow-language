@@ -1,13 +1,13 @@
 {
     "name": "noodle-language",
-    "version": "0.2.0",
+    "version": "0.1.2",
     "types": "lib/types/index.d.ts",
     "module": "lib/esm/index.js",
     "main": "lib/cjs/index.js",
     "scripts": {
         "dev": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json --watch",
         "build": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json",
-        "minor": "npm version minor"
+        "patch": "npm version patch"
     },
     "author": "dogefromage",
     "license": "MIT",
