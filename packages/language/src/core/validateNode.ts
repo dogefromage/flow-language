@@ -1,6 +1,3 @@
-import { findEnvironmentSignature } from "./environment";
-import { FlowEnvironment, ApplicationNode, FlowSignature, FunctionTypeSpecifier, OutputRowSignature, TemplatedTypeSpecifier } from "../types";
-import { ApplicationFlowElementContext, RowContext, RowDisplay } from "../types/context";
 import { Obj } from "../types/internal";
 import { assertTruthy } from "../utils";
 import { memoList } from "../utils/functional";
@@ -63,7 +60,7 @@ const bundleNodeContext = mem((
     isUsed: boolean,
     templateSignature: FlowSignature,
     inferredType: TemplatedTypeSpecifier<FunctionTypeSpecifier>,
-    inputContexts: RowContext[],
+    inputContexts: ArgumentRowContext[],
 ): ApplicationFlowElementContext => {
 
     const shouldDestructure = 

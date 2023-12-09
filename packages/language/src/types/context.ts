@@ -1,93 +1,67 @@
 import { TypeSystemExceptionData } from '../typeSystemOld/exceptionHandling';
 import { TExpr } from '../typesystem/typeExpr';
 import { Obj } from './internal';
-import { FlowSignature, InitializerValue } from './signatures';
-import {
-    FlowDocument,
-    InputJointLocation,
-    OutputJointLocation
-} from './state';
+import { FunctionSignature, TypeSignature } from './signatures';
+import { FlowDocument } from './state';
 
-export type FlowEnvironment = {
-    parent: FlowEnvironment | null;
-    namespace: FlowEnvironmentNamespace | null;
+export type EnvScope = {
+    parent: EnvScope | null;
+    namespace: EnvScopeFrame | null;
 }
-export interface FlowEnvironmentNamespace {
-    name: string;
-    content: FlowEnvironmentContent;
+export interface EnvScopeFrame {
+    content: EnvContent;
 }
-export interface FlowEnvironmentContent {
-    signatures: FlowSignature[];
-    types: Record<string, TExpr>;
-}
-export interface FlowNamedEnvironmentContent {
-    signatures: Record<string, FlowSignature>;
-    types: Record<string, TExpr>;
-}
+export type EnvContent = Record<string, TypeSignature>;
 
-export type EdgeStatus = 'normal' | 'redundant' | 'cyclic';
+export type EdgeStatus = 'normal' | 'redundant' | 'cyclic' | 'illegal';
 export type EdgeSyntacticType = 'value-and-type' | 'type-only';
 
-export interface FlowEdge {
+export interface EdgeContext {
     id: string;
-    source: OutputJointLocation;
-    target: InputJointLocation;
+    source: string;
+    target: string;
     status: EdgeStatus;
     syntacticType: EdgeSyntacticType;
 }
 
-export interface FlowDocumentContext {
-    // ref: FlowDocument;
+export interface DocumentContext {
     problems: DocumentProblem[];
-    criticalSubProblems: number;
     flowContexts: Obj<FlowGraphContext>;
-    // topologicalFlowOrder: string[];
-    // entryPointDependencies: Obj<string[]>;
-    environment: FlowEnvironment;
 }
 
 export interface FlowGraphContext {
-    // ref: FlowGraph;
     problems: FlowGraphProblem[];
-    criticalSubProblems: number;
-    nodeContexts: Obj<ApplicationFlowElementContext>;
-    edges: Obj<FlowEdge>;
-    flowSignature: FlowSignature;
-    flowEnvironment: FlowEnvironment;
-    sortedUsedNodes: string[];
+    nodes: Obj<NodeContext>;
+    edges: Obj<EdgeContext>;
 }
 
-export interface ApplicationFlowElementContext {
-    kind: 'application';
-    // ref: ApplicationFlowElement;
+export type NodeContext = CallNodeContext | FunctionNodeContext;
+
+export interface CallNodeContext {
+    kind: 'call';
     problems: NodeProblem[];
-    criticalSubProblems: number;
-    inputRows: Obj<RowContext>;
-    outputRow: RowContext;
-    // proto: FlowSignature | null;
-    // inferredType: TemplatedTypeSpecifier<FunctionTypeSpecifier> | null;
+    // inputRows: Obj<ArgumentRowContext>;
+    // outputRow: ArgumentRowContext;
+    functionSignature: FunctionSignature | null;
+    type: TExpr | null;
     isUsed: boolean;
 }
-export interface FunctionFlowElementContext {
+export interface FunctionNodeContext {
     kind: 'function';
-    // ref: FunctionFlowElement;
     problems: NodeProblem[];
-    criticalSubProblems: number;
 }
 
 export type RowDisplay = 'hidden' | 'simple' | 'initializer' | 'destructured';
 
-export interface RowContext {
-    // ref?: InputRowState;
-    display: RowDisplay;
-    value?: InitializerValue;
-    problems: RowProblem[];
-}
+// export interface ArgumentRowContext {
+//     display: RowDisplay;
+//     value?: InitializerValue;
+//     problems: RowProblem[];
+// }
 
 interface PlaceholderProblem {
     message: string;
 }
-
 export type DocumentProblem =
     PlaceholderProblem
 
@@ -149,4 +123,4 @@ export type RowProblem =
     | InvalidConnection
 
 
-export type LanguageValidator = (document: FlowDocument) => FlowDocumentContext;
+export type LanguageValidator = (document: FlowDocument) => DocumentContext;

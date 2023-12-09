@@ -10,27 +10,27 @@ const varA = newGenericVar();
 const testEnv = new TypeEnvironment({
     cond: {
         kind: 'ARROW',
-        params: [bool, varA, varA],
+        param: [bool, varA, varA],
         ret: varA,
     },
     zero: {
         kind: 'ARROW',
-        params: [num],
+        param: [num],
         ret: bool,
     },
     pred: {
         kind: 'ARROW',
-        params: [num],
+        param: [num],
         ret: num,
     },
     less: {
         kind: 'ARROW',
-        params: [num, num],
+        param: [num, num],
         ret: bool,
     },
     add: {
         kind: 'ARROW',
-        params: [num, num],
+        param: [num, num],
         ret: num,
     },
 });

@@ -9,17 +9,19 @@ export function unify(a: TExpr, b: TExpr) {
     if (a.kind === 'CONST' && b.kind === 'CONST' && a.name === b.name) {
         return;
     }
-    if (a.kind === 'APP' && b.kind === 'APP' && a.args.length === b.args.length) {
+    if (a.kind === 'APP' && b.kind === 'APP'/*  && a.arg.length === b.arg.length */) {
         unify(a.head, b.head);
-        for (let i = 0; i < a.args.length; i++) {
-            unify(a.args[i], b.args[i]);
-        }
+        unify(a.arg, b.arg);
+        // for (let i = 0; i < a.arg.length; i++) {
+        //     unify(a.arg[i], b.arg[i]);
+        // }
         return;
     }
-    if (a.kind === 'ARROW' && b.kind === 'ARROW' && a.params.length === b.params.length) {
-        for (let i = 0; i < a.params.length; i++) {
-            unify(a.params[i], b.params[i]);
-        }
+    if (a.kind === 'ARROW' && b.kind === 'ARROW'/*  && a.param.length === b.param.length */) {
+        unify(a.param, b.param);
+        // for (let i = 0; i < a.param.length; i++) {
+        //     unify(a.param[i], b.param[i]);
+        // }
         unify(a.ret, b.ret);
         return;
     }
@@ -116,15 +118,17 @@ function occursCheckAdjustLevels(ref: VarRefUnbound, ty: TExpr) {
         }
         if (ty.kind === 'APP') {
             f(ty.head);
-            for (const arg of ty.args) {
-                f(arg);
-            }
+            f(ty.arg);
+            // for (const arg of ty.arg) {
+            //     f(arg);
+            // }
             return;
         }
         if (ty.kind === 'ARROW') {
-            for (const param of ty.params) {
-                f(param);
-            }
+            f(ty.param);
+            // for (const param of ty.param) {
+            //     f(param);
+            // }
             f(ty.ret);
             return;
         }
@@ -167,9 +171,9 @@ function instantiate(level: number, ty: TExpr): TExpr {
                 }
                 return ty; // unbound
             case 'APP':
-                return { kind: 'APP', head: f(ty.head), args: ty.args.map(f) };
+                return { kind: 'APP', head: f(ty.head), arg: f(ty.arg) };
             case 'ARROW':
-                return { kind: 'ARROW', params: ty.params.map(f), ret: f(ty.ret) };
+                return { kind: 'ARROW', param: f(ty.param), ret: f(ty.ret) };
             case 'RECORD':
                 return { kind: 'RECORD', row: f(ty.row) };
             case 'ROWEXTEND':
@@ -183,9 +187,9 @@ function instantiate(level: number, ty: TExpr): TExpr {
 function generalize(level: number, ty: TExpr): TExpr {
     switch (ty.kind) {
         case 'APP':
-            return { kind: 'APP', head: generalize(level, ty.head), args: ty.args.map(t => generalize(level, t)) };
+            return { kind: 'APP', head: generalize(level, ty.head), arg: generalize(level, ty.arg) };
         case 'ARROW':
-            return { kind: 'ARROW', params: ty.params.map(t => generalize(level, t)), ret: generalize(level, ty.ret) };
+            return { kind: 'ARROW', param: generalize(level, ty.param), ret: generalize(level, ty.ret) };
         case 'RECORD':
             return { kind: 'RECORD', row: generalize(level, ty.row) };
         case 'ROWEXTEND':
@@ -207,8 +211,8 @@ function generalize(level: number, ty: TExpr): TExpr {
 
 function matchFunctionType(paramCount: number, ty: TExpr): TArrow {
     if (ty.kind === 'ARROW') {
-        if (ty.params.length !== paramCount) {
-            throw new InferenceError(`Expected ${ty.params.length} parameters, got ${paramCount}.`);
+        if (ty.param.length !== paramCount) {
+            throw new InferenceError(`Expected ${ty.param.length} parameters, got ${paramCount}.`);
         }
         return ty;
     }
@@ -222,7 +226,7 @@ function matchFunctionType(paramCount: number, ty: TExpr): TArrow {
                 .fill(0)
                 .map(() => newUnboundVar(level));
             const newRet = newUnboundVar(level);
-            const arrowTy: TArrow = { kind: 'ARROW', params: newParams, ret: newRet };
+            const arrowTy: TArrow = { kind: 'ARROW', param: newParams, ret: newRet };
             ty.ref = { kind: 'LINK', type: arrowTy };
             return arrowTy;
         }
@@ -248,7 +252,7 @@ export function demoInfer(env: TypeEnvironment, level: number, expr: DemoExpr): 
                 env
             );
             const returnTy = demoInfer(funcEnv, level, expr.body);
-            return { kind: 'ARROW', params: paramTypes, ret: returnTy };
+            return { kind: 'ARROW', param: paramTypes, ret: returnTy };
         }
         case 'LET': {
             const varTy = demoInfer(env, level + 1, expr.defn);
@@ -261,12 +265,13 @@ export function demoInfer(env: TypeEnvironment, level: number, expr: DemoExpr): 
             const newEnv = env.extend(expr.x, varTy);
             const defnTy = demoInfer(newEnv, level + 1, expr.defn);
             const generalDefnTy = generalize(level, defnTy);
+            // if this fails try generalizing varTy instead of defnTy
             unify(varTy, generalDefnTy);
             return demoInfer(newEnv, level, expr.body);
         }
         case 'CALL': {
             const headTy = demoInfer(env, level, expr.head);
-            const { params, ret } = matchFunctionType(expr.args.length, headTy);
+            const { param: params, ret } = matchFunctionType(expr.args.length, headTy);
             for (let i = 0; i < expr.args.length; i++) {
                 const argTy = demoInfer(env, level, expr.args[i]);
                 unify(params[i], argTy);

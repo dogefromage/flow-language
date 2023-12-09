@@ -1,8 +1,8 @@
-import { FlowEnvironmentContent } from "./context";
+import { EnvContent } from "./context";
 import { FlowDocument } from "./state";
 
 export interface FlowModule {
     name: string;
-    declarations: FlowEnvironmentContent;
+    content: EnvContent;
     source: FlowDocument | null;
 }

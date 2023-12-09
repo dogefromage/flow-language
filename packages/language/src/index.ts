@@ -16,23 +16,9 @@ export * from './tools/builder';
 export * from './core/problemTree';
 
 export {
-    collectTotalEnvironmentContent,
-    findEnvironmentSignature,
-    findEnvironmentType,
+    flattenEnvironment,
+    getEnvironmentSignature,
 } from './core/environment';
-
-// export {
-//     createAnyType,
-//     createPrimitiveType,
-//     createListType,
-//     createTupleType,
-//     createFunctionType,
-//     createMapType,
-//     getTemplatedSignatureType,
-//     createAliasType,
-//     createGenericType,
-//     createTemplateParameter,
-// } from './typeSystemOld';
 
 export {
     tryResolveTypeAlias,

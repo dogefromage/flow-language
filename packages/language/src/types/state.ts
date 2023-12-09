@@ -1,76 +1,88 @@
 import { Obj, Size2, Vec2 } from './internal';
-import { InitializerValue } from './signatures';
 
-export interface InputJointLocation {
-    direction: 'input';
+export interface OutputReference {
+    kind: 'output';
     nodeId: string;
-    rowId: string;
-    accessor: string;
-}
-export interface OutputJointLocation {
-    direction: 'output';
-    nodeId: string;
-    // only output row, no rowId here
     accessor?: string;
 }
-export type JointLocation = InputJointLocation | OutputJointLocation
-
-export interface FlowConnection {
+export interface ParameterRerefence {
+    kind: 'parameter';
     nodeId: string;
-    accessor?: string; // used for destructured outputs
+    parameter: string;
+    accessor?: string;
 }
 
-export interface FlowConnectionJoint {
-    typeOnly?: boolean;
-    typeRef?: FlowConnection;
-    valueRef?: FlowConnection;
+export type ConnectionReference = OutputReference | ParameterRerefence;
+
+export type InitializerValue = string | number | boolean; // must be JSON serializable
+
+export interface ConnectionReferencePair {
+    // if type specified, should try to unify with 
+    // values type otherwise create problem
+    valueRef?: ConnectionReference;
+    typeRef?: ConnectionReference;
 }
 
-
-export interface InputRowState {
+export interface ArgumentRowState {
+    id: string;
+    references: Obj<ConnectionReferencePair>;
     destructure?: boolean;
     value?: InitializerValue;
-    connections: Obj<FlowConnectionJoint>;
 }
-
-export interface OutputRowState {
+export interface ReturnOutputRowState {
     destructure?: boolean;
 }
-
-export interface ApplicationFlowElement {
-    kind: 'application';
+export interface ParameterRowState {
     id: string;
-    position: Vec2;
-    funName: string;
-    inputs: Obj<InputRowState>;
-    output: OutputRowState;
+    constraint: ConnectionReferencePair;
+    // destructure?: boolean; TODO
 }
-export interface FunctionFlowElement {
+export interface MatchArmState {
+    id: string;
+    height: number;
+    result: ConnectionReferencePair;
+}
+
+export interface CallNode {
+    kind: 'call';
+    id: string;
+    functionId: string;
+    argumentMap: Obj<ArgumentRowState>;
+    output: ReturnOutputRowState;
+    position: Vec2;
+}
+export interface FunctionNode {
     kind: 'function';
     id: string;
+    parameters: Obj<ParameterRowState>;
+    result: ConnectionReferencePair;
     position: Vec2;
-    size: Size2;
-    parameters: Obj<FlowConnectionJoint>;
-    children: string[];
+    width: number;
 }
-export interface RegionFlowElement {
-    kind: 'region';
+export interface MatchNode {
+    kind: 'match';
     id: string;
+    scrutinee: ConnectionReferencePair;
+    output: ReturnOutputRowState;
+    arms: Obj<MatchArmState>;
+    position: Vec2;
+    width: number;
+}
+export interface CommentNode {
+    kind: 'comment';
+    id: string;
+    attributes: Record<string, string>;
     position: Vec2;
     size: Size2;
-    attributes: Record<string, string>;
 }
 
-export type FlowElement = ApplicationFlowElement | FunctionFlowElement | RegionFlowElement;
+export type FlowNode = CallNode | FunctionNode | MatchNode | CommentNode;
 
 export interface FlowGraph {
     id: string;
-    elements: Obj<FlowElement>;
     attributes: Record<string, string>;
     imports: string[];
-    // generics: TemplateParameter[];
-    // inputs: InputRowSignature[];
-    // output: OutputRowSignature;
+    nodes: Obj<FlowNode>;
 }
 
 export interface FlowDocument {

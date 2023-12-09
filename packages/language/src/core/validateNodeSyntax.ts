@@ -6,7 +6,7 @@ import { generateDefaultValue } from "../typeSystemOld/generateDefaultValue";
 import { closeTemplatedSpecifier, disjoinTemplateLiterals, instantiateTemplatedType, mapTypeInference } from "../typeSystemOld/generics";
 import { tryResolveTypeAlias } from "../typeSystemOld/resolution";
 import { checkElementOfType } from "../typeSystemOld/validateElement";
-import { FlowConnection, FlowEnvironment, FlowSignature, FunctionTypeSpecifier, InputRowSignature, NamespacePath, RowContext, RowProblem, InputRowState, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier, RowDisplay, FlowConnectionJoint } from "../types";
+import { FlowConnection, FlowEnvironment, FlowSignature, FunctionTypeSpecifier, InputRowSignature, NamespacePath, ArgumentRowContext, RowProblem, ArgumentRowState, TemplatedTypeSpecifier, TupleTypeSpecifier, TypeSpecifier, RowDisplay, ConnectionReferencePair } from "../types";
 import { Obj } from "../types/internal";
 import { assertDef, assertTruthy } from "../utils";
 import { mapObj, objToArr, zipInner } from "../utils/functional";
@@ -14,11 +14,11 @@ import { mem } from '../utils/mem';
 import { findEnvironmentSignature } from "./environment";
 
 export const validateNodeSyntax = mem((
-    rowStates: Obj<InputRowState>,
+    rowStates: Obj<ArgumentRowState>,
     signature: FlowSignature,
     inferredNodeOutputs: Obj<TemplatedTypeSpecifier>,
     env: FlowEnvironment,
-): { inferredType: TemplatedTypeSpecifier<FunctionTypeSpecifier>, rowContexts: Obj<RowContext> } => {
+): { inferredType: TemplatedTypeSpecifier<FunctionTypeSpecifier>, rowContexts: Obj<ArgumentRowContext> } => {
     const rowProblemsMap: Record<string, RowProblem[]> = {};
 
     // accumulator for type inference in loop
@@ -29,7 +29,7 @@ export const validateNodeSyntax = mem((
 
     for (let inputIndex = 0; inputIndex < signature.inputs.length; inputIndex++) {
         const input = signature.inputs[inputIndex];
-        const rowState = rowStates[input.id] as InputRowState | undefined;
+        const rowState = rowStates[input.id] as ArgumentRowState | undefined;
 
         const closedInputType = getFunctionParamType(closedAccumulatedType, inputIndex);
         const { incomingTemplate, rowProblems: incomingProblems } =
@@ -74,7 +74,7 @@ export const validateNodeSyntax = mem((
     }
 
     // generate display for rows and pack with problems
-    const rowContexts: Record<string, RowContext> = {};
+    const rowContexts: Record<string, ArgumentRowContext> = {};
     for (let i = 0; i < signature.inputs.length; i++) {
         const input = signature.inputs[i];
         rowContexts[input.id] = bundleRowContext(
@@ -93,7 +93,7 @@ export const validateNodeSyntax = mem((
 
 function findIncomingType(
     input: InputRowSignature,
-    rowState: InputRowState | undefined,
+    rowState: ArgumentRowState | undefined,
     env: FlowEnvironment,
     previousOutputTypes: Obj<TemplatedTypeSpecifier>,
     resolvedInputType: TypeSpecifier,
@@ -102,7 +102,7 @@ function findIncomingType(
     const fallbackType = createTemplatedType(createAnyType());
 
     const incomingTypeMap: Record<string, TemplatedTypeSpecifier> = {};
-    for (const [ argKey, arg ] of Object.entries(rowState?.connections || {})) {
+    for (const [ argKey, arg ] of Object.entries(rowState?.references || {})) {
         let connection = arg.typeRef || arg.valueRef;
         if (connection != null) {
             const { connectedType, accessorProblem } = resolveRowConnection(connection, previousOutputTypes, env);
@@ -286,11 +286,11 @@ function bundleRowContext(
     input: InputRowSignature,
     closedSpecifier: TypeSpecifier,
     env: FlowEnvironment,
-    rowState: InputRowState | undefined,
+    rowState: ArgumentRowState | undefined,
     problems: RowProblem[],
-): RowContext {
+): ArgumentRowContext {
     const resolvedSpec = tryResolveTypeAlias(closedSpecifier, env);
-    const isUnconnected = rowState?.connections[0] == null;
+    const isUnconnected = rowState?.references[0] == null;
 
     if (input.rowType === 'input-variable' && isUnconnected) {
         if (resolvedSpec?.type === 'function') {

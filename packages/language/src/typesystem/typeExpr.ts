@@ -35,11 +35,13 @@ export interface TConst {
 export interface TApp {
     kind: 'APP';
     head: TExpr;
-    args: TExpr[];
+    arg: TExpr;
+    // args: TExpr[];
 }
 export interface TArrow {
     kind: 'ARROW';
-    params: TExpr[];
+    param: TExpr;
+    // params: TExpr[];
     ret: TExpr;
 }
 export interface TVar {
@@ -69,15 +71,15 @@ export type TExpr =
     | TRowEmpty
     | TRowExtend
 
-export const typeExpressions = {
-    const: (name: string): TConst => ({ kind: 'CONST', name }),
-    app: (head: TExpr, args: TExpr[]): TApp => ({ kind: 'APP', head, args }),
-    arrow: (params: TExpr[], ret: TExpr): TArrow => ({ kind: 'ARROW', params, ret }),
-    var: (ref: VarRef): TVar => ({ kind: 'VAR', ref }),
-    record: (row: TExpr): TRecord => ({ kind: 'RECORD', row }),
-    rowEmpty: (): TRowEmpty => ({ kind: 'ROWEMPTY' }),
-    rowExtend: (key: string, field: TExpr, row: TExpr): TRowExtend => ({ kind: 'ROWEXTEND', key, field, row }),
-};
+// export const typeExpressions = {
+//     const: (name: string): TConst => ({ kind: 'CONST', name }),
+//     app: (head: TExpr, args: TExpr[]): TApp => ({ kind: 'APP', head, args }),
+//     arrow: (params: TExpr[], ret: TExpr): TArrow => ({ kind: 'ARROW', params, ret }),
+//     var: (ref: VarRef): TVar => ({ kind: 'VAR', ref }),
+//     record: (row: TExpr): TRecord => ({ kind: 'RECORD', row }),
+//     rowEmpty: (): TRowEmpty => ({ kind: 'ROWEMPTY' }),
+//     rowExtend: (key: string, field: TExpr, row: TExpr): TRowExtend => ({ kind: 'ROWEXTEND', key, field, row }),
+// };
 
 export function tyToString(ty: TExpr) {
     const genericNames = new Map<number, string>();
@@ -97,9 +99,9 @@ export function tyToString(ty: TExpr) {
             case 'CONST':
                 return ty.name;
             case 'APP':
-                return `${bracketize(f(ty.head))}[${ty.args.map(s => bracketize(f(s))).join(', ')}]`;
+                return `${bracketize(f(ty.head))}[${bracketize(f(ty.arg))}]`;
             case 'ARROW':
-                return `(${ty.params.map(s => bracketize(f(s))).join(', ')}) -> ${bracketize(f(ty.ret))}`;
+                return `(${bracketize(f(ty.param))}) -> ${bracketize(f(ty.ret))}`;
             case 'RECORD':
                 return `{ ${tyToString(ty.row)} }`;
             case 'ROWEMPTY':

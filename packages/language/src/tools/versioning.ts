@@ -9,9 +9,5 @@ export function updateObsoleteDocument(doc: FlowDocument): FlowDocument {
 }
 
 function updateObsoleteFlow(flow: FlowGraph): FlowGraph {
-    
-    return {
-        regions: {}, // added regions (15.11.23)
-        ...flow as any,
-    }
+    return flow;
 }
