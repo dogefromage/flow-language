@@ -1,8 +1,8 @@
 import styled from 'styled-components';
 import { useAppSelector } from '../redux/stateHooks';
 import { selectConfig } from '../slices/configSlice';
-import { interlace } from '../utils/functional';
 import Menus from './Menus';
+import { interlace } from '../utils';
 
 const ToolbarDiv = styled.div`
     display: flex;

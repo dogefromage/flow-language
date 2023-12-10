@@ -1,5 +1,5 @@
 import { Reducer } from "redux";
-import { createConsoleError } from "../utils/exceptions";
+import { createConsoleError } from "../utils";
 
 export default function catchExceptionEnhancer<S>
     (reducer: Reducer<S>): Reducer<S> {

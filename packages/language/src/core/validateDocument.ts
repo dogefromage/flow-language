@@ -1,15 +1,18 @@
-import { DocumentContext, DocumentProblem, FlowDocument, FlowGraphContext, LanguageConfiguration } from "../types";
-import { createEnvironment } from "./environment";
+import { DocumentContext, DocumentProblem, Environment, FlowDocument, FlowGraphContext, LanguageConfiguration } from "../types";
+import { createEnvironment, pushScope } from "./environment";
 import { validateFlow } from "./validateFlow";
 
 export const validateDocument = (document: FlowDocument, configuration: LanguageConfiguration) => {
     const flowContexts: Record<string, FlowGraphContext> = {};
     const problems: DocumentProblem[] = [];
 
-    let baseEnvironment = createEnvironment(null);
+    let envWithModules = createEnvironment({ kind: 'module', name: 'root', flows: {} });
+    for (const moduleScope of configuration.modules) {
+        envWithModules = pushScope(envWithModules, moduleScope);
+    }
 
     for (const flow of Object.values(document.flows)) {
-        const flowContext = validateFlow(flow, baseEnvironment, configuration.modules);
+        const flowContext = validateFlow(flow, envWithModules);
         flowContexts[flow.id] = flowContext;
     }
     const result: DocumentContext = {

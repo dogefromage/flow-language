@@ -1,24 +1,26 @@
+import { base26StringToIndex, indexToBase26String } from "../utils";
+import { maximum } from "../utils/functional";
 
-// // TODO optimize here with better algorithm
-// export function compareIdStrings(a: string, b: string) {
-//     return base26StringToIndex(a) - base26StringToIndex(b);
-// }
+// TODO optimize here with better algorithm
+export function compareIdStrings(a: string, b: string) {
+    return base26StringToIndex(a) - base26StringToIndex(b);
+}
 
-// export function getLastestNodeId(...ids: string[]) {
-//     return maximum(ids, compareIdStrings);
-// }
+export function getLastestNodeId(...ids: string[]) {
+    return maximum(ids, compareIdStrings);
+}
 
-// export function *createIdGenerator(...previousIds: string[]) {
-//     let n = 0;
-//     if (previousIds.length) {
-//         const latest = getLastestNodeId(...previousIds);
-//         n = base26StringToIndex(latest);
-//     }
-//     while (true) {
-//         n++;
-//         yield indexToBase26String(n);
-//     }
-// }
+export function *createIdGenerator(...previousIds: string[]) {
+    let n = 0;
+    if (previousIds.length) {
+        const latest = getLastestNodeId(...previousIds);
+        n = base26StringToIndex(latest);
+    }
+    while (true) {
+        n++;
+        yield indexToBase26String(n);
+    }
+}
 
 // export function pasteSelectedNodes(
 //     source: FlowGraph, target: FlowGraph,

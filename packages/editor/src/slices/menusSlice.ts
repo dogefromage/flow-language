@@ -3,7 +3,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { useCallback } from "react";
 import { RootState } from "../redux/rootReducer";
 import { MenusSliceState, MenuStackNode, MenuState } from "../types";
-import { except } from "../utils/exceptions";
+import { except } from "../utils";
 
 const initialState: MenusSliceState = {};
 

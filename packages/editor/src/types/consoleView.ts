@@ -12,4 +12,3 @@ export interface ConsoleSliceState {
     lines: ConsoleLine[];
 }
 
-export class AppException extends Error {}

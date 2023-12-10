@@ -4,22 +4,21 @@ import { FlowJointStyling, SelectionStatus, Size2, Vec2 } from '../types';
 export const FLOW_NODE_ROW_HEIGHT = 24;
 export const FLOW_NODE_MIN_WIDTH = 7 * FLOW_NODE_ROW_HEIGHT;
 
-export const FLOW_REGION_MIN_SIZE: Size2 = {
+export const FLOW_COMMENT_MIN_SIZE: Size2 = {
     w: FLOW_NODE_MIN_WIDTH,
     h: FLOW_NODE_ROW_HEIGHT,
 };
-export const REGION_DEFAULT_COLOR_HEX = '#cccccc';
+export const FLOW_COMMENT_DEFAULT_COLOR_HEX = '#cccccc';
 
-export interface FlowNodeDivProps {
+export interface FlowNodeCallDivProps {
     $position: Vec2;
     $selectionStatus: SelectionStatus;
-    $debugOutlineColor?: string
 }
-export const FlowNodeDiv = styled.div.attrs<FlowNodeDivProps>(({ $position: position }) => ({
+export const FlowNodeCallDiv = styled.div.attrs<FlowNodeCallDivProps>(({ $position }) => ({
     style: {
-        transform: `translate(${position.x}px, ${position.y}px)`,
+        transform: `translate(${$position.x}px, ${$position.y}px)`,
     },
-})) <FlowNodeDivProps>`
+})) <FlowNodeCallDivProps>`
 
     position: absolute;
     z-index: 0;
@@ -31,38 +30,32 @@ export const FlowNodeDiv = styled.div.attrs<FlowNodeDivProps>(({ $position: posi
         $selectionStatus !== 'nothing' && css`
             outline: solid calc(3px / min(var(--zoom), 1)) ${theme.colors.selectionStatus[$selectionStatus]};
     `}
-
-    ${({ $debugOutlineColor }) => $debugOutlineColor && css`
-        outline: 5px solid ${$debugOutlineColor};
-        outline-offset: 5px;
-    `}
-
     background-color: ${({ theme }) => theme.colors.flowEditor.nodeColor};
 
     cursor: pointer;
 `;
 
-export interface FlowRegionDivProps {
+export interface FlowNodeCommentDivProps {
     $position: Vec2;
     $size: Size2;
     $selectionStatus: SelectionStatus;
     $color: string;
 }
-export const FlowRegionDiv = styled.div.attrs<FlowRegionDivProps>(({ $position, $size }) => ({
+export const FlowNodeCommentDiv = styled.div.attrs<FlowNodeCommentDivProps>(({ $position, $size }) => ({
     style: {
         transform: `translate(${$position.x}px, ${$position.y}px)`,
         width: `${$size.w}px`,
         height: `${$size.h}px`,
         ['--height-pixels']: $size.h,
     },
-})) <FlowRegionDivProps>`
+})) <FlowNodeCommentDivProps>`
 
     position: absolute;
     z-index: 0;
     top: 0;
     left: 0;
-    min-width: ${FLOW_REGION_MIN_SIZE.w}px;
-    min-height: ${FLOW_REGION_MIN_SIZE.h}px;
+    min-width: ${FLOW_COMMENT_MIN_SIZE.w}px;
+    min-height: ${FLOW_COMMENT_MIN_SIZE.h}px;
 
     padding: 4px 8px;
     /* overflow: hidden; */

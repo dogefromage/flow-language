@@ -1,6 +1,7 @@
 import * as lang from "noodle-language";
-import { Vec2 } from "./utils";
+import { assert } from "../utils";
 import { PanelState } from "./panelManager";
+import { Vec2 } from "./utils";
 
 export const FLOW_EDITOR_VIEW_TYPE = 'flow-editor';
 
@@ -14,10 +15,10 @@ interface EditorActionLocation {
     clientPosition: Vec2;
 }
 export interface DraggingJointContext {
-    fromJoint: lang.JointLocation;
-    syntax: lang.EdgeSyntacticType;
-    dataType: lang.TypeSpecifier;
-    environment: lang.FlowEnvironment;
+    fromJoint: JointLocation;
+    syntax: lang.ReferenceSyntacticType;
+    // dataType: lang.TExpr;
+    // env: lang.EnvScope;
 }
 
 export interface EditorActionNeutralState {
@@ -44,13 +45,52 @@ export type EditorActionState =
     | EditorActionDraggingLinkState
     | EditorActionAddNodeWithConnectionState
 
-export type JointLocationKey = `${string}.${string}.${number}` | `${string}.${string}`;
+interface ArgumentJointLocation {
+    kind: 'argument';
+    nodeId: string;
+    argumentId: string;
+    accessor?: string;
+} 
+interface OutputJointLocation {
+    kind: 'output';
+    nodeId: string;
+    accessor?: string;
+}
+interface ParameterJointLocation {
+    kind: 'parameter';
+    nodeId: string;
+    parameterId: string;
+} 
+interface ResultJointLocation {
+    kind: 'result';
+    nodeId: string;
+}
+export type JointLocation = ArgumentJointLocation | OutputJointLocation | ParameterJointLocation | ResultJointLocation;
+export type JointLocationDigest = string & { __jointLocationDigest: true };
+
+export function jointLocationDirection(loc: JointLocation) {
+    switch (loc.kind) {
+        case 'argument':
+        case 'result':
+            return 'input';
+        case 'output':
+        case 'parameter':
+            return 'output';
+    }
+    assert(0);
+}
+
+export interface FlowEdge {
+    id: string;
+    source: JointLocation;
+    target: JointLocation;
+}
 
 export interface FlowEditorPanelState extends PanelState {
     flowStack: string[];
     cameras: Record<string, PlanarCamera>;
     state: EditorActionState;
-    relativeJointPosition: Map<JointLocationKey, Vec2>;
+    relativeJointPosition: Map<JointLocationDigest, Vec2>;
 }
 
 export interface FlowJointStyling {
@@ -60,15 +100,13 @@ export interface FlowJointStyling {
     borderStyle: 'dashed' | 'solid';
 }
 
-export type FlowConnectingStrategy = 'list' | 'static';
-
 export interface ContextSliceState {
-    documentContext: lang.FlowDocumentContext | null;
+    documentContext: lang.DocumentContext | null;
 }
 
 export const EDITOR_ITEM_ID_ATTR = 'data-id';
 export const EDITOR_SELECTABLE_ITEM_CLASS = 'editor-selectable-items';
-export const EDITOR_SELECTABLE_ITEM_TYPE_ATTR = 'selectable-type';
+// export const EDITOR_SELECTABLE_ITEM_TYPE_ATTR = 'selectable-type';
 
 export const DEFAULT_EDITOR_CAMERA = { position: { x: 0, y: 0 }, zoom: 1, };
 

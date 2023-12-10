@@ -49,6 +49,12 @@ function createMiddleware(getDefaultMiddleWare: CurriedGetDefaultMiddleware, con
 function generatePreloadedState(config: EditorConfig): RecursivePartial<RootState> {
     return {
         config,
+        document: {
+            future: [],
+            past: [],
+            present: config.defaultDocument,
+            lastRecord: undefined,
+        }
     };
 }
 

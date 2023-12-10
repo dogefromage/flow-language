@@ -1,8 +1,7 @@
 import { assert } from "../utils";
-import { DemoExpr } from "./demolang";
-import { InferenceError, TArrow, TExpr, TypeEnvironment, VarRefUnbound, newUnboundVar, tyToString } from "./typeExpr";
+import { InferenceError, TExpr, VarRefUnbound, newUnboundVar, tyToString } from "./typeExpr";
 
-export function unify(a: TExpr, b: TExpr) {
+export function unifyTypes(a: TExpr, b: TExpr) {
     if (a === b) {
         return;
     }
@@ -10,31 +9,31 @@ export function unify(a: TExpr, b: TExpr) {
         return;
     }
     if (a.kind === 'APP' && b.kind === 'APP'/*  && a.arg.length === b.arg.length */) {
-        unify(a.head, b.head);
-        unify(a.arg, b.arg);
+        unifyTypes(a.head, b.head);
+        unifyTypes(a.arg, b.arg);
         // for (let i = 0; i < a.arg.length; i++) {
         //     unify(a.arg[i], b.arg[i]);
         // }
         return;
     }
     if (a.kind === 'ARROW' && b.kind === 'ARROW'/*  && a.param.length === b.param.length */) {
-        unify(a.param, b.param);
+        unifyTypes(a.param, b.param);
         // for (let i = 0; i < a.param.length; i++) {
         //     unify(a.param[i], b.param[i]);
         // }
-        unify(a.ret, b.ret);
+        unifyTypes(a.ret, b.ret);
         return;
     }
     if (a.kind === 'VAR' && b.kind === 'VAR' && a.ref.kind === 'LINK' && b.ref.kind === 'LINK') {
-        unify(a.ref.type, b.ref.type);
+        unifyTypes(a.ref.type, b.ref.type);
         return;
     }
     if (a.kind === 'VAR' && a.ref.kind === 'LINK') {
-        unify(a.ref.type, b);
+        unifyTypes(a.ref.type, b);
         return;
     }
     if (b.kind === 'VAR' && b.ref.kind === 'LINK') {
-        unify(a, b.ref.type);
+        unifyTypes(a, b.ref.type);
         return;
     }
     if (a.kind === 'VAR' && b.kind === 'VAR' && a.ref.kind === 'UNBOUND' && b.ref.kind === 'UNBOUND' && a.ref.id === b.ref.id) {
@@ -47,10 +46,10 @@ export function unify(a: TExpr, b: TExpr) {
     }
     if (b.kind === 'VAR' && b.ref.kind === 'UNBOUND') {
         // mirror
-        return unify(b, a);
+        return unifyTypes(b, a);
     }
     if (a.kind === 'RECORD' && b.kind === 'RECORD') {
-        unify(a.row, b.row);
+        unifyTypes(a.row, b.row);
         return;
     }
     if (a.kind === 'ROWEMPTY' && b.kind === 'ROWEMPTY') {
@@ -63,7 +62,7 @@ export function unify(a: TExpr, b: TExpr) {
         if (restRow1TVarUnboundRef?.ref.kind === 'LINK') {
             throw new InferenceError(`Recursive row types.`);
         }
-        unify(rest1, rest2);
+        unifyTypes(rest1, rest2);
         return;
     }
 
@@ -76,7 +75,7 @@ function rewriteRow(row2: TExpr, key1: string, field1: TExpr): TExpr {
         throw new InferenceError(`Could not find row '${key1}'.`);
     }
     if (row2.kind === 'ROWEXTEND' && row2.key === key1) {
-        unify(field1, row2.field);
+        unifyTypes(field1, row2.field);
         return row2.row;
     }
     if (row2.kind === 'ROWEXTEND') {
@@ -107,6 +106,7 @@ function occursCheckAdjustLevels(ref: VarRefUnbound, ty: TExpr) {
             return f(ty.ref.type);
         }
         if (ty.kind === 'VAR' && ty.ref.kind === 'GENERIC') {
+            // generic must be instantiated when taken from env
             assert(false);
         }
         if (ty.kind === 'VAR' && ty.ref.kind === 'UNBOUND') {
@@ -149,7 +149,12 @@ function occursCheckAdjustLevels(ref: VarRefUnbound, ty: TExpr) {
     f(ty);
 }
 
-function instantiate(level: number, ty: TExpr): TExpr {
+/**
+ * Creates a copy of the given type where:
+ * - all generic variables are replaced with fresh unbound variables of provided level.
+ * - all links are resolved.
+ */
+export function instantiateType(level: number, ty: TExpr): TExpr {
     const idVarMap = new Map<number, TExpr>();
     const f = (ty: TExpr): TExpr => {
         switch (ty.kind) {
@@ -184,19 +189,22 @@ function instantiate(level: number, ty: TExpr): TExpr {
     return f(ty);
 }
 
-function generalize(level: number, ty: TExpr): TExpr {
+/**
+ * Returns a generalized type by replacing unbound variables above and excluding the given level with generic variables.
+ */
+export function generalizeType(level: number, ty: TExpr): TExpr {
     switch (ty.kind) {
         case 'APP':
-            return { kind: 'APP', head: generalize(level, ty.head), arg: generalize(level, ty.arg) };
+            return { kind: 'APP', head: generalizeType(level, ty.head), arg: generalizeType(level, ty.arg) };
         case 'ARROW':
-            return { kind: 'ARROW', param: generalize(level, ty.param), ret: generalize(level, ty.ret) };
+            return { kind: 'ARROW', param: generalizeType(level, ty.param), ret: generalizeType(level, ty.ret) };
         case 'RECORD':
-            return { kind: 'RECORD', row: generalize(level, ty.row) };
+            return { kind: 'RECORD', row: generalizeType(level, ty.row) };
         case 'ROWEXTEND':
-            return { kind: 'ROWEXTEND', key: ty.key, field: generalize(level, ty.field), row: generalize(level, ty.row) };
+            return { kind: 'ROWEXTEND', key: ty.key, field: generalizeType(level, ty.field), row: generalizeType(level, ty.row) };
         case 'VAR':
             if (ty.ref.kind === 'LINK') {
-                return generalize(level, ty.ref.type);
+                return generalizeType(level, ty.ref.type);
             }
             if (ty.ref.kind === 'UNBOUND' && ty.ref.level > level) {
                 return { kind: 'VAR', ref: { kind: 'GENERIC', id: ty.ref.id } };
@@ -205,104 +213,6 @@ function generalize(level: number, ty: TExpr): TExpr {
         case 'CONST':
         case 'ROWEMPTY':
             return ty;
-    }
-    assert(false);
-}
-
-function matchFunctionType(paramCount: number, ty: TExpr): TArrow {
-    if (ty.kind === 'ARROW') {
-        if (ty.param.length !== paramCount) {
-            throw new InferenceError(`Expected ${ty.param.length} parameters, got ${paramCount}.`);
-        }
-        return ty;
-    }
-    if (ty.kind === 'VAR') {
-        if (ty.ref.kind === 'LINK') {
-            return matchFunctionType(paramCount, ty.ref.type);
-        }
-        if (ty.ref.kind === 'UNBOUND') {
-            let level = ty.ref.level;
-            const newParams = new Array(paramCount)
-                .fill(0)
-                .map(() => newUnboundVar(level));
-            const newRet = newUnboundVar(level);
-            const arrowTy: TArrow = { kind: 'ARROW', param: newParams, ret: newRet };
-            ty.ref = { kind: 'LINK', type: arrowTy };
-            return arrowTy;
-        }
-    }
-    throw new InferenceError(`Expected a function.`);
-}
-
-export function demoInfer(env: TypeEnvironment, level: number, expr: DemoExpr): TExpr {
-    switch (expr.kind) {
-        case 'IDENTIFIER': {
-            if (env.has(expr.value)) {
-                return instantiate(level, env.get(expr.value));
-            }
-            throw new InferenceError(`Unknown identifier '${expr.value}'.`);
-        }
-        case 'LITERAL': {
-            return { kind: 'CONST', name: typeof expr.value };
-        }
-        case 'FUN': {
-            const paramTypes = expr.params.map(() => newUnboundVar(level));
-            const funcEnv = expr.params.reduce(
-                (envAcc, param, index) => envAcc.extend(param, paramTypes[index]),
-                env
-            );
-            const returnTy = demoInfer(funcEnv, level, expr.body);
-            return { kind: 'ARROW', param: paramTypes, ret: returnTy };
-        }
-        case 'LET': {
-            const varTy = demoInfer(env, level + 1, expr.defn);
-            const generalTy = generalize(level, varTy);
-            const newEnv = env.extend(expr.x, generalTy);
-            return demoInfer(newEnv, level, expr.body);
-        }
-        case 'LETREC': {
-            const varTy = newUnboundVar(level);
-            const newEnv = env.extend(expr.x, varTy);
-            const defnTy = demoInfer(newEnv, level + 1, expr.defn);
-            const generalDefnTy = generalize(level, defnTy);
-            // if this fails try generalizing varTy instead of defnTy
-            unify(varTy, generalDefnTy);
-            return demoInfer(newEnv, level, expr.body);
-        }
-        case 'CALL': {
-            const headTy = demoInfer(env, level, expr.head);
-            const { param: params, ret } = matchFunctionType(expr.args.length, headTy);
-            for (let i = 0; i < expr.args.length; i++) {
-                const argTy = demoInfer(env, level, expr.args[i]);
-                unify(params[i], argTy);
-            }
-            return ret;
-        }
-        case 'RECORDEMPTY':
-            return { kind: 'RECORD', row: { kind: 'ROWEMPTY' } };
-        case 'RECORDSELECT': {
-			// (* inlined code for Call of function with type "forall[a r] {label : a | r} -> a" *)
-            const restRowTy = newUnboundVar(level);
-            const fieldTy = newUnboundVar(level);
-            const paramTy: TExpr = { kind: 'RECORD', row: { kind: 'ROWEXTEND', key: expr.key, field: fieldTy, row: restRowTy } };
-            unify(paramTy, demoInfer(env, level, expr.rec));
-            return fieldTy;
-        }
-        case 'RECORDRESTRICT':
-			// inlined code for Call of function with type "forall[a r] {label : a | r} -> {r}"
-            const restRowTy = newUnboundVar(level);
-            const fieldTy = newUnboundVar(level);
-            const paramTy: TExpr = { kind: 'RECORD', row: { kind: 'ROWEXTEND', key: expr.key, field: fieldTy, row: restRowTy } };
-            unify(paramTy, demoInfer(env, level, expr.rec));
-            return { kind: 'RECORD', row: restRowTy };
-        case 'RECORDEXTEND': {
-			// (* inlined code for Call of function with type "forall[a r] (a, {r}) -> {label : a | r}" *)
-            const fieldVar = newUnboundVar(level);
-            unify(fieldVar, demoInfer(env, level, expr.value));
-            const restRowVar = newUnboundVar(level);
-            unify({ kind: 'RECORD', row: restRowVar }, demoInfer(env, level, expr.rest));
-            return { kind: 'RECORD', row: { kind: 'ROWEXTEND', key: expr.key, field: fieldVar, row: restRowVar } };
-        }
     }
     assert(false);
 }

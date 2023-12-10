@@ -1,28 +1,27 @@
-import { TypeSystemExceptionData } from '../typeSystemOld/exceptionHandling';
 import { TExpr } from '../typesystem/typeExpr';
+import { Environment, FlowScope, FunctionSignature, LocalScope } from './env';
 import { Obj } from './internal';
-import { FunctionSignature, TypeSignature } from './signatures';
 import { FlowDocument } from './state';
 
-export type EnvScope = {
-    parent: EnvScope | null;
-    namespace: EnvScopeFrame | null;
-}
-export interface EnvScopeFrame {
-    content: EnvContent;
-}
-export type EnvContent = Record<string, TypeSignature>;
+// export type EnvScope = {
+//     parent: EnvScope | null;
+//     namespace: EnvScopeFrame | null;
+// }
+// export interface EnvScopeFrame {
+//     content: EnvContent;
+// }
+// export type EnvContent = Record<string, TypeSignature>;
 
-export type EdgeStatus = 'normal' | 'redundant' | 'cyclic' | 'illegal';
-export type EdgeSyntacticType = 'value-and-type' | 'type-only';
+export type ReferenceStatus = 'normal' | 'redundant' | 'cyclic' | 'illegal';
+export type ReferenceSyntacticType = 'value-and-type' | 'type-only';
 
-export interface EdgeContext {
-    id: string;
-    source: string;
-    target: string;
-    status: EdgeStatus;
-    syntacticType: EdgeSyntacticType;
-}
+// export interface EdgeContext {
+//     id: string;
+//     source: string;
+//     target: string;
+//     status: EdgeStatus;
+//     syntacticType: EdgeSyntacticType;
+// }
 
 export interface DocumentContext {
     problems: DocumentProblem[];
@@ -32,7 +31,7 @@ export interface DocumentContext {
 export interface FlowGraphContext {
     problems: FlowGraphProblem[];
     nodes: Obj<NodeContext>;
-    edges: Obj<EdgeContext>;
+    env: Environment;
 }
 
 export type NodeContext = CallNodeContext | FunctionNodeContext;
@@ -104,12 +103,12 @@ interface IncompatibleArgumentType {
     type: 'incompatible-argument-type';
     message: string;
     connectionIndex: number;
-    typeProblem: TypeSystemExceptionData;
+    // typeProblem: TypeSystemExceptionData;
 }
 interface InvalidValue {
     type: 'invalid-value';
     message: string;
-    typeProblem?: TypeSystemExceptionData;
+    // typeProblem?: TypeSystemExceptionData;
 }
 interface InvalidConnection {
     type: 'invalid-connection';

@@ -3,9 +3,8 @@ import { castDraft } from "immer";
 import { useCallback } from "react";
 import { panelStateEnhancer, useSelectPanelState } from "../redux/panelStateEnhancer";
 import { RootState } from "../redux/rootReducer";
-import { CreatePanelStateCallback, DEFAULT_EDITOR_CAMERA, DraggingJointContext, FLOW_EDITOR_VIEW_TYPE, FlowEditorPanelState, getActiveEditorCamera, JointLocationKey, PlanarCamera, Vec2 } from "../types";
-import { except } from "../utils/exceptions";
-import { clamp } from "../utils/math";
+import { CreatePanelStateCallback, DraggingJointContext, FLOW_EDITOR_VIEW_TYPE, FlowEditorPanelState, getActiveEditorCamera, JointLocationDigest, PlanarCamera, Vec2 } from "../types";
+import { clamp, except } from "../utils";
 import { getPanelState } from "../utils/panelManager";
 import { pointScreenToWorld, vectorScreenToWorld } from "../utils/planarCameraMath";
 
@@ -103,11 +102,11 @@ export const flowEditorPanelsSlice = createSlice({
                 draggingContext: lastState.draggingContext,
             };
         },
-        setRelativeClientJointPositions: (s, a: PayloadAction<{ panelId: string, updates: Array<{ jointKey: JointLocationKey, relativeClientPosition: Vec2 }> }>) => {
+        setRelativeClientJointPositions: (s, a: PayloadAction<{ panelId: string, updates: Array<{ jointKey: JointLocationDigest, relativeClientPosition: Vec2 }> }>) => {
             const ps = getPanelState(s, a);
             const cam = getActiveEditorCamera(ps);
             for (const { jointKey, relativeClientPosition } of a.payload.updates) {
-                const relativeWorldPos = vectorScreenToWorld(cam, relativeClientPosition);
+                const relativeWorldPos = vectorScreenToWorld(cam.zoom, relativeClientPosition);
                 ps.relativeJointPosition.set(jointKey, relativeWorldPos);
             }
         },

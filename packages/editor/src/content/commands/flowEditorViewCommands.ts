@@ -1,7 +1,7 @@
-import { selectEditor } from "../../slices/editorSlice";
-import { flowsAddRegion, flowsPasteNodes, selectFlows } from "../../slices/flowsSlice";
+import { flowsAddCommentNode, selectFlows } from "../../slices/flowsSlice";
 import { flowEditorPanelsUpdateActiveCamera, flowEditorSetStateAddNodeAtPosition } from "../../slices/panelFlowEditorSlice";
 import { EDITOR_SELECTABLE_ITEM_CLASS, FLOW_EDITOR_VIEW_TYPE, FlowEditorPanelState, PlanarCamera, createCommandGroup, createViewCommandUnlabeled, getActiveEditorCamera } from "../../types";
+import { except } from "../../utils";
 import { clientToOffsetPos, getPanelDivId } from "../../utils/panelManager";
 import { pointScreenToWorld } from "../../utils/planarCameraMath";
 
@@ -9,7 +9,7 @@ export const {
     commands: flowEditorCommandList,
     labels: {
         addNodeAtPosition: flowEditorAddNodeAtPositionCommand,
-        addRegionAtPosition: flowEditorAddRegionAtPositionCommand,
+        addCommandAtPosition: flowEditorAddCommandAtPositionCommand,
         paste: flowEditorPasteCommand,
         fitCamera: flowEditorFitCameraCommand,
     }
@@ -28,15 +28,15 @@ export const {
             },
             [{ key: ' ', displayName: 'Space' }],
         ),
-        addRegionAtPosition: createViewCommandUnlabeled<FlowEditorPanelState>(
+        addCommandAtPosition: createViewCommandUnlabeled<FlowEditorPanelState>(
             FLOW_EDITOR_VIEW_TYPE,
-            'Add Region',
+            'Add Comment',
             ({ panelState, offsetCursor, offsetPanelCenter }, params) => {
                 const activeFlow = panelState.flowStack[0];
                 const camera = getActiveEditorCamera(panelState);
                 const offsetPoint = offsetCursor || offsetPanelCenter;
                 const worldPoint = pointScreenToWorld(camera, offsetPoint);
-                return flowsAddRegion({
+                return flowsAddCommentNode({
                     flowId: activeFlow,
                     position: worldPoint,
                     undo: { desc: 'Added region in active flow.' },
@@ -47,14 +47,15 @@ export const {
             FLOW_EDITOR_VIEW_TYPE,
             'Paste',
             ({ appState, panelState: { flowStack } }, params) => {
-                const { clipboard } = selectEditor(appState);
-                const flowId = flowStack[0];
-                if (flowId == null || clipboard == null) return;
-                return flowsPasteNodes({
-                    flowId,
-                    clipboard,
-                    undo: { desc: `Pasted ${clipboard.selection.items.length} elements into active flow.` },
-                });
+                except(`Implement paste`);
+                // const { clipboard } = selectEditor(appState);
+                // const flowId = flowStack[0];
+                // if (flowId == null || clipboard == null) return;
+                // return flowsPasteNodes({
+                //     flowId,
+                //     clipboard,
+                //     undo: { desc: `Pasted ${clipboard.selection.items.length} elements into active flow.` },
+                // });
             },
             [{ key: 'v', ctrlKey: true }],
         ),

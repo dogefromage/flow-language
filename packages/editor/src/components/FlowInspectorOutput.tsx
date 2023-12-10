@@ -1,61 +1,53 @@
-import { PropsWithChildren, useMemo } from 'react';
-import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { documentRenameOutput } from '../slices/documentSlice';
-import { useSelectSingleFlow } from '../slices/flowsSlice';
-import { flowInspectorPanelsSelectItem } from '../slices/panelFlowInspectorSlice';
-import { listItemRegex } from '../utils/flows';
-import FormSortableList from './FormSortableList';
-import { useSelectFlowInspectorPanel } from '../slices/panelFlowInspectorSlice';
 
-interface FlowInspectorOutputProps {
-    panelId: string;
-    flowId: string;
-}
+// interface FlowInspectorOutputProps {
+//     panelId: string;
+//     flowId: string;
+// }
 
-const FlowInspectorOutput = ({ panelId, flowId }: PropsWithChildren<FlowInspectorOutputProps>) => {
-    const dispatch = useAppDispatch();
-    const panelState = useAppSelector(useSelectFlowInspectorPanel(panelId));
-    const flow = useAppSelector(useSelectSingleFlow(flowId));
+// const FlowInspectorOutput = ({ panelId, flowId }: PropsWithChildren<FlowInspectorOutputProps>) => {
+//     const dispatch = useAppDispatch();
+//     const panelState = useAppSelector(useSelectFlowInspectorPanel(panelId));
+//     const flow = useAppSelector(useSelectSingleFlow(flowId));
 
-    if (!flow) return null;
+//     if (!flow) return null;
 
-    const selectedId = panelState?.selectedItem?.type === 'output' ?
-        panelState?.selectedItem?.id : '';
+//     const selectedId = panelState?.selectedItem?.type === 'output' ?
+//         panelState?.selectedItem?.id : '';
 
-    const mutableOrder = useMemo(() => [structuredClone(flow.output)], [flow]);
+//     const mutableOrder = useMemo(() => [structuredClone(flow.output)], [flow]);
 
-    const select = (id: string) => {
-        dispatch(flowInspectorPanelsSelectItem({
-            panelId,
-            type: 'output',
-            id,
-        }))
-    }
+//     const select = (id: string) => {
+//         dispatch(flowInspectorPanelsSelectItem({
+//             panelId,
+//             type: 'output',
+//             id,
+//         }))
+//     }
 
-    return (
-        <FormSortableList
-            order={mutableOrder}
-            selected={selectedId}
-            disableAdd
-            onRename={(_, newName) => {
-                dispatch(documentRenameOutput({
-                    flowId,
-                    newName,
-                    undo: { desc: `Renamed output to '${newName}'.` },
-                }));
-                select(newName);
-            }}
-            onValidateNewName={(newName, oldName) => {
-                if (newName.length == 0) {
-                    return { message: 'Please provide a name.' };
-                }
-                if (!listItemRegex.test(newName)) {
-                    return { message: 'Please provide a valid name. A name should only contain letters, digits, underscores and should not start with a number.' };
-                }
-            }}
-            onSelect={select}
-        />
-    );
-}
+//     return (
+//         <FormSortableList
+//             order={mutableOrder}
+//             selected={selectedId}
+//             disableAdd
+//             onRename={(_, newName) => {
+//                 dispatch(documentRenameOutput({
+//                     flowId,
+//                     newName,
+//                     undo: { desc: `Renamed output to '${newName}'.` },
+//                 }));
+//                 select(newName);
+//             }}
+//             onValidateNewName={(newName, oldName) => {
+//                 if (newName.length == 0) {
+//                     return { message: 'Please provide a name.' };
+//                 }
+//                 if (!listItemRegex.test(newName)) {
+//                     return { message: 'Please provide a valid name. A name should only contain letters, digits, underscores and should not start with a number.' };
+//                 }
+//             }}
+//             onSelect={select}
+//         />
+//     );
+// }
 
-export default FlowInspectorOutput;
+// export default FlowInspectorOutput;

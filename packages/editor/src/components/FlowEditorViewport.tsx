@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { flowEditorAddNodeAtPositionCommand, flowEditorAddRegionAtPositionCommand, flowEditorFitCameraCommand, flowEditorPasteCommand } from '../content/commands/flowEditorViewCommands';
+import { flowEditorAddNodeAtPositionCommand, flowEditorAddCommandAtPositionCommand, flowEditorFitCameraCommand, flowEditorPasteCommand } from '../content/commands/flowEditorViewCommands';
 import { editCopySelectedCommand, editCutSelectedCommand, editDeleteSelectedCommand } from '../content/commands/globalEditorCommands';
 import { useAppSelector } from '../redux/stateHooks';
 import { useSelectFlowEditorPanel } from '../slices/panelFlowEditorSlice';
@@ -42,11 +42,9 @@ const FlowEditorViewport = ({ panelId }: Props) => {
         'Flow Viewport',
         [
             flowEditorAddNodeAtPositionCommand,
-            flowEditorAddRegionAtPositionCommand,
+            flowEditorAddCommandAtPositionCommand,
             editDeleteSelectedCommand,
             CONTEXT_MENU_DIVIDER,
-            // 'flowEditor.createFlow',
-            // CONTEXT_MENU_DIVIDER,
             editCopySelectedCommand,
             editCutSelectedCommand,
             flowEditorPasteCommand,

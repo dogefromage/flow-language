@@ -6,14 +6,14 @@ import styled from 'styled-components';
 import { Vector2 } from 'threejs-math';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { editorSetSelection } from '../slices/editorSlice';
-import { flowsAddRegion } from '../slices/flowsSlice';
 import { CAMERA_MAX_ZOOM, CAMERA_MIN_ZOOM, flowEditorPanelsUpdateActiveCamera, flowEditorSetStateAddNodeWithConnection, flowEditorUpdateDragginLinkPosition, useSelectFlowEditorPanel } from '../slices/panelFlowEditorSlice';
 import { FLOW_NODE_ROW_HEIGHT, MouseSelectionDiv } from '../styles/flowStyles';
-import { EDITOR_ITEM_ID_ATTR, EDITOR_SELECTABLE_ITEM_CLASS, EDITOR_SELECTABLE_ITEM_TYPE_ATTR, PlanarCamera, Rect, Vec2, getActiveEditorCamera } from '../types';
-import { clamp, rectanglesIntersect } from '../utils/math';
+import { EDITOR_ITEM_ID_ATTR, EDITOR_SELECTABLE_ITEM_CLASS, PlanarCamera, Rect, Vec2, getActiveEditorCamera } from '../types';
+import { clamp, rectanglesIntersect } from '../utils';
 import { pointScreenToWorld, vectorScreenToWorld } from '../utils/planarCameraMath';
 import FlowEditorContent from './FlowEditorContent';
 import { DRAG_JOIN_DND_TAG } from './FlowJoint';
+import { flowsAddCommentNode } from '../slices/flowsSlice';
 
 interface DivProps {
     camera: PlanarCamera;
@@ -100,12 +100,12 @@ const FlowEditorTransform = ({ flowId, panelId }: Props) => {
             };
             return rectanglesIntersect(offsetNode, box);
         });
-        const selection: lang.FlowSelection = { flowId, items: [] };
+        const selection: lang.FlowSelection = { flowId, nodes: [] };
         intersectingItems.forEach(div => {
             const id = div.getAttribute(EDITOR_ITEM_ID_ATTR);
-            const type = div.getAttribute(EDITOR_SELECTABLE_ITEM_TYPE_ATTR);
-            if (id && type) {
-                selection.items.push({ id, type: type as 'node' | 'region' });
+            // const type = div.getAttribute(EDITOR_SELECTABLE_ITEM_TYPE_ATTR);
+            if (id?.length) {
+                selection.nodes.push(id);
             }
         });
         dispatch(editorSetSelection({ selection }));
@@ -115,9 +115,9 @@ const FlowEditorTransform = ({ flowId, panelId }: Props) => {
         const cam = getActiveEditorCamera(panelStateRef.current);
         if (!cam) return;
         const worldPoint = pointScreenToWorld(cam, rect);
-        const worldSizeVec = vectorScreenToWorld(cam, { x: rect.w, y: rect.h });
+        const worldSizeVec = vectorScreenToWorld(cam.zoom, { x: rect.w, y: rect.h });
         const worldSize = { w: worldSizeVec.x, h: worldSizeVec.y };
-        dispatch(flowsAddRegion({
+        dispatch(flowsAddCommentNode({
             flowId,
             position: worldPoint,
             size: worldSize,
@@ -281,11 +281,7 @@ const FlowEditorTransform = ({ flowId, panelId }: Props) => {
             <TransformingDiv>
                 {
                     flowId &&
-                    <FlowEditorContent
-                        panelId={panelId}
-                        flowId={flowId}
-                        getPanelState={getPanelState}
-                    />
+                    <FlowEditorContent panelId={panelId} flowId={flowId} />
                 }
             </TransformingDiv>
             {

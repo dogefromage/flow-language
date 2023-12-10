@@ -1,6 +1,5 @@
 
 export * from './types';
-
 export * as content from './content/index.public';
 
 export {
@@ -11,26 +10,14 @@ export {
     updateObsoleteDocument,
 } from './tools/versioning';
 
-export * from './tools/modification';
-export * from './tools/builder';
-export * from './core/problemTree';
-
 export {
-    flattenEnvironment,
-    getEnvironmentSignature,
+    // getInstantiatedEnvType,
 } from './core/environment';
 
-export {
-    tryResolveTypeAlias,
-} from './typeSystemOld/resolution';
-
-export {
-    isSubsetType,
-} from './typeSystemOld/comparison';
-export {
-    assertDef,
-    assertNever,
-    assertTruthy,
-} from './utils/index';
-
 export * as utils from './utils/functional';
+
+export {
+    createIdGenerator,
+} from './tools/modification';
+
+export { TExpr, tyToString } from './typesystem/typeExpr';

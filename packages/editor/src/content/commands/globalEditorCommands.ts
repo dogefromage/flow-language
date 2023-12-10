@@ -1,7 +1,7 @@
 import { undoEnhancerRedo, undoEnhancerUndo } from "../../redux/undoableEnhancer";
 import { selectDocument } from "../../slices/documentSlice";
 import { editorSetClipboard, editorSetSelection, selectEditor } from "../../slices/editorSlice";
-import { flowsRemoveNodes } from "../../slices/flowsSlice";
+import { flowsRemoveSelection } from "../../slices/flowsSlice";
 import { createCommandGroup, createGlobalCommandUnlabeled } from "../../types";
 
 export const {
@@ -32,7 +32,7 @@ export const {
             ({ appState }) => {
                 const { selection, activeFlow } = selectEditor(appState);
                 if (activeFlow == null || selection == null) return;
-                return flowsRemoveNodes({
+                return flowsRemoveSelection({
                     flowId: activeFlow,
                     selection,
                     undo: { desc: `Deleted selected elements in active flow.` },
@@ -62,7 +62,7 @@ export const {
                     editorSetClipboard({
                         clipboard: { selection, snapshot: currentDocument },
                     }),
-                    flowsRemoveNodes({
+                    flowsRemoveSelection({
                         flowId: activeFlow,
                         selection,
                         undo: { desc: 'Cut selected elements in active flow.' },

@@ -1,56 +1,68 @@
 import React from 'react';
 import { useAppSelector } from '../redux/stateHooks';
-import { useSelectFlowContext } from '../slices/contextSlice';
+import { selectFlows, useSelectSingleFlow, useSelectSingleFlowNode } from '../slices/flowsSlice';
 import { useSelectFlowEditorPanel } from '../slices/panelFlowEditorSlice';
-import { FlowEditorPanelState } from '../types';
+import { assert } from '../utils';
 import FlowEdges from './FlowEdges';
-import FlowNodeElement from './FlowNodeElement';
-import FlowRegion from './FlowRegion';
+import FlowNodeComment from './FlowNodeComment';
+import FlowNodeCall from './FlowNodeCall';
+import FlowNodeFunction from './FlowNodeFunction';
+import { selectDocument } from '../slices/documentSlice';
 
-interface Props {
+interface FlowEditorContentProps {
     panelId: string;
     flowId: string;
-    getPanelState: () => FlowEditorPanelState;
 }
 
-const FlowEditorContent = ({ flowId, panelId, getPanelState }: Props) => {
-    const context = useAppSelector(useSelectFlowContext(flowId));
+const FlowEditorContent = ({ flowId, panelId }: FlowEditorContentProps) => {
     const panelState = useAppSelector(useSelectFlowEditorPanel(panelId));
+    const flowGraph = useAppSelector(useSelectSingleFlow(flowId));
 
-    if (!context || !panelState) {
+    if (!flowGraph || !panelState) {
         return null;
     }
 
     return (
         <>
             {
-                // regions
-                Object.values(context.ref.regions).map(region =>
-                    <FlowRegion
-                        key={region.id}
-                        flowId={flowId}
-                        panelId={panelId}
-                        region={region}
-                        getPanelState={getPanelState}
-                    />
+                Object.keys(flowGraph.nodes).map((nodeId) => 
+                    <FlowNodeSwitch key={nodeId} panelId={panelId} flowId={flowId} nodeId={nodeId} />
                 )
             }
             <FlowEdges panelId={panelId} flowId={flowId} />
-            {
-                // nodes
-                Object.values(context.nodeContexts).map(nodeContext =>
-                    <FlowNodeElement
-                        key={nodeContext.ref.id}
-                        flowId={flowId}
-                        panelId={panelId}
-                        context={nodeContext}
-                        env={context.flowEnvironment}
-                        getPanelState={getPanelState}
-                    />
-                )
-            }
         </>
     );
 }
 
 export default React.memo(FlowEditorContent);
+
+
+
+export interface FlowNodeProps {
+    panelId: string;
+    flowId: string;
+    nodeId: string;
+}
+const FlowNodeSwitch = ({ panelId, flowId, nodeId }: FlowNodeProps) => {
+    const node = useAppSelector(useSelectSingleFlowNode(flowId, nodeId));
+    if (!node) return null;
+    
+    switch (node.kind) {
+        case 'call':
+            return <FlowNodeCall panelId={panelId} flowId={flowId} nodeId={nodeId} />;
+        case 'comment':
+            return <FlowNodeComment panelId={panelId} flowId={flowId} nodeId={nodeId} />;
+        case 'function':
+            return <FlowNodeFunction panelId={panelId} flowId={flowId} nodeId={nodeId} />;
+        default:
+            assert(0);
+    }
+}
+
+export type RowComponentProps<R> = {
+    panelId: string;
+    flowId: string;
+    nodeId: string;
+    row: R;
+}
+

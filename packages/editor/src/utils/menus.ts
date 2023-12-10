@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { trueMod } from ".";
 import { useAppDispatch, useAppSelector } from "../redux/stateHooks";
 import { menusAdd, menusRemove, menusSetFocusPath, useSelectSingleMenu } from "../slices/menusSlice";
 import { MenuState } from "../types";
@@ -76,11 +77,7 @@ export function useFocusNavigation(
 
 export function useFocusMoveHandlers(path: number[], neightborCount: number) {
     return {
-        up:   () => [ ...path.slice(0, -1), mod(path.at(-1)! - 1, neightborCount) ],
-        down: () => [ ...path.slice(0, -1), mod(path.at(-1)! + 1, neightborCount) ],
+        up:   () => [ ...path.slice(0, -1), trueMod(path.at(-1)! - 1, neightborCount) ],
+        down: () => [ ...path.slice(0, -1), trueMod(path.at(-1)! + 1, neightborCount) ],
     }
-}
-
-function mod(x: number, m: number) {
-    return ((x % m) + m) % m;
 }

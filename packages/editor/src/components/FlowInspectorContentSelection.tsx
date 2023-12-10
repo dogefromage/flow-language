@@ -6,7 +6,7 @@ import { FormSettingsTable } from '../styles/formStyles';
 import FormColorPicker from './FormColorPicker';
 import FormExpandableRegion from './FormExpandableRegion';
 import FormRenameField from './FormRenameField';
-import { REGION_DEFAULT_COLOR_HEX } from '../styles/flowStyles';
+import { FLOW_COMMENT_DEFAULT_COLOR_HEX } from '../styles/flowStyles';
 import { useAvailableSignatureOptionsData } from '../utils/flows';
 import { useSelectFlowContext } from '../slices/contextSlice';
 import FormSelectOption from './FormSelectOption';
@@ -89,7 +89,7 @@ const ContentSelectionRegion = ({ flowId, regionId }: ContentSelectionRegionProp
             />
             <p>Color</p>
             <FormColorPicker
-                value={region.attributes.color || REGION_DEFAULT_COLOR_HEX}
+                value={region.attributes.color || FLOW_COMMENT_DEFAULT_COLOR_HEX}
                 onChange={(newColor, actionToken) => {
                     dispatch(flowsSetRegionAttribute({
                         flowId,

@@ -5,6 +5,11 @@ import { FlowNodeErrorWrapper } from './FlowNodeErrorWrapper';
 import { FlowInputRowSwitch, FlowOutputRowSwitch } from './FlowNodeRowComponents';
 import { FlowNodeHeaderToolTipContent } from './FlowNodeToolTips';
 import ToolTip from './ToolTip';
+import React, { PropsWithChildren, useRef, useState } from 'react';
+import styled from 'styled-components';
+import { useAppDispatch } from '../redux/stateHooks';
+import { flowsSetRegionAttribute } from '../slices/flowsSlice';
+import { v4 } from 'uuid';
 
 interface Props {
     panelId: string;
@@ -14,8 +19,8 @@ interface Props {
     env: lang.FlowEnvironment;
 }
 
+const { panelId, flowId, context, signature, env } = props;
 const FlowNodeContent = (props: Props) => {
-    const { panelId, flowId, context, signature, env } = props;
     const commonProps = { panelId, flowId, nodeId: context.ref.id };
 
     let inputType: lang.TupleTypeSpecifier | undefined;

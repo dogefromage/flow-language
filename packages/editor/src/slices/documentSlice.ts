@@ -1,10 +1,10 @@
-import * as lang from "noodle-language";
 import { AnyAction, createAction } from "@reduxjs/toolkit";
 import produce from "immer";
-import { createUndoAction } from "../types";
-import flowsReducer from "./flowsSlice";
+import * as lang from "noodle-language";
 import { RootState } from "../redux/rootReducer";
-import { except } from "../utils/exceptions";
+import { createUndoAction } from "../types";
+import { except } from "../utils";
+import flowsReducer from "./flowsSlice";
 
 export const documentSetTitle = createUndoAction
     <{ title: string }, 'document.setTitle'>('document.setTitle');
@@ -32,10 +32,7 @@ function documentReducer(s: lang.FlowDocument | undefined, a: AnyAction): lang.F
 
     const newFlowsState = flowsReducer(s.flows, a);
     if (newFlowsState != s.flows) {
-        return {
-            ...s,
-            flows: newFlowsState,
-        };
+        return { ...s, flows: newFlowsState };
     }
 
     if (documentSetTitle.match(a)) {
@@ -55,42 +52,46 @@ function documentReducer(s: lang.FlowDocument | undefined, a: AnyAction): lang.F
         return lang.updateObsoleteDocument(a.payload.document);
     }
     if (documentRenameFlow.match(a)) {
-        const builder = new lang.Builder(s);
-        const flow = builder.document.flows[a.payload.oldName];
-        if (flow == null) {
-            except(`Could not find flow with id '${a.payload.oldName}'.`);
-        }
-        builder.renameItem(flow, a.payload.newName);
-        return builder.finalize();
+        except('Implement Builder');
+        // const builder = new lang.Builder(s);
+        // const flow = builder.document.flows[a.payload.oldName];
+        // if (flow == null) {
+        //     except(`Could not find flow with id '${a.payload.oldName}'.`);
+        // }
+        // builder.renameItem(flow, a.payload.newName);
+        // return builder.finalize();
     }
     if (documentRenameGeneric.match(a)) {
-        const builder = new lang.Builder(s);
-        const generic = builder.document.flows[a.payload.flowId]?.generics
-            .find(g => g.id === a.payload.oldName);
-        if (generic == null) {
-            except(`Could not find flow with id '${a.payload.flowId}' containing generic with id '${a.payload.oldName}'.`);
-        }
-        builder.renameItem(generic, a.payload.newName);
-        return builder.finalize();
+        except('Implement Builder');
+        // const builder = new lang.Builder(s);
+        // const generic = builder.document.flows[a.payload.flowId]?.generics
+        //     .find(g => g.id === a.payload.oldName);
+        // if (generic == null) {
+        //     except(`Could not find flow with id '${a.payload.flowId}' containing generic with id '${a.payload.oldName}'.`);
+        // }
+        // builder.renameItem(generic, a.payload.newName);
+        // return builder.finalize();
     }
     if (documentRenameInput.match(a)) {
-        const builder = new lang.Builder(s);
-        const input = builder.document.flows[a.payload.flowId]?.inputs
-            .find(g => g.id === a.payload.oldName);
-        if (input == null) {
-            except(`Could not find flow with id '${a.payload.flowId}' containing input with id '${a.payload.oldName}'.`);
-        }
-        builder.renameItem(input, a.payload.newName);
-        return builder.finalize();
+        except('Implement Builder');
+        // const builder = new lang.Builder(s);
+        // const input = builder.document.flows[a.payload.flowId]?.inputs
+        //     .find(g => g.id === a.payload.oldName);
+        // if (input == null) {
+        //     except(`Could not find flow with id '${a.payload.flowId}' containing input with id '${a.payload.oldName}'.`);
+        // }
+        // builder.renameItem(input, a.payload.newName);
+        // return builder.finalize();
     }
     if (documentRenameOutput.match(a)) {
-        const builder = new lang.Builder(s);
-        const output = builder.document.flows[a.payload.flowId]?.output;
-        if (output == null) {
-            except(`Could not find flow with id '${a.payload.flowId}'.`);
-        }
-        builder.renameItem(output, a.payload.newName);
-        return builder.finalize();
+        except('Implement Builder');
+        // const builder = new lang.Builder(s);
+        // const output = builder.document.flows[a.payload.flowId]?.output;
+        // if (output == null) {
+        //     except(`Could not find flow with id '${a.payload.flowId}'.`);
+        // }
+        // builder.renameItem(output, a.payload.newName);
+        // return builder.finalize();
     }
 
     return s;

@@ -2,8 +2,8 @@ import { Reducer } from "@reduxjs/toolkit";
 import React from 'react';
 import { Command, PanelState } from ".";
 import { RootState } from "../redux/rootReducer";
-import { assertDef } from "noodle-language";
 import * as lang from 'noodle-language';
+import { assert } from "../utils";
 
 export interface EditorConfig {
     // state
@@ -22,6 +22,7 @@ export interface EditorConfig {
     language: {
         validator: lang.LanguageValidator;
     }
+    defaultDocument: lang.FlowDocument;
 }
 
 export type EditorExtension = (config: EditorConfig) => void;
@@ -29,7 +30,7 @@ export type EditorExtension = (config: EditorConfig) => void;
 export const createExtensionSelector = <S extends any>(extensionId: string) => {
     return (state: RootState) => {
         const s = state as any;
-        assertDef(s.extensions, 'Could not find extensions slice.');
+        assert(s.extensions, 'Could not find extensions slice.');
         return s.extensions[extensionId] as S;
     }
 }

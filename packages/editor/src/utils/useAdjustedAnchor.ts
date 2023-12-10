@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useAppSelector } from "../redux/stateHooks";
 import { selectPanelManager } from "../slices/panelManagerSlice";
 import { Size2, Vec2 } from "../types";
-import { assertNever } from "noodle-language";
+import { assert } from ".";
 
 const AVAIL_MARGIN = 8;
 const SIZE_MARGIN = 4;
@@ -75,7 +75,7 @@ function adjustPosition(
             return adjustFlip(availableStart, availableSize,
                 preferredPos, currentSize, parentSize, strategy.sign);
     }
-    assertNever();
+    assert(0);
 }
 
 export default function useAdjustedAnchor(

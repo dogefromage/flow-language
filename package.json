@@ -7,7 +7,7 @@
     "scripts": {
         "dev-editor": "cd packages/editor && pnpm run dev",
         "dev-language": "cd packages/language && pnpm run dev",
-        "dev-bytecode": "cd packages/bytecode && pnpm run dev",
+        "_dev-bytecode": "cd packages/bytecode && pnpm run dev",
         "dev": "concurrently npm:dev-*"
     },
     "devDependencies": {

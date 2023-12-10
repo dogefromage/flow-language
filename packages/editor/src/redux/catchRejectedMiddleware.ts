@@ -1,7 +1,7 @@
 import { isRejected, isRejectedWithValue } from '@reduxjs/toolkit';
 import { Middleware } from 'redux';
 import { AppDispatch, RootState } from './rootReducer';
-import { createConsoleError } from '../utils/exceptions';
+import { createConsoleError } from '../utils';
 
 export const catchRejectedMiddleware: Middleware<{}, RootState, AppDispatch> = storeApi => next => action => {
     if (isRejectedWithValue(action)) {

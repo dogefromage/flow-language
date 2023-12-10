@@ -2,16 +2,11 @@ import { PropsWithChildren } from 'react';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { documentRenameFlow } from '../slices/documentSlice';
 import { editorSetActiveFlow, selectEditor } from '../slices/editorSlice';
-import { flowsSetAttribute, useSelectSingleFlow } from '../slices/flowsSlice';
-import { FormSettingsTable, FormSpacer } from '../styles/formStyles';
+import { useSelectSingleFlow } from '../slices/flowsSlice';
+import { FormSettingsTable } from '../styles/formStyles';
 import { useFlowNamingValidator } from '../utils/flows';
-import FormColorPicker from './FormColorPicker';
 import FormExpandableRegion from './FormExpandableRegion';
 import FormRenameField from './FormRenameField';
-import FlowInspectorGenericList from './FlowInspectorGenericList';
-import FlowInspectorInputList from './FlowInspectorInputList';
-import FlowInspectorPortDetails from './FlowInspectorPortDetails';
-import FlowInspectorOutput from './FlowInspectorOutput';
 
 interface FlowInspectorContentFlowProps {
     panelId: string;
@@ -43,7 +38,7 @@ const FlowInspectorContentFlow = ({ panelId }: PropsWithChildren<FlowInspectorCo
                         }));
                     }}
                 />
-                <p>Description</p>
+                {/* <p>Description</p>
                 <FormRenameField
                     value={flow.attributes.description || ''}
                     onChange={newValue => {
@@ -54,8 +49,8 @@ const FlowInspectorContentFlow = ({ panelId }: PropsWithChildren<FlowInspectorCo
                             undo: { desc: `Changed active flows description attribute.` },
                         }));
                     }}
-                />
-                <p>Color</p>
+                /> */}
+                {/* <p>Color</p>
                 <FormColorPicker
                     value={flow.attributes.color || '#000000'}
                     onChange={(newColor, actionToken) => {
@@ -66,9 +61,9 @@ const FlowInspectorContentFlow = ({ panelId }: PropsWithChildren<FlowInspectorCo
                             undo: { desc: `Changed active flows color attribute.`, actionToken },
                         }));
                     }}
-                />
+                /> */}
             </FormSettingsTable>
-            <FormSpacer />
+            {/* <FormSpacer />
             <FormSettingsTable>
                 <p>Generics</p>
                 <FlowInspectorGenericList panelId={panelId} flowId={flowId} />
@@ -78,7 +73,7 @@ const FlowInspectorContentFlow = ({ panelId }: PropsWithChildren<FlowInspectorCo
                 <FlowInspectorOutput panelId={panelId} flowId={flowId} />
             </FormSettingsTable>
             <FormSpacer />
-            <FlowInspectorPortDetails panelId={panelId} flowId={flowId} />
+            <FlowInspectorPortDetails panelId={panelId} flowId={flowId} /> */}
         </FormExpandableRegion>
     );
 }

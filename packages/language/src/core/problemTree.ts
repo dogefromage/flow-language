@@ -1,14 +1,13 @@
-import { DocumentProblem, DocumentContext, FlowGraphProblem, NodeProblem, RowProblem } from "..";
 
-export type AllFlowProblems = DocumentProblem | FlowGraphProblem | NodeProblem | RowProblem;
+// export type AllFlowProblems = DocumentProblem | FlowGraphProblem | NodeProblem | RowProblem;
 
-export interface ProblemTreeNode {
-    name: string;
-    problems: AllFlowProblems[];
-    children: ProblemTreeNode[];
-}
+// export interface ProblemTreeNode {
+//     name: string;
+//     problems: AllFlowProblems[];
+//     children: ProblemTreeNode[];
+// }
 
-export function generateProblemTree(doc: DocumentContext): ProblemTreeNode | null {
+// export function generateProblemTree(doc: DocumentContext): ProblemTreeNode | null {
 
     // const flowProblems: ProblemTreeNode[] = [];
     // for (const [ flowId, flow ] of Object.entries(doc.flowContexts)) {
@@ -59,5 +58,5 @@ export function generateProblemTree(doc: DocumentContext): ProblemTreeNode | nul
     //         children: flowProblems,
     //     };
     // }
-    return null;
-}
+//     return null;
+// }

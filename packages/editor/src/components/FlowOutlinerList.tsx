@@ -1,7 +1,6 @@
 import { PropsWithChildren, useState } from 'react';
 import styled from 'styled-components';
 import { flowOutlinerDeleteFlowEntryCommand } from '../content/commands/flowOutlinerCommands';
-import { defaultFlowSignature } from '../content/defaultDocument';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { selectDocument } from '../slices/documentSlice';
 import { editorSetActiveFlow, selectEditor } from '../slices/editorSlice';
@@ -108,7 +107,6 @@ const FlowOutlinerList = ({ panelId }: PropsWithChildren<FlowOutlinerListProps>)
                     onChange={newVal => {
                         dispatch(flowsCreate({
                             flowId: newVal,
-                            signature: defaultFlowSignature,
                             undo: { desc: 'Created new flow.' },
                         }));
                         setAdditional(false);

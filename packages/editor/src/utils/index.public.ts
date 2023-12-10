@@ -1,4 +1,5 @@
 
 
 export { default as useDispatchCommand } from './useDispatchCommand';
-export * from './exceptions';
+
+export { AppException, except, createConsoleError, createConsoleWarn, assert } from './index';

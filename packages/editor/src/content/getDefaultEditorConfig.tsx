@@ -4,6 +4,7 @@ import { EditorConfig } from "../types";
 import { defaultCommands } from "./commands/defaultCommands";
 import { editClearSelectionCommand, editCutSelectedCommand, editDeleteSelectedCommand, editRedoCommand, editUndoCommand } from "./commands/globalEditorCommands";
 import { defaultPanelReducers } from "./defaultPanels";
+import { defaultDocument } from './defaultDocument';
 
 function getDefaultCommandMap() {
     return Object.fromEntries(
@@ -46,6 +47,7 @@ export function getDefaultEditorConfig(): EditorConfig {
         managerComponents: [],
         language: {
             validator: lang.createLanguageValidator(lang.content.defaultConfiguration),
-        }
+        },
+        defaultDocument: defaultDocument,
     };
 }

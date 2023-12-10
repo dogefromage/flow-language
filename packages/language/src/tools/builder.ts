@@ -1,35 +1,35 @@
 
-interface ValueSymbolReference {
-    target: any;
-    key: string;
-    prefix?: string;
-    postfix?: string;
-}
-interface KeySymbolReference {
-    target: any;
-    prefix?: string;
-    postfix?: string;
-}
+// interface ValueSymbolReference {
+//     target: any;
+//     key: string;
+//     prefix?: string;
+//     postfix?: string;
+// }
+// interface KeySymbolReference {
+//     target: any;
+//     prefix?: string;
+//     postfix?: string;
+// }
 
-interface BuilderSymbol {
-    value: string;
-    valueReferences: ValueSymbolReference[];
-    keyReferences: KeySymbolReference[];
-}
+// interface BuilderSymbol {
+//     value: string;
+//     valueReferences: ValueSymbolReference[];
+//     keyReferences: KeySymbolReference[];
+// }
 
-const valueRef = <O extends object>(
-    target: O, key: keyof O & string, prefix?: string, postfix?: string
-): ValueSymbolReference => ({ target, key, prefix, postfix });
+// const valueRef = <O extends object>(
+//     target: O, key: keyof O & string, prefix?: string, postfix?: string
+// ): ValueSymbolReference => ({ target, key, prefix, postfix });
 
-const keyRef = <O extends object>(
-    target: O, prefix?: string, postfix?: string
-): KeySymbolReference => ({ target, prefix, postfix });
+// const keyRef = <O extends object>(
+//     target: O, prefix?: string, postfix?: string
+// ): KeySymbolReference => ({ target, prefix, postfix });
 
-function sandwich(identifier: string, ref: ValueSymbolReference | KeySymbolReference) {
-    const prefix = ref.prefix || '';
-    const postfix = ref.postfix || '';
-    return prefix + identifier + postfix;
-}
+// function sandwich(identifier: string, ref: ValueSymbolReference | KeySymbolReference) {
+//     const prefix = ref.prefix || '';
+//     const postfix = ref.postfix || '';
+//     return prefix + identifier + postfix;
+// }
 
 // export class Builder {
 //     private doc: FlowDocument;

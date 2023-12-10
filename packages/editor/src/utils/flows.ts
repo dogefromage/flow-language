@@ -1,31 +1,32 @@
-import * as lang from "noodle-language";
-import { FlowJointStyling, JointLocationKey } from "../types";
-import { AllRowSignatures } from "../types/flowInspectorView";
-import _ from "lodash";
+import { useCallback } from "react";
 import { NameValidationError } from "../components/FormRenameField";
 import { useAppSelector } from "../redux/stateHooks";
 import { selectDocument } from "../slices/documentSlice";
-import { useCallback, useMemo } from "react";
-import { SelectOptionContent } from "../components/FormSelectOption";
+import { FlowJointStyling, JointLocation, JointLocationDigest } from "../types";
 
 export const flowsIdRegex = /^[A-Za-z_][A-Za-z_0-9]*$/;
 export const listItemRegex = /^[A-Za-z_][A-Za-z_0-9]*$/;
 export const dictionaryRegex = /^[A-Za-z_][A-Za-z_0-9]*$/;
 
-export function getJointLocationKey(location: lang.JointLocation): JointLocationKey {
-    if (location.direction === 'input') {
-        return `${location.nodeId}.${location.rowId}.${location.accessor}`;
-    } else {
-        return `${location.nodeId}.${location.accessor || ''}`;
+export function getJointLocationDigest(location: JointLocation): JointLocationDigest {
+    switch (location.kind) {
+        case 'argument':
+            return `${location.kind};${location.nodeId};${location.argumentId};${location.accessor || '*'}` as JointLocationDigest;
+        case 'output':
+            return `${location.kind};${location.nodeId};${location.accessor || '*'}` as JointLocationDigest;
+        case 'parameter':
+            return `${location.kind};${location.nodeId};${location.parameterId}` as JointLocationDigest;
+        case 'result':
+            return `${location.kind};${location.nodeId}` as JointLocationDigest;
     }
 }
 
-const style = (
-    background: FlowJointStyling['background'],
-    border: FlowJointStyling['border'] = 'transparent',
-    shape: FlowJointStyling['shape'] = 'round',
-    borderStyle: FlowJointStyling['borderStyle'] = 'solid',
-): FlowJointStyling => ({ borderStyle, shape, background, border });
+// const style = (
+//     background: FlowJointStyling['background'],
+//     border: FlowJointStyling['border'] = 'transparent',
+//     shape: FlowJointStyling['shape'] = 'round',
+//     borderStyle: FlowJointStyling['borderStyle'] = 'solid',
+// ): FlowJointStyling => ({ borderStyle, shape, background, border });
 
 // jointStyles: {
 //     boolean:   { fillColor: '#44adb3', borderColor: 'transparent' },
@@ -39,67 +40,62 @@ const style = (
 //     tuple:     { fillColor: '#ff55ff', borderColor: 'transparent' },
 // },
 
-const primitiveColors: Record<string, Pick<FlowJointStyling, 'background' | 'border'>> = {
-    boolean: { background: '#44adb3', border: null, },
-    number: { background: '#347dcf', border: null, },
-    string: { background: '#9249e6', border: null, },
-    // null:    { background: '#b5b5b5', border: null, },
-}
-const missingColor = '#b5b5b5';
+// const primitiveColors: Record<string, Pick<FlowJointStyling, 'background' | 'border'>> = {
+//     boolean: { background: '#44adb3', border: null, },
+//     number: { background: '#347dcf', border: null, },
+//     string: { background: '#9249e6', border: null, },
+//     // null:    { background: '#b5b5b5', border: null, },
+// }
+// const missingColor = '#b5b5b5';
 
-function getBaseStyling(argX: lang.TypeSpecifier, env: lang.FlowEnvironment): FlowJointStyling {
-    const X = lang.tryResolveTypeAlias(argX, env);
+// function getBaseStyling(argX: lang.TypeSpecifier, env: lang.FlowEnvironment): FlowJointStyling {
+//     const X = lang.tryResolveTypeAlias(argX, env);
 
-    if (X == null || X.type === 'any') {
-        return style(null, '#aaa');
-    }
+//     if (X == null || X.type === 'any') {
+//         return style(null, '#aaa');
+//     }
 
-    switch (X.type) {
-        case 'primitive':
-            return {
-                ...primitiveColors[X.name],
-                shape: 'round',
-                borderStyle: 'solid',
-            };
-        case 'list':
-            return {
-                ...getBaseStyling(X.element, env),
-                shape: 'square',
-            };
-    }
+//     switch (X.type) {
+//         case 'primitive':
+//             return {
+//                 ...primitiveColors[X.name],
+//                 shape: 'round',
+//                 borderStyle: 'solid',
+//             };
+//         case 'list':
+//             return {
+//                 ...getBaseStyling(X.element, env),
+//                 shape: 'square',
+//             };
+//     }
 
-    return style(missingColor, null, 'square');
-}
+//     return style(missingColor, null, 'square');
+// }
 
-export function getJointStyling(argX: lang.TypeSpecifier, env: lang.FlowEnvironment, additional = false): FlowJointStyling {
-    const baseStyle = getBaseStyling(argX, env);
+// export function getJointStyling(argX: lang.TypeSpecifier, env: lang.FlowEnvironment, additional = false): FlowJointStyling {
+//     const baseStyle = getBaseStyling(argX, env);
 
-    if (additional) {
-        const borderColor = baseStyle.background || baseStyle.border || missingColor;
-        return style(null, borderColor, baseStyle.shape, 'dashed');
-    }
+//     if (additional) {
+//         const borderColor = baseStyle.background || baseStyle.border || missingColor;
+//         return style(null, borderColor, baseStyle.shape, 'dashed');
+//     }
 
-    return baseStyle;
-}
+//     return baseStyle;
+// }
 
-type RowTypes = AllRowSignatures['rowType'];
-export const flowRowTypeNames: Record<RowTypes, string> = {
-    'output': 'Output',
-    'input-simple': 'Simple Input',
-    'input-variable': 'Variable Input',
-};
+// type RowTypes = AllRowSignatures['rowType'];
+// export const flowRowTypeNames: Record<RowTypes, string> = {
+//     'output': 'Output',
+//     'input-simple': 'Simple Input',
+//     'input-variable': 'Variable Input',
+// };
 
 export function formatFlowLabel(label: string) {
-    return label
-        .split('_')
-        .filter(x => x.length)
-        .join('_')
-
-    // Nicer formatting but sucks:
+    return label;
     // return label
     //     .split('_')
-    //     .map(_.upperFirst)
-    //     .join(' ');
+    //     .filter(x => x.length)
+    //     .join('_');
 }
 
 export function bracketSymbol(
@@ -143,21 +139,21 @@ export const useFlowNamingValidator = (excludeId?: string) => {
     }, [document, excludeId]);
 }
 
-export function useAvailableSignatureOptionsData(env?: lang.FlowEnvironment): SelectOptionContent {
-    return useMemo(() => {
-        if (!env) {
-            const defaultData: SelectOptionContent = {
-                names: {},
-                options: [],
-            };
-            return defaultData;
-        }
-        const envContent = lang.collectTotalEnvironmentContent(env);
-        const paths = Object.keys(envContent.signatures);
-        const pathNames = paths.map<[string, string]>(path => [path, lang.pathTail({ path })]);
-        return {
-            names: Object.fromEntries(pathNames),
-            options: paths,
-        };
-    }, [env]);
-}
+// export function useAvailableSignatureOptionsData(env?: lang.FlowEnvironment): SelectOptionContent {
+//     return useMemo(() => {
+//         if (!env) {
+//             const defaultData: SelectOptionContent = {
+//                 names: {},
+//                 options: [],
+//             };
+//             return defaultData;
+//         }
+//         const envContent = lang.collectTotalEnvironmentContent(env);
+//         const paths = Object.keys(envContent.signatures);
+//         const pathNames = paths.map<[string, string]>(path => [path, lang.pathTail({ path })]);
+//         return {
+//             names: Object.fromEntries(pathNames),
+//             options: paths,
+//         };
+//     }, [env]);
+// }

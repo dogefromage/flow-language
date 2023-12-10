@@ -13,7 +13,7 @@ export const contextSlice = createSlice({
     name: 'context',
     initialState,
     reducers: {
-        setContext: (s, a: PayloadAction<{ context: lang.FlowDocumentContext }>) => {
+        setContext: (s, a: PayloadAction<{ context: lang.DocumentContext }>) => {
             s.documentContext = castDraft(a.payload.context);
         }
     }

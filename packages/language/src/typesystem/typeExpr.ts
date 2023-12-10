@@ -71,15 +71,27 @@ export type TExpr =
     | TRowEmpty
     | TRowExtend
 
-// export const typeExpressions = {
-//     const: (name: string): TConst => ({ kind: 'CONST', name }),
-//     app: (head: TExpr, args: TExpr[]): TApp => ({ kind: 'APP', head, args }),
-//     arrow: (params: TExpr[], ret: TExpr): TArrow => ({ kind: 'ARROW', params, ret }),
-//     var: (ref: VarRef): TVar => ({ kind: 'VAR', ref }),
-//     record: (row: TExpr): TRecord => ({ kind: 'RECORD', row }),
-//     rowEmpty: (): TRowEmpty => ({ kind: 'ROWEMPTY' }),
-//     rowExtend: (key: string, field: TExpr, row: TExpr): TRowExtend => ({ kind: 'ROWEXTEND', key, field, row }),
-// };
+function trecord(mapT: Record<string, TExpr>): TRecord {
+    let row: TExpr = { kind: 'ROWEMPTY' };
+    for (const [key, field] of Object.entries(mapT)) {
+        row = { kind: 'ROWEXTEND', key, field, row };
+    }
+    return { kind: 'RECORD', row };
+}
+
+export const typeExpressions = {
+    tconst: (name: string): TConst => ({ kind: 'CONST', name }),
+    tapp: (head: TExpr, arg: TExpr): TApp => ({ kind: 'APP', head, arg }),
+    tarrow: (param: TExpr, ret: TExpr): TArrow => ({ kind: 'ARROW', param, ret }),
+    trecord,
+    tgeneric: newGenericVar,
+    // trecord: (row: TExpr): TRecord => ({ kind: 'RECORD', row }),
+    // trowempty: (): TRowEmpty => ({ kind: 'ROWEMPTY' }),
+    // trowextend: (key: string, field: TExpr, row: TExpr): TRowExtend => ({ kind: 'ROWEXTEND', key, field, row }),
+};
+
+
+
 
 export function tyToString(ty: TExpr) {
     const genericNames = new Map<number, string>();

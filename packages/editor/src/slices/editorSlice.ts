@@ -1,10 +1,11 @@
-import * as lang from "noodle-language";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { EditorClipboardData, EditorSliceState } from "../types";
+import * as lang from "noodle-language";
+import { DEFAULT_FLOW_ID } from "../content/defaultDocument";
 import { RootState } from "../redux/rootReducer";
+import { EditorClipboardData, EditorSliceState } from "../types";
 
 const initialState: EditorSliceState = {
-    activeFlow: lang.MAIN_FLOW_ID,
+    activeFlow: DEFAULT_FLOW_ID,
     clipboard: null,
     selection: null,
 };

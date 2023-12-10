@@ -3,7 +3,7 @@ import React, { useRef, useState } from 'react';
 import styled from 'styled-components';
 import { v4 as uuidv4 } from 'uuid';
 import { FLOW_NODE_ROW_HEIGHT } from '../styles/flowStyles';
-import { formatSimple, parseSimple } from '../utils/numberInput';
+import { formatNumericalInput, parseNumericalInput } from '../utils';
 
 const SlidableInputDiv = styled.div`
     position: relative;
@@ -73,7 +73,7 @@ const FormSlidableInput = ({
     const [isWriting, setIsWriting] = useState(false);
     const [textValue, setTextValue] = useState<string>();
 
-    const formatValue = (value: number) => formatSimple(value);
+    const formatValue = (value: number) => formatNumericalInput(value);
 
     const submitText = (e: React.FormEvent) => {
         e.preventDefault();
@@ -85,7 +85,7 @@ const FormSlidableInput = ({
 
         try {
             const input = inputRef.current?.value || '';
-            const parsed = parseSimple(input);
+            const parsed = parseNumericalInput(input);
             onChange(parsed);
         } catch (e: any) {
             console.error(`Error at evaluating user input: ${e.message}`);

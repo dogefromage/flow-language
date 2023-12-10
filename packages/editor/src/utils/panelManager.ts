@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { panelStateBind, panelStateRemove } from "../redux/panelStateEnhancer";
 import { useAppDispatch } from "../redux/stateHooks";
 import { CreatePanelStateCallback, PanelState, Rect, Vec2, ViewProps } from "../types";
-import { except } from "./exceptions";
+import { except } from ".";
 
 export function useBindPanelState(panelId: string, createPanelState: CreatePanelStateCallback, viewType: string) {
     const dispatch = useAppDispatch();
