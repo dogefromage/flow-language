@@ -1,13 +1,16 @@
 import * as lang from 'noodle-language';
+import { useMemo } from 'react';
 import styled from 'styled-components';
 import { Box2, Vector2 } from 'threejs-math';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
-import { useSelectFlowContext } from '../slices/contextSlice';
-import { useSelectSingleFlow } from '../slices/flowsSlice';
+import { useSelectContextFlow } from '../slices/contextSlice';
+import { flowsRemoveConnection, useSelectSingleFlow } from '../slices/flowsSlice';
 import { useSelectFlowEditorPanel } from '../slices/panelFlowEditorSlice';
-import { EditorActionDraggingLinkState, FlowEdge, FlowEditorPanelState, JointLocation } from '../types';
-import { except } from '../utils';
+import { EditorActionDraggingLinkState, FlowEditorPanelState, JointLocation, JointLocationDigest, createConnectionReference, getJointDir, getJointLocationFromReference } from '../types';
 import { getJointLocationDigest } from '../utils/flows';
+import { FUNCTION_NODE_MIN_WIDTH } from './FlowNodeFunction';
+import { FlowNodeRowProblemMessage } from './FlowNodeToolTips';
+import ToolTip, { useToolTip } from './ToolTip';
 
 const NEW_LINK_KEY = `NEW_LINK`;
 
@@ -37,7 +40,7 @@ const FlowEdgesSVG = styled.svg.attrs<SVGProps>(({ box }) => {
     pointer-events: none;
 `;
 
-const FlowEdgeGroup = styled.g<{ $status: lang.ReferenceStatus, $syntax: lang.ReferenceSyntacticType, key: string }>`
+const FlowEdgeG = styled.g<{ $status: lang.ReferenceStatus, $syntax: lang.ReferenceSyntacticType }>`
     .path-catcher {
         fill: none;
         stroke: transparent;
@@ -51,9 +54,9 @@ const FlowEdgeGroup = styled.g<{ $status: lang.ReferenceStatus, $syntax: lang.Re
         fill: none;
         stroke-width: 3px;
 
-        stroke: ${({ $status, theme }) => theme.colors.flowEditor.edgeColors[$status]};
+        stroke: ${({ $status, theme }) => theme.colors.flowEditor.referenceStatus[$status]};
 
-        ${({ $syntax }) => $syntax === 'type-only' && `stroke-dasharray: 6px 4px;` }
+        ${({ $syntax }) => $syntax === 'type-only' && `stroke-dasharray: 6px 4px;`}
 
         transition: stroke-width 50ms, stroke 150ms;
     }
@@ -71,96 +74,192 @@ interface Props {
 const FlowEdges = ({ panelId, flowId }: Props) => {
     const dispatch = useAppDispatch();
     const flow = useAppSelector(useSelectSingleFlow(flowId));
-    const context = useAppSelector(useSelectFlowContext(flowId));
+    const context = useAppSelector(useSelectContextFlow(flowId));
     const panelState = useAppSelector(useSelectFlowEditorPanel(panelId));
 
-    const edges: Record<string, FlowEdge> = {};
+    // const edgeCache = useMemo(() => new WeakMap<lang.FlowNode, ImplicitEdge>(), [flowId]);
+    const implicitEdges = useMemo(() => findImplicitEdges(flow, /* edgeCache */), [flow, /* edgeCache */]);
 
-    const removeEdge = (edgeId: string) => {
-        except(`Implement remove connection`);
-        // if (!context) return;
-        // const edge = context.edges[edgeId];
-        // if (!edge) return;
-        // dispatch(flowsRemoveConnection({
-        //     flowId,
-        //     input: edge.target,
-        //     syntax: edge.syntacticType,
-        //     undo: { desc: 'Removed an edge from current flow.' },
-        // }))
+    const removeEdge = (edgeKey: string) => {
+        const edge = implicitEdges.find(e => e.key === edgeKey);
+        if (!edge) return;
+        dispatch(flowsRemoveConnection({
+            flowId,
+            input: edge.target,
+            syntax: edge.syntacticType,
+            undo: { desc: 'Removed an edge from current flow.' },
+        }))
     }
 
-    if (!context || !flow || !panelState) {
+    if (!implicitEdges || !flow || !panelState) {
         return null;
     }
 
-    const { handleQuadruples, svgBox } = generateVectorData(edges, flow, panelState);
+    // console.log(implicitEdges);
+
+    const { handleQuadruples, svgBox } = generateVectorData(implicitEdges, flow, panelState);
 
     if (handleQuadruples.length === 0) return null;
 
     return (
         <FlowEdgesSVG box={svgBox}>
-            {
-                handleQuadruples.map(({ key, points, edge }) => {
-                    const [A, B, C, D] = points.map(p => `${p.x},${p.y}`);
-                    const d = `M${A} C${B} ${C} ${D}`;
+            {handleQuadruples.map(({ key, points, edge }) => {
 
-                    let status = 'normal' as const;
-                    let syntax = 'value-and-type' as const;
-                    
-                    // let status = edge?.status || 'normal';
-                    // let syntax = edge?.syntacticType || 'value-and-type';
-                    // if (key == NEW_LINK_KEY) {
-                    //     syntax = (panelState.state as EditorActionDraggingLinkState)
-                    //         .draggingContext?.syntax || syntax;
-                    // }
+                const referenceTag = edge?.source &&
+                    lang.referenceDigest(createConnectionReference(edge?.source, 0)) + 
+                    ';' + edge?.target.nodeId;
+                const refContext = context?.references[referenceTag!];
 
-                    return (
-                        <FlowEdgeGroup
-                            key={key}
-                            id={key}
-                            $status={status}
-                            $syntax={syntax}
-                            onClick={() => removeEdge(key)}
-                            onMouseDown={e => e.stopPropagation()}
-                        >
-                            <path className='path-catcher' d={d} />
-                            <path className='path-display' d={d} />
-                        </FlowEdgeGroup>
-                    );
-                })
-            }
+                return (
+                    <FlowEdgeGroup key={key} id={key} points={points} edge={edge} 
+                        refContext={refContext} panelStateState={panelState.state}
+                        onRemove={() => removeEdge(key)} />
+                );
+            })}
         </FlowEdgesSVG>
     );
 }
 
 export default FlowEdges;
 
-function generateVectorData(edges: Record<string, FlowEdge>, flow: lang.FlowGraph, panelState: FlowEditorPanelState) {
+interface FlowEdgeGroupProps {
+    id: string;
+    points: Vector2[];
+    edge: ImplicitEdge | undefined;
+    refContext: lang.ReferenceContext | undefined;
+    panelStateState: FlowEditorPanelState['state'];
+    onRemove: () => void;
+}
+const FlowEdgeGroup = ({ id, points, edge, refContext, onRemove, panelStateState }: FlowEdgeGroupProps) => {
+    const [A, B, C, D] = points.map(p => `${p.x},${p.y}`);
+    const d = `M${A} C${B} ${C} ${D}`;
+
+    let status: lang.ReferenceStatus = /* edge?.status || */ 'normal';
+    let syntax: lang.ReferenceSyntacticType = edge?.syntacticType || 'value-and-type';
+    if (id == NEW_LINK_KEY) {
+        syntax = (panelStateState as EditorActionDraggingLinkState)
+            .draggingContext?.syntax || syntax;
+    }
+
+    if (refContext?.problems.length) {
+        status = 'cyclic';
+    }
+
+    const { handlers, catcher } = useToolTip(createEdgeToolTipContent(refContext));
+
+    return (
+        <FlowEdgeG
+            id={id}
+            $status={status}
+            $syntax={syntax}
+            onClick={onRemove}
+            onMouseDown={e => e.stopPropagation()}
+            {...handlers}
+        >
+            <path className='path-catcher' d={d} />
+            <path className='path-display' d={d} />
+            {catcher}
+        </FlowEdgeG>
+    );
+}
+
+
+interface ImplicitEdge {
+    key: string;
+    source: JointLocation;
+    sourceDigest: JointLocationDigest;
+    target: JointLocation;
+    targetDigest: JointLocationDigest;
+    syntacticType: lang.ReferenceSyntacticType;
+}
+
+function findImplicitEdges(flow: lang.FlowGraph | undefined, /* edgeCache: WeakMap<lang.FlowNode, ImplicitEdge> */) {
+    if (!flow) return [];
+
+    const edges: ImplicitEdge[] = [];
+
+    function createEdge(source: JointLocation, target: JointLocation, syntacticType: lang.ReferenceSyntacticType) {
+        const sourceDigest = getJointLocationDigest(source);
+        const targetDigest = getJointLocationDigest(target);
+        const key = `${sourceDigest};${targetDigest}`;
+        edges.push({ key, source, target, sourceDigest, targetDigest, syntacticType });
+    }
+
+    function createEdgesFromPair(pair: lang.ConnectionReferencePair, target: JointLocation) {
+        if (pair.valueRef != null) {
+            createEdge(getJointLocationFromReference(pair.valueRef), target, 'value-and-type');
+        }
+        if (pair.typeRef != null) {
+            createEdge(getJointLocationFromReference(pair.typeRef), target, 'type-only');
+        }
+    }
+
+    for (const node of Object.values(flow.nodes)) {
+        switch (node.kind) {
+            case 'call':
+                for (const arg of Object.values(node.argumentMap)) {
+                    if (arg.exprType === 'structure') {
+                        for (const [accessor, pair] of Object.entries(arg.references)) {
+                            const target: JointLocation = {
+                                kind: 'argument',
+                                nodeId: node.id,
+                                argumentId: arg.id,
+                                accessor,
+                            };
+                            createEdgesFromPair(pair, target);
+                        }
+                    } else if (arg.exprType === 'initializer' && arg.references[0] != null) {
+                        const target: JointLocation = {
+                            kind: 'argument',
+                            nodeId: node.id,
+                            argumentId: arg.id,
+                        };
+                        createEdgesFromPair(arg.references[0], target);
+                    }
+                }
+                break;
+            case 'function':
+                if (node.result != null) {
+                    const target: JointLocation = {
+                        kind: 'result',
+                        nodeId: node.id,
+                    }
+                    createEdgesFromPair(node.result, target);
+                }
+                break;
+        }
+    }
+    return edges;
+}
+
+
+
+function generateVectorData(edges: ImplicitEdge[], flow: lang.FlowGraph, panelState: FlowEditorPanelState) {
 
     const handleEndPoints: Array<{
         key: string;
         A: Vector2;
         D: Vector2;
-        edge?: FlowEdge;
+        edge?: ImplicitEdge;
     }> = [];
 
-    for (const [edgeId, edge] of Object.entries(edges)) {
-        const A = getJointPosition(edge.source, panelState, flow);
-        const D = getJointPosition(edge.target, panelState, flow);
+    for (const edge of edges) {
+        const A = getJointPosition(edge.source, edge.sourceDigest, panelState, flow);
+        const D = getJointPosition(edge.target, edge.targetDigest, panelState, flow);
         if (A && D) {
-            handleEndPoints.push({
-                key: edgeId, A, D, edge,
-            });
+            handleEndPoints.push({ key: edge.key, A, D, edge });
         }
     }
 
     // new edge link
     if (panelState.state.type === 'dragging-link') {
-        let A = getJointPosition(panelState.state.draggingContext.fromJoint, panelState, flow);
+        const draggingJoint = panelState.state.draggingContext.fromJoint;
+        const draggingJointDigest = getJointLocationDigest(draggingJoint);
+        let A = getJointPosition(draggingJoint, draggingJointDigest, panelState, flow);
         const mouseWorld = panelState.state.cursorWorldPosition;
         if (A && mouseWorld) {
             let D = new Vector2(mouseWorld.x, mouseWorld.y);
-            const fromDir = getJointLocationDigest(panelState.state.draggingContext.fromJoint);
+            const fromDir = getJointDir(panelState.state.draggingContext.fromJoint);
             if (fromDir === 'input') {
                 const temp = A;
                 A = D;
@@ -212,15 +311,34 @@ function generateVectorData(edges: Record<string, FlowEdge>, flow: lang.FlowGrap
     }
 }
 
-function getJointPosition(jointLocation: JointLocation, panelState: FlowEditorPanelState, flow: lang.FlowGraph) {
-    const key = getJointLocationDigest(jointLocation);
-    const offset = panelState.relativeJointPosition.get(key);
+function getJointPosition(jointLocation: JointLocation, digest: JointLocationDigest, panelState: FlowEditorPanelState, flow: lang.FlowGraph) {
+    const offset = panelState.relativeJointPosition.get(digest);
     const node = flow.nodes[jointLocation.nodeId];
     if (!offset || !node) {
         return undefined;
     }
-    return new Vector2(
-        node.position.x + offset.x,
-        node.position.y + offset.y,
-    );
+
+    let { x, y } = offset;
+    x += node.position.x;
+    y += node.position.y;
+
+    if (node.kind === 'function' && jointLocation.kind === 'result') {
+        const actualWidth = Math.max(node.width, FUNCTION_NODE_MIN_WIDTH);
+        x += actualWidth;
+    }
+
+    return new Vector2(x, y);
+}
+
+const createEdgeToolTipContent = (refContext: lang.ReferenceContext | undefined) => {
+    return () => {
+        if (!refContext) return null;
+        return (
+            <ToolTip.SectionDiv>
+                {refContext.problems.map(p =>
+                    <FlowNodeRowProblemMessage problem={p}/>    
+                )}
+            </ToolTip.SectionDiv>
+        )
+    }
 }

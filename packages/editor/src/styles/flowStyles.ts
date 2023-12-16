@@ -25,7 +25,7 @@ export const FlowNodeCallDiv = styled.div.attrs<FlowNodeCallDivProps>(({ $positi
     top: 0;
     left: 0;
     min-width: ${FLOW_NODE_MIN_WIDTH}px;
-        
+
     ${({ $selectionStatus, theme }) =>
         $selectionStatus !== 'nothing' && css`
             outline: solid calc(3px / min(var(--zoom), 1)) ${theme.colors.selectionStatus[$selectionStatus]};
@@ -107,8 +107,7 @@ export const FlowNodeNameWrapper = styled(FlowNodeRowDiv) <{
 `;
 
 export const FlowNodeRowNameP = styled.p<{
-    $align: 'right' | 'left';
-    $bold?: boolean;
+    $align: 'right' | 'left' | 'center';
     $color?: string;
 }>`
     width: 100%;
@@ -121,7 +120,6 @@ export const FlowNodeRowNameP = styled.p<{
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    ${({ $bold: bold }) => bold && `font-weight: bold;`}
 
     color: ${({ $color }) => $color || 'inherit'};
 `;

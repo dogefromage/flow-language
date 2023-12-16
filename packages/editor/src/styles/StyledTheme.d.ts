@@ -1,6 +1,5 @@
 // https://styled-components.com/docs/api#typescript
-import { ConsumerOutput } from '@noodles/shared';
-import { EdgeColor } from '@marble/language';
+import { ReferenceStatus } from 'noodle-language';
 import 'styled-components';
 import { SelectionStatus } from '.';
 
@@ -13,7 +12,7 @@ declare module 'styled-components' {
             flowEditor: {
                 background: string;
                 nodeColor: string;
-                edgeColors: Record<EdgeColor, string>;
+                referenceStatus: Record<ReferenceStatus, string>;
                 defaultTitle: string;
             }
             console: {

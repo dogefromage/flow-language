@@ -1,5 +1,5 @@
 import { Middleware } from 'redux';
-import { selectDocumentContext, validationSetResult } from '../slices/contextSlice';
+import { selectContextDocument, validationSetResult } from '../slices/contextSlice';
 import { selectDocument } from '../slices/documentSlice';
 import { EditorConfig } from '../types';
 import { RootState } from './rootReducer';
@@ -16,7 +16,7 @@ export function createValidatorMiddleware(config: EditorConfig) {
     > = storeApi => next => action => {
         const oldState = storeApi.getState();
         const oldDoc = selectDocument(oldState);
-        const context = selectDocumentContext(oldState);
+        const context = selectContextDocument(oldState);
 
         let result = next(action);
     
@@ -26,6 +26,7 @@ export function createValidatorMiddleware(config: EditorConfig) {
             // revalidate
             try {
                 const projectContext = config.language.validator(newDoc);
+                // console.log(projectContext);
                 // send action to change validation
                 next(validationSetResult({
                     context: projectContext,

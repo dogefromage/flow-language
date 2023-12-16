@@ -392,10 +392,9 @@ const MenuText = ({ text }: PropsWithChildren<MenuTextProps>) => {
 interface MenuButtonProps {
     name: string;
     onPush?: () => void;
-    unactive?: boolean;
 }
 const MenuButton = React.forwardRef<HTMLDivElement, PropsWithChildren<MenuButtonProps>>((
-    { name, onPush, unactive }, ref) => {
+    { name, onPush }, ref) => {
     const dispatch = useAppDispatch();
     const divRef = useComposeRef(ref);
     const menuPath = useMenuPath(divRef, true);
@@ -432,11 +431,60 @@ const MenuButton = React.forwardRef<HTMLDivElement, PropsWithChildren<MenuButton
                 e.stopPropagation();
                 submit();
             }}
-            $unactive={unactive}
             {...handlers}
         > {
                 <p>{name}</p>
             }
+        </MenuElementDiv>
+    );
+});
+
+
+interface MenuBaseButtonProps {
+    onPush?: () => void;
+}
+
+const MenuBaseButton = React.forwardRef<HTMLDivElement, PropsWithChildren<MenuBaseButtonProps>>((
+    { children, onPush }, ref) => {
+    const dispatch = useAppDispatch();
+    const divRef = useComposeRef(ref);
+    const menuPath = useMenuPath(divRef, true);
+    const menuId = menuPath?.menuId;
+
+    const menu = useAppSelector(useSelectSingleMenu(menuPath?.menuId));
+    const focus = menuPath?.focus;
+
+    useEffect(() => {
+        if (menu && focus && comparePath(menu.focusedPath, focus.path)) {
+            setTimeout(() => divRef.current?.focus(), 20);
+        }
+    }, [menu?.focusedPath, focus?.path]);
+
+    const handlers = useFocusNavigation(menu?.id, focus?.path,
+        focus ? {
+            out: () => focus.path.slice(0, -1),
+            ...useFocusMoveHandlers(focus.path, focus.totalSiblings),
+            submit,
+        } : undefined
+    );
+
+    function submit() {
+        if (menuId == null) return;
+        dispatch(menusSetClosed({ menuId }));
+        onPush?.();
+    }
+
+    return (
+        <MenuElementDiv
+            tabIndex={-1}
+            ref={divRef}
+            {...handlers}
+            onClick={e => {
+                e.stopPropagation();
+                submit();
+            }}
+        >
+            {children}
         </MenuElementDiv>
     );
 });
@@ -639,6 +687,7 @@ const Menus = {
     Text: MenuText,
     Command: MenuCommand,
     Button: MenuButton,
+    BaseButton: MenuBaseButton,
     Search: MenuSearch,
     ColorWheel: MenuColorWheel,
     ExpandInline: createMenuExpand('inline'),

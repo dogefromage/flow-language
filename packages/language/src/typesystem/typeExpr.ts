@@ -62,7 +62,7 @@ export interface TRowExtend {
     row: TExpr;
 }
 
-export type TExpr = 
+export type TExpr =
     | TConst
     | TApp
     | TArrow
@@ -71,15 +71,15 @@ export type TExpr =
     | TRowEmpty
     | TRowExtend
 
-function trecord(mapT: Record<string, TExpr>): TRecord {
-    let row: TExpr = { kind: 'ROWEMPTY' };
+function trecord(mapT: Record<string, TExpr>, rest: TExpr = { kind: 'ROWEMPTY' }): TRecord {
+    let row = rest;
     for (const [key, field] of Object.entries(mapT)) {
         row = { kind: 'ROWEXTEND', key, field, row };
     }
     return { kind: 'RECORD', row };
 }
 
-export const typeExpressions = {
+export const typeConstructors = {
     tconst: (name: string): TConst => ({ kind: 'CONST', name }),
     tapp: (head: TExpr, arg: TExpr): TApp => ({ kind: 'APP', head, arg }),
     tarrow: (param: TExpr, ret: TExpr): TArrow => ({ kind: 'ARROW', param, ret }),
@@ -91,19 +91,69 @@ export const typeExpressions = {
 };
 
 
+export interface GenericNamingContext {
+    nameMap: Map<number, string>;
+    nameCounter: number;
+}
+export function createGenericNamingContext(): GenericNamingContext {
+    return {
+        nameMap: new Map(),
+        nameCounter: 0,
+    };
+}
 
-
-export function tyToString(ty: TExpr) {
-    const genericNames = new Map<number, string>();
-    let nameCounter = 0;
-    const getName = (id: number) => {
-        if (genericNames.has(id)) {
-            return genericNames.get(id)!;
+export function populateGenericNamingContext(ty: TExpr, ctx: GenericNamingContext) {
+    const generateName = (id: number) => {
+        if (!ctx.nameMap.has(id)) {
+            const name = String.fromCharCode(97 + ctx.nameCounter % 26);
+            // const name = String.fromCharCode(97 + nameCounter % 26) + (nameCounter / 26 | 0);
+            ctx.nameMap.set(id, name);
+            ctx.nameCounter++;
         }
-        const name = String.fromCharCode(97 + nameCounter % 26);
-        // const name = String.fromCharCode(97 + nameCounter % 26) + (nameCounter / 26 | 0);
-        genericNames.set(id, name);
-        nameCounter++;
+    }
+    const f = (ty: TExpr): void => {
+        switch (ty.kind) {
+            case 'APP':
+                f(ty.head);
+                f(ty.arg);
+                return;
+            case 'ARROW':
+                f(ty.param);
+                f(ty.ret);
+                return;
+            case 'RECORD':
+                f(ty.row);
+                return;
+            case 'ROWEXTEND': {
+                f(ty.field);
+                f(ty.row);
+                return;
+            }
+            case 'VAR':
+                switch (ty.ref.kind) {
+                    case 'GENERIC':
+                        generateName(ty.ref.id);
+                        return;
+                    case 'LINK':
+                        f(ty.ref.type);
+                        return;
+                    case 'UNBOUND':
+                        return;
+                }
+            case 'CONST':
+            case 'ROWEMPTY':
+                return;
+        }
+        assert(false);
+    }
+    f(ty);
+}
+
+export function tyToString(ty: TExpr, ctx?: GenericNamingContext): string {
+    const usedNames = new Set<string>();
+    const getName = (id: number) => {
+        const name = ctx?.nameMap.get(id)! || '$' + id;
+        usedNames.add(name);
         return name;
     }
     const f = (ty: TExpr): string => {
@@ -111,15 +161,25 @@ export function tyToString(ty: TExpr) {
             case 'CONST':
                 return ty.name;
             case 'APP':
-                return `${bracketize(f(ty.head))}[${bracketize(f(ty.arg))}]`;
+                return `${brk(f(ty.head))}[${brk(f(ty.arg))}]`;
             case 'ARROW':
-                return `(${bracketize(f(ty.param))}) -> ${bracketize(f(ty.ret))}`;
+                return `(${brk(f(ty.param))}) -> ${brk(f(ty.ret))}`;
             case 'RECORD':
-                return `{ ${tyToString(ty.row)} }`;
+                return `{ ${f(ty.row)} }`;
             case 'ROWEMPTY':
                 return '{}';
-            case 'ROWEXTEND':
-                return `${ty.key}: ${tyToString(ty.field)} | ${tyToString(ty.row)}`;
+            case 'ROWEXTEND': {
+                let extensions: TRowExtend[] = [];
+                while (ty.kind === 'ROWEXTEND') {
+                    extensions.push(ty);
+                    ty = ty.row;
+                }
+                const fields = extensions.map(e => `${e.key}: ${brk(f(e.field))}`).join(', ');
+                if (ty.kind !== 'ROWEMPTY') {
+                    return `${fields} | ${brk(f(ty))}`;
+                }
+                return `${fields}`
+            }
             case 'VAR':
                 switch (ty.ref.kind) {
                     case 'GENERIC':
@@ -133,13 +193,17 @@ export function tyToString(ty: TExpr) {
         assert(0);
     }
     const body = f(ty);
-    if (genericNames.size) {
-        return `forall[${Array.from(genericNames.values()).join('')}] ${body}`;
+    if (usedNames.size > 0) {
+        const usedNameVars = [...usedNames]
+            .sort((a, b) => a.localeCompare(b))
+            .join(' ');
+        return `forall[${usedNameVars}] ${body}`;
     }
     return body;
 }
-function bracketize(s: string): string {
-    if (s.includes(' ')) {
+function brk(s: string): string {
+    const isBracketed = /{.*}|\(.*\)|\[.*\]/.test(s);
+    if (!isBracketed && s.includes(' ')) {
         return `(${s})`;
     }
     return s;

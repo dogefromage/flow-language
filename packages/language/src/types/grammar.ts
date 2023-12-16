@@ -1,34 +1,41 @@
-import { NamespacePath } from './env';
 import { Obj, Size2, Vec2 } from './internal';
 
-export interface OutputReference {
+export interface Timestamped {
+    __timestamp: number;
+}
+
+// timestamp records time of last connection modification
+export interface OutputReference extends Timestamped {
     kind: 'output';
     nodeId: string;
     accessor?: string;
 }
-export interface ParameterRerefence {
+export interface ParameterRerefence extends Timestamped {
     kind: 'parameter';
     nodeId: string;
     parameter: string;
     accessor?: string;
 }
 
-
-/**```
- * reference <= <nodeId> [ ?<parameter> ] [ .<accessor> ]
- * 
- * ```
- * Example:
- * Accesses destructured x value of vector obj which is parameter of distance:
- *   distance?vec.x
+export type ConnectionReference = OutputReference | ParameterRerefence;
+export type ConnectionReferenceDigest = string & { __connectionReferenceDigest: true };
+/**
+ * reference digest <= <nodeId> [ ?<parameter> ] [ .<accessor> ]
  */
-export type ConnectionReference = string & { __connectionReference: true };
-
-export function decodeParameterRef(ref: ConnectionReference) {
+export function referenceDigest(ref: ConnectionReference): ConnectionReferenceDigest {
+    const accessorStr = ref.accessor ? `.${ref.accessor}` : '';
+    switch (ref.kind) {
+        case 'output':
+            return `${ref.nodeId}${accessorStr}` as ConnectionReferenceDigest;
+        case 'parameter':
+            return `${ref.nodeId}?${ref.parameter}${accessorStr}` as ConnectionReferenceDigest;
+    }
+}
+export function decodeParameterRef(ref: ConnectionReferenceDigest) {
     const m = ref.match(/^(\w+)\?(\w+)(?:\.(\w+))?$/);
     return m ? { kind: 'parameter', nodeId: m[1], parameter: m[2], accessor: m[3] } as const : null;
 }
-export function decodeOutputRef(ref: ConnectionReference) {
+export function decodeOutputRef(ref: ConnectionReferenceDigest) {
     const m = ref.match(/^(\w+)(?:\.(\w+))?$/);
     return m ? { kind: 'output', nodeId: m[1], accessor: m[2] } as const : null;
 }
@@ -43,12 +50,12 @@ export interface ConnectionReferencePair {
     typeRef?: ConnectionReference;
 }
 
-export type ArgumentExprType = 'simple' | 'initializer' | 'record';
+export type ArgumentExprType = 'initializer' | 'structure';
 
 export interface ArgumentRowState {
     id: string;
+    exprType: ArgumentExprType;
     references: Obj<ConnectionReferencePair>;
-    exprType?: ArgumentExprType; // default 'record'
     value?: InitializerValue;
 }
 export interface OutputRowState {
@@ -68,7 +75,7 @@ export interface MatchArmState {
 export interface CallNode {
     kind: 'call';
     id: string;
-    functionId: NamespacePath;
+    functionId: string;
     argumentMap: Obj<ArgumentRowState>;
     output: OutputRowState;
     position: Vec2;

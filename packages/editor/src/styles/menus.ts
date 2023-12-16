@@ -81,7 +81,6 @@ export const MenuFloatingDiv = styled.div.attrs<MenuFloatingDivProps>(({
 export interface MenuElementDivProps {
     tabIndex?: number;
     $outlinedRed?: boolean;
-    $unactive?: boolean;
 }
 
 export const MenuElementDiv = styled.div.attrs<MenuElementDivProps>(({ tabIndex }) => ({
@@ -119,10 +118,6 @@ export const MenuElementDiv = styled.div.attrs<MenuElementDivProps>(({ tabIndex 
         white-space: nowrap;
         text-overflow: ellipsis;
     }
-
-    /* ${({ $unactive }) => $unactive && css`
-        outline: none;
-    ` } */
 `;
 
 export const MenuDividerDiv = styled.div`

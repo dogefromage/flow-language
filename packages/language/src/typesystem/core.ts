@@ -8,19 +8,13 @@ export function unifyTypes(a: TExpr, b: TExpr) {
     if (a.kind === 'CONST' && b.kind === 'CONST' && a.name === b.name) {
         return;
     }
-    if (a.kind === 'APP' && b.kind === 'APP'/*  && a.arg.length === b.arg.length */) {
+    if (a.kind === 'APP' && b.kind === 'APP') {
         unifyTypes(a.head, b.head);
         unifyTypes(a.arg, b.arg);
-        // for (let i = 0; i < a.arg.length; i++) {
-        //     unify(a.arg[i], b.arg[i]);
-        // }
         return;
     }
-    if (a.kind === 'ARROW' && b.kind === 'ARROW'/*  && a.param.length === b.param.length */) {
+    if (a.kind === 'ARROW' && b.kind === 'ARROW') {
         unifyTypes(a.param, b.param);
-        // for (let i = 0; i < a.param.length; i++) {
-        //     unify(a.param[i], b.param[i]);
-        // }
         unifyTypes(a.ret, b.ret);
         return;
     }
@@ -213,6 +207,40 @@ export function generalizeType(level: number, ty: TExpr): TExpr {
         case 'CONST':
         case 'ROWEMPTY':
             return ty;
+    }
+    assert(false);
+}
+/**
+ * Returns a generalized type by replacing unbound variables above and excluding the given level with generic variables.
+ */
+export function generalizeInPlace(level: number, ty: TExpr): void {
+    switch (ty.kind) {
+        case 'APP':
+            generalizeInPlace(level, ty.head);
+            generalizeInPlace(level, ty.arg);
+            return;
+        case 'ARROW':
+            generalizeInPlace(level, ty.param);
+            generalizeInPlace(level, ty.ret);
+            return;
+        case 'RECORD':
+            generalizeInPlace(level, ty.row);
+            return;
+        case 'ROWEXTEND':
+            generalizeInPlace(level, ty.field);
+            generalizeInPlace(level, ty.row);
+            return;
+        case 'VAR':
+            if (ty.ref.kind === 'LINK') {
+                generalizeInPlace(level, ty.ref.type);
+            }
+            else if (ty.ref.kind === 'UNBOUND' && ty.ref.level > level) {
+                ty.ref = { kind: 'GENERIC', id: ty.ref.id };
+            }
+            return;
+        case 'CONST':
+        case 'ROWEMPTY':
+            return;
     }
     assert(false);
 }

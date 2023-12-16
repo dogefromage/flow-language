@@ -5,7 +5,7 @@ import { selectEditor } from "../slices/editorSlice";
 import FlowInspectorContentDocument from "./FlowInspectorContentDocument";
 
 const InspectorWrapper = styled.div`
-    min-height: 100%;
+    height: 100%;
     overflow-x: hidden;
     container-type: size;
 `;

@@ -1,8 +1,12 @@
-import { useCallback } from "react";
+import * as lang from 'noodle-language';
+import { TExpr } from "noodle-language";
+import React, { useCallback, useMemo } from "react";
 import { NameValidationError } from "../components/FormRenameField";
+import { RootState } from "../redux/rootReducer";
 import { useAppSelector } from "../redux/stateHooks";
+import { selectContextFlow } from "../slices/contextSlice";
 import { selectDocument } from "../slices/documentSlice";
-import { FlowJointStyling, JointLocation, JointLocationDigest } from "../types";
+import { JointLocation, JointLocationDigest } from "../types";
 
 export const flowsIdRegex = /^[A-Za-z_][A-Za-z_0-9]*$/;
 export const listItemRegex = /^[A-Za-z_][A-Za-z_0-9]*$/;
@@ -157,3 +161,28 @@ export const useFlowNamingValidator = (excludeId?: string) => {
 //         };
 //     }, [env]);
 // }
+
+
+export function getZoomFromStyles(element: React.RefObject<HTMLDivElement>) {
+    if (!element.current) return 1;
+    const zoomString = getComputedStyle(element.current).getPropertyValue('--zoom');
+    const zoom = +zoomString;
+    if (!isFinite(zoom)) return 1;
+    if (zoom === 0) {
+        console.error(`zoom should not be 0, used 1`);
+        return 1;
+    }
+    return zoom;
+}
+
+const selectNamingContext = (flowId: string) => (state: RootState) => 
+    selectContextFlow(flowId)(state)?.namingContext;
+    
+export function useTypeToString(flowId?: string, ty?: TExpr | null) {
+    const namingContext = useAppSelector(selectNamingContext(flowId!));
+    return useMemo(() => {
+        if (!ty || !namingContext) return 'unknown type';
+        // const generalTy = lang.generalizeType(0, ty);
+        return lang.tyToString(ty, namingContext);
+    }, [ ty, namingContext ]);
+}

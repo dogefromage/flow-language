@@ -3,15 +3,15 @@ import { assert } from "../utils";
 
 export class OrderedGraph {
     private adjacencyList = new Map<string, string[]>();
+    
+    reachability: Map<string, Set<string>> = new Map();
 
-    private reachability: Map<string, Set<string>> = new Map();
+    inDegrees: Map<string, number> = new Map();
+    outDegrees: Map<string, number> = new Map();
 
-    private inDegrees: Map<string, number> = new Map();
-    private outDegrees: Map<string, number> = new Map();
-
-    private preOrder: Map<string, number> = new Map();
-    private postOrder: Map<string, number> = new Map();
-    private cycles: string[][] = [];
+    preOrder: Map<string, number> = new Map();
+    postOrder: Map<string, number> = new Map();
+    cycles: string[][] = [];
     
     constructor(nodes: string[]) {
         nodes.forEach(node => this.adjacencyList.set(node, []));
@@ -30,21 +30,19 @@ export class OrderedGraph {
         }
     }
 
-    addEdgesFrom(from: string, ...to: string[]) {
+    addEdge(from: string, to: string) {
         const adjacency = this.adjacencyList.get(from)!;
         if (!adjacency) {
             throw new Error(`Node '${from}' does not exist.`);
         }
-        for (const v of to) {
-            if (!this.adjacencyList.has(v)) { 
-                throw new Error(`Node '${v}' does not exist.`);
-            }
-            if (from === v) {
-                throw new Error(`Cannot add self-edge '${from}'.`);
-            }
-            if (!adjacency.includes(v)) {
-                adjacency.push(v);
-            }
+        if (!this.adjacencyList.has(to)) { 
+            throw new Error(`Node '${to}' does not exist.`);
+        }
+        if (from === to) {
+            throw new Error(`Cannot add self-edge '${from}'.`);
+        }
+        if (!adjacency.includes(to)) {
+            adjacency.push(to);
         }
     }
 
@@ -52,7 +50,7 @@ export class OrderedGraph {
         const H = new OrderedGraph(Array.from(this.adjacencyList.keys()));
         for (const [from, to] of this.adjacencyList.entries()) {
             for (const u of to) {
-                H.addEdgesFrom(u, from);
+                H.addEdge(u, from);
             }
         }
         return H;
@@ -109,7 +107,7 @@ export class OrderedGraph {
         return this.outDegrees.get(node)!;
     }
 
-    private calculatePrePostOrderAndCycles(): void {
+    calculatePrePostOrderAndCycles(): void {
         const visited = new Set<string>();
         const cyclicVerts = new Set<string>(); 
 
@@ -165,7 +163,7 @@ export class OrderedGraph {
             }
         }
     }
-       
+
     sortTopologically() {
         this.calculatePrePostOrderAndCycles();
         if (this.cycles.length > 0) {

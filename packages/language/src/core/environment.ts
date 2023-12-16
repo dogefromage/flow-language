@@ -1,77 +1,65 @@
-import { Environment, NamespacePath, ScopeNode } from "../types";
-import { instantiateType } from "../typesystem/core";
-import { TExpr } from "../typesystem/typeExpr";
+import { EnvPath, EnvSymbolRow, Environment, EnvironmentSignature, MaybeProblem } from "../types";
 import { assert } from "../utils";
 
 // // use shared cache since same values appear often in different functions
 // const environmentCache = new ListCache(5209);
 
-export const createEnvironment = (scope: ScopeNode): Environment => ({ parent: null, scope });
+const emptyRow: EnvSymbolRow = { path: [], symbols: {} };
+export const createEnvironment = (row: EnvSymbolRow = emptyRow): Environment => ({ parent: null, row });
+export const pushEnv = (parent: Environment, row: EnvSymbolRow): Environment => ({ parent, row });
+export const popEnv = (env: Environment) => env.parent;
 
-export const pushScope = (env: Environment, scope: ScopeNode): Environment => ({ parent: env, scope });
-export const popScope = (env: Environment) => env.parent;
-
-export const getInstantiatedEnvType = (env: Environment, level: number, path: NamespacePath) => {
-    const slugs = path.split('/');
-    let ty!: TExpr;
-    switch (slugs.length) {
-        case 1:
-            ty = getLocalType(env, slugs[0]);
-            break;
-        case 2:
-            ty = getFlowType(env, slugs[0], slugs[1]);
-            break;
-        case 3:
-            ty = getModuleType(env, slugs[0], slugs[1], slugs[2]);
-            break;
-        default:
-            assert(0) as never;
+/**
+ * Expecting scopedIdentifier to look like
+ *    'module/flow/identifier'
+ * where the first two parts are optional.
+ * Location path should contain enough information to resolve the first two parts
+ * if they are missing. Will throw all kinds of errors if this is not possible.
+ */
+export function resolveEnvPath(scopedIdentifier: string, locationPath: string[]) {
+    const searchPath = scopedIdentifier.split('/');
+    assert(locationPath.length <= 2, 'invalid prefix path');
+    assert(searchPath.length <= 3, 'invalid search path');
+    assert((searchPath.length + locationPath.length) >= 3, 'not enough path information');
+    
+    const finalPath: string[] = [];
+    for (let i = 0; i < 3; i++) {
+        finalPath.push(
+            searchPath[i - 3 + searchPath.length] || 
+            locationPath[i] || 
+            assert(false)!
+        );
     }
-    return instantiateType(level, ty);
+    return finalPath;
 }
 
-function getLocalType(env: Environment | null, identifier: string) {
-    while (env?.scope != null && env.scope.kind === 'local') {
-        if (env.scope.types[identifier] != null) {
-            return env.scope.types[identifier];
-        }
-        env = env.parent;
-    }
-    throw new Error(`Could not find local '${identifier}'.`);
-}
-function getFlowType(env: Environment | null, flowId: string, identifier: string) {
-    while (env != null && env.scope.kind !== 'flow') {
-        env = env.parent;
-    }
-    while (env != null && env.scope.kind === 'flow') {
-        if (env.scope.flowId === flowId) {
-            const t = env.scope.functions[identifier]?.generalizedType;
-            if (t != null) {
-                return t;
-            } else {
-                break;
+export function getEnvironmentSignature(
+    env: Environment | null, scopedIdentifier: string, locationPath: string[]): MaybeProblem<EnvironmentSignature> {
+    const searchPath = resolveEnvPath(scopedIdentifier, locationPath).join('/');
+
+    while (env != null) {
+        // TODO: inefficient, optimize
+        for (const [key, sig] of Object.entries(env.row.symbols)) {
+            const sigPath = resolveEnvPath(key, env.row.path).join('/');
+            if (searchPath === sigPath) {
+                return MaybeProblem.ok(sig);
             }
         }
         env = env.parent;
     }
-    throw new Error(`Could not find flow '${flowId}' with type '${identifier}'.`);
+
+    return MaybeProblem.problem({ message: `Could not find symbol '${searchPath}'.` });
 }
-function getModuleType(env: Environment | null, moduleName: string, flowId: string, identifier: string) {
-    while (env != null && env.scope.kind !== 'module') {
-        env = env.parent;
-    }
-    while (env != null && env.scope.kind === 'module') {
-        if (env.scope.name === moduleName) {
-            const t = env.scope.flows[flowId]?.functions[identifier]?.generalizedType;
-            if (t != null) {
-                return t;
-            } else {
-                break;
-            }
+
+export function getEnvironmentSignatureOfKind<S extends EnvironmentSignature>
+    (env: Environment | null, name: string, path: string[], kind: S['kind']): MaybeProblem<S> {
+    return getEnvironmentSignature(env, name, path).flatMap(sig => {
+        if (sig.kind !== kind) {
+            const msg = `Expected signature of kind '${kind}' at location '${path}' but found '${sig.kind}'.`;
+            return MaybeProblem.problem({ message: msg });
         }
-        env = env.parent;
-    }
-    throw new Error(`Could not find module '${moduleName}' with flow '${flowId}' with type '${identifier}'.`);
+        return MaybeProblem.ok(sig as S);
+    });
 }
 
 // export const getEnvironmentSignature = (env: EnvScope, name: string) => {
@@ -111,7 +99,7 @@ function getModuleType(env: Environment | null, moduleName: string, flowId: stri
 //         // dont know how to handle types. for now just dont scope them
 //         types: namespace.content.types,
 //         // types: mapObjKeys(
-//         //     namespace.content.types, 
+//         //     namespace.content.types,
 //         //     addNamespaceName
 //         // ),
 //     };
@@ -120,7 +108,7 @@ function getModuleType(env: Environment | null, moduleName: string, flowId: stri
 
 // export const collectTotalEnvironmentContent = mem(
 //     (env: EnvScope): FlowNamedEnvironmentContent => {
-//         let currContent = env.namespace ? 
+//         let currContent = env.namespace ?
 //             getNamedContent(env.namespace) : { signatures: {}, types: {} };
 //         if (env.parent == null) {
 //             return currContent;

@@ -1,5 +1,5 @@
 import * as lang from "noodle-language";
-import { assert } from "../utils";
+import { assert, except } from "../utils";
 import { PanelState } from "./panelManager";
 import { Vec2 } from "./utils";
 
@@ -50,7 +50,7 @@ interface ArgumentJointLocation {
     nodeId: string;
     argumentId: string;
     accessor?: string;
-} 
+}
 interface OutputJointLocation {
     kind: 'output';
     nodeId: string;
@@ -60,15 +60,14 @@ interface ParameterJointLocation {
     kind: 'parameter';
     nodeId: string;
     parameterId: string;
-} 
+}
 interface ResultJointLocation {
     kind: 'result';
     nodeId: string;
 }
 export type JointLocation = ArgumentJointLocation | OutputJointLocation | ParameterJointLocation | ResultJointLocation;
 export type JointLocationDigest = string & { __jointLocationDigest: true };
-
-export function jointLocationDirection(loc: JointLocation) {
+export function getJointDir(loc: JointLocation) {
     switch (loc.kind) {
         case 'argument':
         case 'result':
@@ -79,12 +78,60 @@ export function jointLocationDirection(loc: JointLocation) {
     }
     assert(0);
 }
-
-export interface FlowEdge {
-    id: string;
-    source: JointLocation;
-    target: JointLocation;
+export function createConnectionReference(loc: JointLocation, __timestamp: number): lang.ConnectionReference {
+    if (loc.kind !== 'parameter' && loc.kind !== 'output') {
+        except(`Joint of type '${loc.kind}' cannot be referenced.`);
+    }
+    if (loc.kind === 'parameter') {
+        return {
+            __timestamp,
+            kind: 'parameter',
+            nodeId: loc.nodeId,
+            parameter: loc.parameterId,
+            // accessor: loc.accessor,
+        }
+        // return `${loc.nodeId}?${loc.parameterId}` as lang.ConnectionReference;
+    }
+    if (loc.kind === 'output') {
+        return {
+            __timestamp,
+            kind: 'output',
+            nodeId: loc.nodeId,
+            accessor: loc.accessor,
+        }
+        // const accessor = loc.accessor ? `.${loc.accessor}` : '';
+        // return `${loc.nodeId}${accessor}` as lang.ConnectionReference;
+    }
+    assert(false);
 }
+export function getJointLocationFromReference(
+    ref: lang.ConnectionReference
+): ParameterJointLocation | OutputJointLocation {
+    // const decodedParam = lang.decodeParameterRef(ref);
+    if (ref.kind === 'parameter') {
+        return {
+            kind: 'parameter',
+            nodeId: ref.nodeId,
+            parameterId: ref.parameter,
+            // accessor?    
+        };
+    }
+    // const decodedOutput = lang.decodeOutputRef(ref);
+    if (ref.kind === 'output') {
+        return {
+            kind: 'output',
+            nodeId: ref.nodeId,
+            accessor: ref.accessor,
+        };
+    }
+    except(`Invalid connection reference: ${JSON.stringify(ref)}`);
+}
+
+// export interface FlowEdge {
+//     id: string;
+//     source: JointLocation;
+//     target: JointLocation;
+// }
 
 export interface FlowEditorPanelState extends PanelState {
     flowStack: string[];

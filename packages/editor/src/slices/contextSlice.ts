@@ -23,13 +23,16 @@ export const {
     setContext: validationSetResult,
 } = contextSlice.actions;
 
-export const selectDocumentContext = (state: RootState) => state.context;
-export const useSelectFlowContext = (flowId: string) => {
-    return useCallback((state: RootState) =>
-        selectDocumentContext(state).documentContext?.flowContexts[flowId],
-        [flowId],
-    );
-}
+export const selectContextDocument = (state: RootState) => state.context;
+export const selectContextFlow = (flowId: string) => 
+    (state: RootState) => selectContextDocument(state).documentContext?.flowContexts[flowId];
+const selectContextNode = (flowId: string, nodeId: string) =>
+    (state: RootState) => selectContextFlow(flowId)(state)?.nodes[nodeId];
+
+export const useSelectContextFlow = (flowId: string) =>
+    useCallback(selectContextFlow(flowId), [flowId]);
+export const useSelectContextNode = (flowId: string, nodeId: string) =>
+    useCallback(selectContextNode(flowId, nodeId), [flowId, nodeId]);
 
 const contextReducer = contextSlice.reducer;
 

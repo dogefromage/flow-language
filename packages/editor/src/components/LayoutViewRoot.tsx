@@ -10,8 +10,16 @@ const LayoutViewRoot = () => {
         <ReflexContainer orientation='vertical' style={{
             overflow: 'hidden',
         }}>
-            <ReflexElement minSize={200} flex={1}>
-                <FlowOutlinerView panelId={'outliner'} viewType={FLOW_OUTLINER_VIEW_TYPE}/>
+            <ReflexElement flex={1}>
+                <ReflexContainer orientation='horizontal'>
+                    <ReflexElement minSize={200} flex={2}>
+                        <FlowOutlinerView panelId={'outliner'} viewType={FLOW_OUTLINER_VIEW_TYPE}/>
+                    </ReflexElement>
+                    <ReflexSplitter />
+                    <ReflexElement minSize={250}  flex={1}>
+                        <FlowInspectorView panelId={'inspector'} viewType={FLOW_INSPECTOR_VIEW_TYPE} />
+                    </ReflexElement>
+                </ReflexContainer>
             </ReflexElement>
             <ReflexSplitter />
             <ReflexElement flex={5}>
@@ -24,10 +32,6 @@ const LayoutViewRoot = () => {
                         <ConsoleView panelId={'console'} viewType={CONSOLE_VIEW_TYPE}/>
                     </ReflexElement>
                 </ReflexContainer>
-            </ReflexElement>
-            <ReflexSplitter />
-            <ReflexElement minSize={250}  flex={2}>
-                <FlowInspectorView panelId={'inspector'} viewType={FLOW_INSPECTOR_VIEW_TYPE} />
             </ReflexElement>
         </ReflexContainer>
     );

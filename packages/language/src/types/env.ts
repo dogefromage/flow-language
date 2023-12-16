@@ -1,5 +1,5 @@
 import { TExpr } from "../typesystem/typeExpr";
-import { ArgumentExprType, InitializerValue } from "./state";
+import { ArgumentExprType, InitializerValue } from "./grammar";
 
 export interface ParameterSignature {
     id: string;
@@ -11,37 +11,53 @@ export interface OutputSignature {
 }
 
 export interface FunctionSignature {
-    id: string;
     kind: 'function';
     attributes: Record<string, string>;
-    generalizedType: TExpr;
+    type: TExpr;
     parameters: Record<string, ParameterSignature>;
     output: OutputSignature;
 }
 
-export interface ModuleScope {
-    kind: 'module';
-    name: string;
-    flows: Record<string, FlowScope>;
-}
-export interface FlowScope {
-    kind: 'flow';
-    flowId: string;
-    functions: Record<string, FunctionSignature>;
-}
-export interface LocalScope {
-    kind: 'local';
-    types: Record<string, TExpr>;
-}
-export type ScopeNode = ModuleScope | FlowScope | LocalScope;
+// /**
+//  * It is assumed that scopes are ordered
+//  *   ModuleScope... FlowScope... LocalScope...
+//  */
+// export interface ModuleScope {
+//     kind: 'module';
+//     name: string;
+//     flows: Record<string, FlowScope>;
+// }
+// export interface FlowScope {
+//     kind: 'flow';
+//     flowId: string;
+//     functions: Record<string, FunctionSignature>;
+// }
+// export interface LocalScope {
+//     kind: 'local';
+//     types: Record<string, TExpr>;
+// }
+// export type ScopeNode = ModuleScope | FlowScope | LocalScope;
 
-export type NamespacePath = string & { __namespacePath: never };
+export interface TypeSignature {
+    kind: 'type';
+    type: TExpr;
+}
 
-/**
- * It is assumed that scopes are ordered
- *   ModuleScope... FlowScope... LocalScope...
- */
+export type EnvironmentSignature = FunctionSignature | TypeSignature;
+
+export type EnvPath = string[];
+
+export interface EnvSymbolRow {
+    path: EnvPath;
+    symbols: Record<string, EnvironmentSignature>;
+}
+
 export interface Environment {
     parent: Environment | null;
-    scope: ScopeNode;
+    row: EnvSymbolRow;
+}
+
+
+export interface FlowModule {
+    row: EnvSymbolRow;
 }

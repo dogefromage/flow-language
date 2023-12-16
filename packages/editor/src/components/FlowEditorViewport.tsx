@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { flowEditorAddNodeAtPositionCommand, flowEditorAddCommandAtPositionCommand, flowEditorFitCameraCommand, flowEditorPasteCommand } from '../content/commands/flowEditorViewCommands';
+import { flowEditorAddAppNodeAtPositionCommand, flowEditorAddCommandAtPositionCommand, flowEditorFitCameraCommand, flowEditorPasteCommand, flowEditorAddFunctionAtPositionCommand } from '../content/commands/flowEditorViewCommands';
 import { editCopySelectedCommand, editCutSelectedCommand, editDeleteSelectedCommand } from '../content/commands/globalEditorCommands';
 import { useAppSelector } from '../redux/stateHooks';
 import { useSelectFlowEditorPanel } from '../slices/panelFlowEditorSlice';
@@ -41,7 +41,8 @@ const FlowEditorViewport = ({ panelId }: Props) => {
         panelId,
         'Flow Viewport',
         [
-            flowEditorAddNodeAtPositionCommand,
+            flowEditorAddAppNodeAtPositionCommand,
+            flowEditorAddFunctionAtPositionCommand,
             flowEditorAddCommandAtPositionCommand,
             editDeleteSelectedCommand,
             CONTEXT_MENU_DIVIDER,
@@ -58,7 +59,7 @@ const FlowEditorViewport = ({ panelId }: Props) => {
             onContextMenu={contextMenu}
             onDoubleClick={e => {
                 dispatchCommand(
-                    flowEditorAddNodeAtPositionCommand,
+                    flowEditorAddAppNodeAtPositionCommand,
                     { clientCursor: { x: e.clientX, y: e.clientY } }
                 );
             }}

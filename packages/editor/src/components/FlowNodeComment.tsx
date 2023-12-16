@@ -3,7 +3,7 @@ import React, { PropsWithChildren, useRef, useState } from 'react';
 import { v4 as uuidv4, v4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { editorSetSelection, selectEditor } from '../slices/editorSlice';
-import { flowsMoveSelection, flowsResizeComment, flowsSetCommentAttribute, useSelectSingleFlowNode } from '../slices/flowsSlice';
+import { flowsMoveSelection, flowsResizeComment, flowsSetCommentAttribute, useSelectFlowNode } from '../slices/flowsSlice';
 import { EDITOR_ITEM_ID_ATTR, EDITOR_SELECTABLE_ITEM_CLASS, SelectionStatus, Size2, Vec2 } from '../types';
 import { assert } from '../utils';
 import { vectorScreenToWorld } from '../utils/planarCameraMath';
@@ -11,6 +11,7 @@ import { FLOW_COMMENT_DEFAULT_COLOR_HEX, FlowNodeCommentDiv } from '../styles/fl
 import { MaterialSymbol } from '../styles/icons';
 import * as lang from 'noodle-language';
 import styled from 'styled-components';
+import { getZoomFromStyles } from '../utils/flows';
 
 interface FlowNodeRegionProps {
     panelId: string;
@@ -20,7 +21,8 @@ interface FlowNodeRegionProps {
 
 const FlowNodeComment = ({ panelId, flowId, nodeId }: PropsWithChildren<FlowNodeRegionProps>) => {
     const dispatch = useAppDispatch();
-    const node = useAppSelector(useSelectSingleFlowNode(flowId, nodeId));
+    const node = useAppSelector(useSelectFlowNode(flowId, nodeId));
+    const wrapperRef = useRef<HTMLDivElement>(null);
     if (!node) return null;
     assert(node.kind === 'comment');
 
@@ -35,6 +37,7 @@ const FlowNodeComment = ({ panelId, flowId, nodeId }: PropsWithChildren<FlowNode
         lastCursor: Vec2;
         startPosition: Vec2;
         stackToken: string;
+        zoom: number;
     }>();
 
     const ensureSelection = () => {
@@ -52,24 +55,25 @@ const FlowNodeComment = ({ panelId, flowId, nodeId }: PropsWithChildren<FlowNode
                 cancel();
             }
 
+            const zoom = getZoomFromStyles(wrapperRef);
             dragRef.current = {
                 startCursor: { x: e.clientX, y: e.clientY },
                 lastCursor: { x: e.clientX, y: e.clientY },
                 startPosition: { ...node.position },
                 stackToken: uuidv4(),
+                zoom,
             };
             e.stopPropagation();
             ensureSelection();
         },
         move: e => {
             if (!dragRef.current || !selection) return;
-            const zoom = 1;
 
             const screenDelta = {
                 x: e.clientX - dragRef.current.lastCursor.x,
                 y: e.clientY - dragRef.current.lastCursor.y,
             };
-            const worldMove = vectorScreenToWorld(zoom, screenDelta);
+            const worldMove = vectorScreenToWorld(dragRef.current.zoom, screenDelta);
             dragRef.current.lastCursor = { x: e.clientX, y: e.clientY };
 
             dispatch(flowsMoveSelection({
@@ -89,28 +93,30 @@ const FlowNodeComment = ({ panelId, flowId, nodeId }: PropsWithChildren<FlowNode
         lastSize: Size2;
         lastCursor: Vec2;
         stackToken: string;
+        zoom: number;
     }>();
 
     const { handlers: sizeHandlers, catcher: sizeCatcher } = useMouseDrag({
         mouseButton: 0,
         start: e => {
+            const zoom = getZoomFromStyles(wrapperRef);
             sizeRef.current = {
                 startCursor: { x: e.clientX, y: e.clientY },
                 lastCursor: { x: e.clientX, y: e.clientY },
                 lastSize: { ...node.size },
                 stackToken: uuidv4(),
+                zoom,
             };
             e.stopPropagation();
         },
         move: e => {
             if (!sizeRef.current) return;
-            const zoom = 1;
 
             const screenDelta = {
                 x: e.clientX - sizeRef.current.lastCursor.x,
                 y: e.clientY - sizeRef.current.lastCursor.y,
             };
-            const worldDelta = vectorScreenToWorld(zoom, screenDelta);
+            const worldDelta = vectorScreenToWorld(sizeRef.current.zoom, screenDelta);
             const newSize: Size2 = {
                 w: sizeRef.current.lastSize.w + worldDelta.x,
                 h: sizeRef.current.lastSize.h + worldDelta.y,
@@ -122,7 +128,7 @@ const FlowNodeComment = ({ panelId, flowId, nodeId }: PropsWithChildren<FlowNode
                 size: newSize,
                 undo: {
                     actionToken: sizeRef.current!.stackToken,
-                    desc: `Resized region in active flow.`
+                    desc: `Resized comment in active flow.`
                 },
             }));
         },
@@ -133,6 +139,7 @@ const FlowNodeComment = ({ panelId, flowId, nodeId }: PropsWithChildren<FlowNode
 
     return (
         <FlowNodeCommentDiv $position={node.position}
+            ref={wrapperRef}
             $size={node.size}
             $selectionStatus={selectionStatus}
             $color={color} className={EDITOR_SELECTABLE_ITEM_CLASS}

@@ -8,10 +8,11 @@ const defaultTheme: DefaultTheme = {
         flowEditor: {
             background: '#444',
             nodeColor: 'var(--color-3)',
-            edgeColors: {
+            referenceStatus: {
                 normal: '#c9c9c9',
                 redundant: '#c9c9c944',
                 cyclic: '#ba2a09',
+                illegal: '#ba2a09',
             },
             defaultTitle: '#111',
         },

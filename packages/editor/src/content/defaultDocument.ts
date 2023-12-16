@@ -1,4 +1,5 @@
 import * as lang from "noodle-language";
+import { FUNCTION_NODE_MIN_WIDTH } from "../components/FlowNodeFunction";
 
 // export const defaultFlowSignature: lang.AnonymousFlowSignature = {
 //     generics: [],
@@ -44,24 +45,35 @@ const defaultFlow: lang.FlowGraph = {
     id: DEFAULT_FLOW_ID,
     attributes: {},
     nodes: {
-        a: {
-            kind: 'call',
-            id: 'a',
-            functionId: 'core/number/multiply' as lang.NamespacePath,
-            argumentMap: {
-                x: { id: 'x', references: {} },
-                y: { id: 'y', references: {} },
-            },
-            output: {},
-            position: { x: 500, y: 300 }
-        },
-        b: {
-            kind: 'comment',
-            id: 'b',
-            attributes: { text: 'Test Comment!!', },
-            position: { x: 0, y: 0 },
-            size: { w: 700, h: 180 },
-        }
+        // a: {
+        //     kind: 'call',
+        //     id: 'a',
+        //     functionId: 'core/number/multiply' as lang.NamespacePath,
+        //     argumentMap: {
+        //         x: { id: 'x', references: {}, exprType: 'initializer' },
+        //         y: { id: 'y', references: {}, exprType: 'initializer' },
+        //     },
+        //     output: {},
+        //     position: { x: 500, y: 300 }
+        // },
+        // b: {
+        //     kind: 'comment',
+        //     id: 'b',
+        //     attributes: { text: 'Test Comment!!', },
+        //     position: { x: 0, y: 0 },
+        //     size: { w: 700, h: 180 },
+        // },
+        // c: {
+        //     kind: 'function',
+        //     id: 'c',
+        //     parameters: {
+        //         x: { id: 'x', constraint: {} },
+        //         y: { id: 'y', constraint: {} },
+        //     },
+        //     position: { x: 1000, y: 500 },
+        //     result: {},
+        //     width: 0,
+        // }
     },
     imports: [ 'standard' ],
 };

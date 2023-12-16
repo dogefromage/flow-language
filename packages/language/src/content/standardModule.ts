@@ -1,22 +1,23 @@
-import { FlowScope, FunctionSignature, ModuleScope } from "../types";
-import { TExpr, typeExpressions } from "../typesystem/typeExpr";
+import _ from "lodash";
+import { EnvSymbolRow, FlowModule } from "../types";
+import { typeConstructors } from "../typesystem/typeExpr";
 
 // const { varRow, simpleRow, outputRow, genParam } = shorthands;
-const { tapp, tarrow, tconst, trecord, tgeneric } = typeExpressions;
+const { tapp, tarrow, tconst, trecord, tgeneric } = typeConstructors;
 
-function buildFlow(flowId: string, signatures: FunctionSignature[]): FlowScope {
-    const functions: Record<string, FunctionSignature> = {};
-    for (const signature of signatures) {
-        functions[signature.id] = signature;
-    }
-    return {
-        kind: 'flow',
-        flowId,
-        functions,
-    }
-}
+// function buildFlow(flowId: string, signatures: FunctionSignature[]): FlowScope {
+//     const functions: Record<string, FunctionSignature> = {};
+//     for (const signature of signatures) {
+//         functions[signature.id] = signature;
+//     }
+//     return {
+//         kind: 'flow',
+//         flowId,
+//         functions,
+//     }
+// }
 
-const numberFunctions: FunctionSignature[] = [];
+const numberSymbols: EnvSymbolRow['symbols'] = {};
 
 const immediate = <T>(fun: () => T) => fun();
 
@@ -76,17 +77,16 @@ const primitives = {
 //     inputs: [varRow.number('a', { defaultValue: 0 })],
 //     output: outputRow.alias('a_truncated', 'number'),
 // });
-numberFunctions.push({
+numberSymbols['multiply'] = ({
     kind: 'function',
-    id: 'multiply',
+    type: tarrow(trecord({ a: primitives.number, b: primitives.number }), primitives.number),
     attributes: {
         category: 'Numbers',
         description: 'Takes two numbers and returns their product.'
     },
-    generalizedType: tarrow(trecord({ a: primitives.number, b: primitives.number }), primitives.number),
     parameters: {
-        a: { id: 'a', defaultExprType: 'initializer' },
-        b: { id: 'b', defaultExprType: 'initializer' },
+        a: { id: 'a', defaultExprType: 'initializer', defaultValue: 1 },
+        b: { id: 'b', defaultExprType: 'initializer', defaultValue: 2 },
     },
     output: {},
 });
@@ -117,16 +117,15 @@ numberFunctions.push({
 //     output: outputRow.custom('choice', createGenericType('T')),
 // });
 
-numberFunctions.push({
+numberSymbols['number'] = ({
     kind: 'function',
-    id: 'number',
+    type: tarrow(trecord({ n: primitives.number }), primitives.number),
     attributes: {
         category: 'Numbers',
         description: 'An input field for a number.'
     },
-    generalizedType: tarrow(trecord({ n: primitives.number }), primitives.number),
     parameters: {
-        n: { id: 'n', defaultExprType: 'initializer' },
+        n: { id: 'n', defaultExprType: 'initializer', defaultValue: 0 },
     },
     output: {},
 });
@@ -366,10 +365,11 @@ numberFunctions.push({
 //     boolean: createPrimitiveType('boolean'),
 // }
 
-export const standardModule: ModuleScope = {
-    kind: 'module',
-    name: 'core',
-    flows: {
-        'number': buildFlow('number', numberFunctions),
+export const standardModule: FlowModule = {
+    row: {
+        path: ['core'],
+        symbols: {
+            ..._.mapKeys(numberSymbols, (_, k) => `number/${k}`),
+        }
     },
 };

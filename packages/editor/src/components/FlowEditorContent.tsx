@@ -1,13 +1,13 @@
+import * as lang from 'noodle-language';
 import React from 'react';
 import { useAppSelector } from '../redux/stateHooks';
-import { selectFlows, useSelectSingleFlow, useSelectSingleFlowNode } from '../slices/flowsSlice';
+import { useSelectSingleFlow, useSelectFlowNode } from '../slices/flowsSlice';
 import { useSelectFlowEditorPanel } from '../slices/panelFlowEditorSlice';
 import { assert } from '../utils';
 import FlowEdges from './FlowEdges';
-import FlowNodeComment from './FlowNodeComment';
 import FlowNodeCall from './FlowNodeCall';
+import FlowNodeComment from './FlowNodeComment';
 import FlowNodeFunction from './FlowNodeFunction';
-import { selectDocument } from '../slices/documentSlice';
 
 interface FlowEditorContentProps {
     panelId: string;
@@ -24,12 +24,12 @@ const FlowEditorContent = ({ flowId, panelId }: FlowEditorContentProps) => {
 
     return (
         <>
+            <FlowEdges panelId={panelId} flowId={flowId} />
             {
                 Object.keys(flowGraph.nodes).map((nodeId) => 
                     <FlowNodeSwitch key={nodeId} panelId={panelId} flowId={flowId} nodeId={nodeId} />
                 )
             }
-            <FlowEdges panelId={panelId} flowId={flowId} />
         </>
     );
 }
@@ -44,7 +44,7 @@ export interface FlowNodeProps {
     nodeId: string;
 }
 const FlowNodeSwitch = ({ panelId, flowId, nodeId }: FlowNodeProps) => {
-    const node = useAppSelector(useSelectSingleFlowNode(flowId, nodeId));
+    const node = useAppSelector(useSelectFlowNode(flowId, nodeId));
     if (!node) return null;
     
     switch (node.kind) {
@@ -64,5 +64,6 @@ export type RowComponentProps<R> = {
     flowId: string;
     nodeId: string;
     row: R;
+    ty: lang.TExpr;
 }
 

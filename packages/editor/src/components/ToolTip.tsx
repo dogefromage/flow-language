@@ -67,24 +67,17 @@ const ToolTipBox = ({ children, anchor, parentSize }: PropsWithChildren<ToolTipB
     );
 };
 
-const RelativeDiv = styled.div`
-    position: relative;
-`;
-
-interface ToolTipProps {
-    tooltip: React.FC;
-    hoverMillis?: number;
-}
-
-const ToolTipAnchor = ({ tooltip: ToolTipContent, children, hoverMillis }: PropsWithChildren<ToolTipProps>) => {
+export function useToolTip(content: React.FC, hoverMillis?: number) {
     const [tooltip, setTooltip] = useState<{ anchor: Vec2, parentSize: Size2 }>();
     const timeoutRef = useRef<number | undefined>();
 
     hoverMillis ||= 500;
 
-    return (
-        <RelativeDiv
-            onMouseEnter={e => {
+    const ToolTipContent = content;
+
+    return {
+        handlers: {
+            onMouseEnter: (e: React.MouseEvent) => {
                 if (timeoutRef.current == null) {
                     const bounds = e.currentTarget.getBoundingClientRect();
                     const anchor = { x: bounds.left, y: bounds.top };
@@ -93,26 +86,42 @@ const ToolTipAnchor = ({ tooltip: ToolTipContent, children, hoverMillis }: Props
                     timeoutRef.current = setTimeout(
                         () => setTooltip({ anchor, parentSize }), hoverMillis);
                 }
-            }}
-            onMouseLeave={e => {
+            },
+            onMouseLeave: (e: React.MouseEvent) => {
                 setTooltip(undefined);
                 if (timeoutRef != null) {
                     clearTimeout(timeoutRef.current);
                     timeoutRef.current = undefined;
                 }
-            }}
-        >
-            {
-                children
-            }{
-                tooltip &&
-                ReactDOM.createPortal(
-                    <ToolTipBox anchor={tooltip.anchor} parentSize={tooltip.parentSize}  >
-                        <ToolTipContent />
-                    </ToolTipBox>,
-                    document.querySelector(`#tool-tip-portal-mount`)!
-                )
-            }
+            },
+        },
+        catcher: (
+            tooltip && 
+            ReactDOM.createPortal(
+                <ToolTipBox anchor={tooltip.anchor} parentSize={tooltip.parentSize}  >
+                    <ToolTipContent />
+                </ToolTipBox>,
+                document.querySelector(`#tool-tip-portal-mount`)!
+            )
+        )
+    }
+}
+
+const RelativeDiv = styled.div`
+    position: relative;
+`;
+
+interface ToolTipProps {
+    content: React.FC;
+    hoverMillis?: number;
+}
+
+const ToolTipAnchor = ({ content, children, hoverMillis }: PropsWithChildren<ToolTipProps>) => {
+    const { handlers, catcher } = useToolTip(content, hoverMillis);
+    return (
+        <RelativeDiv {...handlers}>
+            {children}
+            {catcher}
         </RelativeDiv>
     );
 }

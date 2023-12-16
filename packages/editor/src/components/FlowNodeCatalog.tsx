@@ -1,12 +1,13 @@
 import { useCallback, useMemo, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../redux/stateHooks";
-import { useSelectFlowContext } from "../slices/contextSlice";
+import { useSelectContextFlow } from "../slices/contextSlice";
 import { flowEditorSetStateNeutral, useSelectFlowEditorPanel } from "../slices/panelFlowEditorSlice";
 import { EditorActionAddNodeAtPositionState, EditorActionAddNodeWithConnectionState, EditorActionState, Vec2 } from "../types";
 import Menus from "./Menus";
 import * as lang from 'noodle-language';
 import { AppDispatch } from "../redux/rootReducer";
 import { flowsAddCallNode } from "../slices/flowsSlice";
+import styled from "styled-components";
 
 interface Props {
     panelId: string;
@@ -16,13 +17,13 @@ const FlowNodeCatalog = ({ panelId }: Props) => {
     const dispatch = useAppDispatch();
     const panelState = useAppSelector(useSelectFlowEditorPanel(panelId));
     const flowId = panelState?.flowStack[0];
-    const graphContext = useAppSelector(useSelectFlowContext(flowId!));
+    const graphContext = useAppSelector(useSelectContextFlow(flowId!));
 
     const [searchValue, setSearchValue] = useState('');
 
     const catalogState = panelState && isCatalogOpen(panelState.state) && panelState.state || undefined;
 
-    const addNode = useCallback((signaturePath: lang.NamespacePath, signature: lang.FunctionSignature) => {
+    const addNode = useCallback((signaturePath: string, signature: lang.FunctionSignature) => {
         if (!flowId || !catalogState) return;
         createAddFlowAction(flowId, signaturePath, signature, catalogState, dispatch);
     }, [flowId, catalogState, dispatch]);
@@ -45,11 +46,11 @@ const FlowNodeCatalog = ({ panelId }: Props) => {
     return (
         <Menus.RootFloating menuId={`template-catalog:${flowId}`} onClose={closeMenu}
             anchor={catalogState.location.clientPosition} initialFocusPath={[0]}>
-            <Menus.Title name='Add Template' color='black' />
+            <Menus.Title name='Add Call Node' color='black' />
             <Menus.Search value={searchValue} placeholder='Search...'
                 onChange={setSearchValue} /> {
-                graphContext &&
-                <CatalogContent searchValue={searchValue} env={graphContext.env}
+                graphContext && flowId &&
+                <CatalogContent flowId={flowId} searchValue={searchValue} env={graphContext.env}
                     addNode={addNode} />
             }
         </Menus.RootFloating>
@@ -59,35 +60,51 @@ const FlowNodeCatalog = ({ panelId }: Props) => {
 export default FlowNodeCatalog;
 
 interface CatalogContentProps {
+    flowId: string;
     searchValue: string;
     env: lang.Environment;
-    addNode: (signaturePath: lang.NamespacePath, signature: lang.FunctionSignature) => void;
+    addNode: (signaturePath: string, signature: lang.FunctionSignature) => void;
 }
-const CatalogContent = ({ searchValue, env, addNode }: CatalogContentProps) => {
+const CatalogContent = ({ flowId, searchValue, env, addNode }: CatalogContentProps) => {
 
-    const functionMap = useMemo(() => {
-        const funs: Record<string, lang.FunctionSignature> = {};
+    interface CatalogOption {
+        fullPath: string;
+        prefix: string;
+        name: string;
+        signature: lang.FunctionSignature;
+    }
+
+    const availFuns = useMemo(() => {
+        const funs: CatalogOption[] = [];
         while (env != null) {
-            if (env.scope.kind === 'flow') {
-                for (const [ funId, fun ] of Object.entries(env.scope.functions)) {
-                    funs[`${env.scope.flowId}/${funId}`] = fun;
+            for (const [funId, fun] of Object.entries(env.row.symbols)) {
+                if (fun.kind !== 'function') continue;
+                const fullPath = lang.resolveEnvPath(funId, env.row.path).join('/');
+                // determin which part of slug is local
+                const [namespaceSlug, flowSlug, nameSlug] = fullPath.split('/');
+                const nameSlugs = [nameSlug];
+                if (flowSlug !== flowId) {
+                    nameSlugs.unshift(flowSlug);
                 }
-            }
-            if (env.scope.kind === 'module') {
-                for (const [ flowId, flow ] of Object.entries(env.scope.flows)) {
-                    for (const [ funId, fun ] of Object.entries(flow.functions)) {
-                        funs[`${env.scope.name}/${flowId}/${funId}`] = fun;
-                    }
+                if (namespaceSlug !== 'document') {
+                    nameSlugs.unshift(namespaceSlug);
                 }
+                const name = nameSlugs.join('/');
+                const prefix = fullPath.slice(0, -name.length);
+                funs.push({ fullPath, prefix, name, signature: fun });
             }
             env = env.parent!;
         }
         return funs;
-    }, [ env ]);
+    }, [env]);
 
-    return Object.entries(functionMap).map(([path, sig]) =>
-        <Menus.Button key={path} name={path}
-            onPush={() => addNode(path as lang.NamespacePath, sig)} />
+    return availFuns.map(({ fullPath, name, prefix, signature }) =>
+        <Menus.BaseButton key={fullPath} onPush={() => addNode(fullPath, signature)}>
+            <p>
+                <i><TransparentSpan>{ prefix }</TransparentSpan></i>
+                <b>{ name }</b>
+            </p>
+        </Menus.BaseButton>
     );
 
     // if (searchValue.length > 0) {
@@ -124,6 +141,10 @@ const CatalogContent = ({ searchValue, env, addNode }: CatalogContentProps) => {
     // );
 }
 
+const TransparentSpan = styled.span`
+    opacity: 50%;
+`;
+
 type AddNodeState = EditorActionAddNodeAtPositionState | EditorActionAddNodeWithConnectionState;
 function isCatalogOpen(
     state: EditorActionState
@@ -131,7 +152,7 @@ function isCatalogOpen(
     return state.type === 'add-node-at-position' || state.type === 'add-node-with-connection'
 }
 
-function createAddFlowAction(flowId: string, signaturePath: lang.NamespacePath, 
+function createAddFlowAction(flowId: string, signaturePath: string,
     signature: lang.FunctionSignature, addNodeState: AddNodeState, dispatch: AppDispatch) {
     let nodePosition = addNodeState.location.worldPosition;
 
@@ -182,9 +203,9 @@ function createAddFlowAction(flowId: string, signaturePath: lang.NamespacePath,
     // }));
 }
 
-function createBasicAddNodeAction(flowId: string, path: lang.NamespacePath, signature: lang.FunctionSignature, position: Vec2) {
+function createBasicAddNodeAction(flowId: string, path: string, signature: lang.FunctionSignature, position: Vec2) {
     return flowsAddCallNode({
-        flowId, 
+        flowId,
         signaturePath: path,
         signature,
         position,

@@ -1,125 +1,115 @@
-import { TExpr } from '../typesystem/typeExpr';
-import { Environment, FlowScope, FunctionSignature, LocalScope } from './env';
+import { GenericNamingContext, TExpr } from '../typesystem/typeExpr';
+import { assert } from '../utils';
+import { Environment, FunctionSignature } from './env';
 import { Obj } from './internal';
-import { FlowDocument } from './state';
-
-// export type EnvScope = {
-//     parent: EnvScope | null;
-//     namespace: EnvScopeFrame | null;
-// }
-// export interface EnvScopeFrame {
-//     content: EnvContent;
-// }
-// export type EnvContent = Record<string, TypeSignature>;
+import { FlowDocument } from './grammar';
 
 export type ReferenceStatus = 'normal' | 'redundant' | 'cyclic' | 'illegal';
 export type ReferenceSyntacticType = 'value-and-type' | 'type-only';
 
-// export interface EdgeContext {
-//     id: string;
-//     source: string;
-//     target: string;
-//     status: EdgeStatus;
-//     syntacticType: EdgeSyntacticType;
-// }
-
-export interface DocumentContext {
-    problems: DocumentProblem[];
-    flowContexts: Obj<FlowGraphContext>;
+export interface ReferenceContext {
+    kind: 'reference';
+    problems: ValidationProblem[];
+    // status: ReferenceStatus;
 }
 
-export interface FlowGraphContext {
-    problems: FlowGraphProblem[];
-    nodes: Obj<NodeContext>;
-    env: Environment;
+export interface ValidationProblem {
+    message: string;
+    // maybe add severity here
+}
+
+export interface RowContext {
+    problems: ValidationProblem[];
+    type: TExpr | null;
+}
+
+export interface CallNodeContext {
+    kind: 'call';
+    problems: ValidationProblem[];
+    inputRows: Obj<RowContext>;
+    outputType: TExpr | null;
+    signature: FunctionSignature | null;
+    // isUsed: boolean;
+}
+export interface FunctionNodeContext {
+    kind: 'function';
+    signature: FunctionSignature;
+    problems: ValidationProblem[];
+    result: RowContext;
+    // functionType: TExpr | null;
+    // isUsed: boolean;
 }
 
 export type NodeContext = CallNodeContext | FunctionNodeContext;
 
-export interface CallNodeContext {
-    kind: 'call';
-    problems: NodeProblem[];
-    // inputRows: Obj<ArgumentRowContext>;
-    // outputRow: ArgumentRowContext;
-    functionSignature: FunctionSignature | null;
-    type: TExpr | null;
-    isUsed: boolean;
-}
-export interface FunctionNodeContext {
-    kind: 'function';
-    problems: NodeProblem[];
+export interface FlowGraphContext {
+    problems: ValidationProblem[];
+    nodes: Obj<NodeContext>;
+    env: Environment;
+    namingContext: GenericNamingContext;
+    references: Obj<ReferenceContext>;
 }
 
-export type RowDisplay = 'hidden' | 'simple' | 'initializer' | 'destructured';
-
-// export interface ArgumentRowContext {
-//     display: RowDisplay;
-//     value?: InitializerValue;
-//     problems: RowProblem[];
-// }
-
-interface PlaceholderProblem {
-    message: string;
+export interface DocumentContext {
+    problems: ValidationProblem[];
+    flowContexts: Obj<FlowGraphContext>;
 }
-export type DocumentProblem =
-    PlaceholderProblem
-
-interface CyclicNodes {
-    type: 'cyclic-nodes';
-    message: string;
-    cycle: string[];
-}
-interface MissingNode {
-    type: 'missing-node';
-    message: string;
-    nodeId: string;
-}
-interface OutputMissing {
-    type: 'output-missing';
-    message: string;
-}
-export type FlowGraphProblem =
-    | CyclicNodes
-    | MissingNode
-    | OutputMissing
-
-interface MissingSignature {
-    type: 'missing-signature';
-    message: string;
-    signature: string;
-}
-export type NodeProblem =
-    | MissingSignature
-
-interface InvalidSpecifier {
-    type: 'invalid-specifier';
-    message: string;
-}
-interface RequiredParameter {
-    type: 'required-parameter';
-    message: string;
-}
-interface IncompatibleArgumentType {
-    type: 'incompatible-argument-type';
-    message: string;
-    connectionIndex: number;
-    // typeProblem: TypeSystemExceptionData;
-}
-interface InvalidValue {
-    type: 'invalid-value';
-    message: string;
-    // typeProblem?: TypeSystemExceptionData;
-}
-interface InvalidConnection {
-    type: 'invalid-connection';
-    message: string;
-}
-export type RowProblem =
-    | InvalidSpecifier
-    | RequiredParameter
-    | IncompatibleArgumentType
-    | InvalidValue
-    | InvalidConnection
 
 
 export type LanguageValidator = (document: FlowDocument) => DocumentContext;
+
+type MaybeProblemState<T> = 
+    | { kind: 'ok', result: T } 
+    | { kind: 'problem', problem: ValidationProblem }
+
+export class MaybeProblem<T> {
+    private constructor(
+        private state: MaybeProblemState<T>,
+    ) {}
+
+    static ok<T>(result: T): MaybeProblem<T> {
+        return new MaybeProblem({ kind: 'ok', result });
+    }
+    static problem<T>(problem: ValidationProblem): MaybeProblem<T> {
+        return new MaybeProblem({ kind: 'problem', problem });
+    }
+
+    cast<R>() {
+        return this as any as MaybeProblem<R>;
+    }
+
+    flatMap<R>(fn: (t: T) => MaybeProblem<R>): MaybeProblem<R> {
+        if (this.state.kind === 'ok') {
+            return fn(this.state.result);
+        }
+        return this.cast<R>();
+    }
+    map<R>(fn: (t: T) => R): MaybeProblem<R> {
+        if (this.state.kind === 'ok') {
+            return MaybeProblem.ok(fn(this.state.result));
+        }
+        return this.cast<R>();
+    }
+    mapProblem(fn: (p: ValidationProblem) => ValidationProblem): MaybeProblem<T> {
+        if (this.state.kind === 'problem') {
+            return MaybeProblem.problem(fn(this.state.problem));
+        }
+        return this;
+    }
+
+    kind() {
+        return this.state.kind;
+    }
+    result(): T {
+        const s = this.state;
+        if (s.kind === 'problem') {
+            throw new Error(`Unwrapped problem: ${s.problem.message}`);
+        }
+        return s.result;
+    }
+    problem() {
+        const s = this.state;
+        assert(s.kind === 'problem', `Maybe state is not problem.`);
+        return s.problem;
+    }
+}

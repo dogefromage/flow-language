@@ -1,5 +1,5 @@
-import { ModuleScope } from "./env";
+import { FlowModule } from "./env";
 
 export interface LanguageConfiguration {
-    modules: ModuleScope[];
+    modules: FlowModule[];
 }

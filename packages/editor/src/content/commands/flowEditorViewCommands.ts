@@ -1,4 +1,4 @@
-import { flowsAddCommentNode, selectFlows } from "../../slices/flowsSlice";
+import { flowsAddCommentNode, flowsAddFunctionNode, selectFlows } from "../../slices/flowsSlice";
 import { flowEditorPanelsUpdateActiveCamera, flowEditorSetStateAddNodeAtPosition } from "../../slices/panelFlowEditorSlice";
 import { EDITOR_SELECTABLE_ITEM_CLASS, FLOW_EDITOR_VIEW_TYPE, FlowEditorPanelState, PlanarCamera, createCommandGroup, createViewCommandUnlabeled, getActiveEditorCamera } from "../../types";
 import { except } from "../../utils";
@@ -8,17 +8,18 @@ import { pointScreenToWorld } from "../../utils/planarCameraMath";
 export const {
     commands: flowEditorCommandList,
     labels: {
-        addNodeAtPosition: flowEditorAddNodeAtPositionCommand,
+        addAppNodeAtPosition: flowEditorAddAppNodeAtPositionCommand,
         addCommandAtPosition: flowEditorAddCommandAtPositionCommand,
+        addFunctionAtPosition: flowEditorAddFunctionAtPositionCommand,
         paste: flowEditorPasteCommand,
         fitCamera: flowEditorFitCameraCommand,
     }
 } = createCommandGroup(
     'flowEditor',
     {
-        addNodeAtPosition: createViewCommandUnlabeled<FlowEditorPanelState>(
+        addAppNodeAtPosition: createViewCommandUnlabeled<FlowEditorPanelState>(
             FLOW_EDITOR_VIEW_TYPE,
-            'Add Node',
+            'Add Call',
             ({ targetPanelId, clientCursor, offsetCursor, offsetPanelCenter, clientPanelCenter }, params) => {
                 return flowEditorSetStateAddNodeAtPosition({
                     panelId: targetPanelId,
@@ -39,7 +40,22 @@ export const {
                 return flowsAddCommentNode({
                     flowId: activeFlow,
                     position: worldPoint,
-                    undo: { desc: 'Added region in active flow.' },
+                    undo: { desc: 'Added comment in active flow.' },
+                });
+            },
+        ),
+        addFunctionAtPosition: createViewCommandUnlabeled<FlowEditorPanelState>(
+            FLOW_EDITOR_VIEW_TYPE,
+            'Add Function',
+            ({ panelState, offsetCursor, offsetPanelCenter }, params) => {
+                const activeFlow = panelState.flowStack[0];
+                const camera = getActiveEditorCamera(panelState);
+                const offsetPoint = offsetCursor || offsetPanelCenter;
+                const worldPoint = pointScreenToWorld(camera, offsetPoint);
+                return flowsAddFunctionNode({
+                    flowId: activeFlow,
+                    position: worldPoint,
+                    undo: { desc: 'Added function in active flow.' },
                 });
             },
         ),

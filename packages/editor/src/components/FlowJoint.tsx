@@ -3,8 +3,9 @@ import React, { useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { flowEditorSetStateDraggingLink, flowEditorSetStateNeutral, useSelectFlowEditorPanelActionState } from '../slices/panelFlowEditorSlice';
 import { FlowJointDiv } from '../styles/flowStyles';
-import { FlowJointStyling, JointLocation, jointLocationDirection } from '../types';
+import { FlowJointStyling, JointLocation, getJointDir } from '../types';
 import { getJointLocationDigest } from '../utils/flows';
+import { flowsAddConnection } from '../slices/flowsSlice';
 
 interface Props {
     panelId: string;
@@ -38,8 +39,8 @@ const FlowJoint = ({ panelId, flowId, location }: Props) => {
     const isDroppableTarget = (
         actionState?.type === 'dragging-link' &&
         actionState.draggingContext.fromJoint.nodeId !== location.nodeId &&
-        jointLocationDirection(actionState.draggingContext.fromJoint) 
-            !== jointLocationDirection(location)
+        getJointDir(actionState.draggingContext.fromJoint) 
+            !== getJointDir(location)
     );
 
     const droppableHandler = (e: React.DragEvent) => {
@@ -54,13 +55,12 @@ const FlowJoint = ({ panelId, flowId, location }: Props) => {
         leave: droppableHandler,
         drop: e => {
             if (!isDroppableTarget) return;
-            alert('connection');
-            // dispatch(flowsAddConnection({
-            //     flowId,
-            //     locations: [location, actionState.draggingContext.fromJoint],
-            //     undo: { desc: `Linked two nodes in active flow.` },
-            //     syntax: actionState.draggingContext.syntax,
-            // }));
+            dispatch(flowsAddConnection({
+                flowId,
+                locations: [location, actionState.draggingContext.fromJoint],
+                undo: { desc: `Connected two nodes in flow.` },
+                syntax: actionState.draggingContext.syntax,
+            }));
             dispatch(flowEditorSetStateNeutral({
                 panelId,
             }));
@@ -79,7 +79,7 @@ const FlowJoint = ({ panelId, flowId, location }: Props) => {
 
     return (
         <FlowJointDiv
-            $direction={jointLocationDirection(location)}
+            $direction={getJointDir(location)}
             $jointStyle={jointStyle}
             {...drag.handlers}
             {...drop.handlers}

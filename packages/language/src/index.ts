@@ -11,13 +11,26 @@ export {
 } from './tools/versioning';
 
 export {
-    // getInstantiatedEnvType,
+    resolveEnvPath,
+    getEnvironmentSignature,
+    getEnvironmentSignatureOfKind,
 } from './core/environment';
 
 export * as utils from './utils/functional';
 
 export {
     createIdGenerator,
+    getLastestNodeId,
 } from './tools/modification';
 
-export { TExpr, tyToString } from './typesystem/typeExpr';
+export { 
+    TExpr, 
+    tyToString,
+    typeConstructors,
+} from './typesystem/typeExpr';
+
+export {
+    generalizeType,
+    instantiateType,
+    unifyTypes,
+} from './typesystem/core';
