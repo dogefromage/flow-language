@@ -27,6 +27,7 @@ export {
     TExpr, 
     tyToString,
     typeConstructors,
+    texprToMap
 } from './typesystem/typeExpr';
 
 export {

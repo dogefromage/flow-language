@@ -336,7 +336,7 @@ const createEdgeToolTipContent = (refContext: lang.ReferenceContext | undefined)
         return (
             <ToolTip.SectionDiv>
                 {refContext.problems.map(p =>
-                    <FlowNodeRowProblemMessage problem={p}/>    
+                    <FlowNodeRowProblemMessage key={p.message} problem={p}/>    
                 )}
             </ToolTip.SectionDiv>
         )

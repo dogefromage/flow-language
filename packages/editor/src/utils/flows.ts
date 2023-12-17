@@ -143,6 +143,22 @@ export const useFlowNamingValidator = (excludeId?: string) => {
     }, [document, excludeId]);
 }
 
+export function useIdentifierNamingValidatorCurry(memoizedIdList: string[]) {
+    return useCallback((excludedId: string) => {
+        return (newValue: string): NameValidationError | undefined => {
+            if (newValue.length == 0) {
+                return { message: 'Please provide a name.' };
+            }
+            if (!flowsIdRegex.test(newValue)) {
+                return { message: 'Please provide a valid name. A name should only contain letters, digits, underscores and should not start with a number. Example: "add_5"' };
+            }
+            if (newValue !== excludedId && memoizedIdList.includes(newValue)) {
+                return { message: `There is already an item named '${newValue}'. Please use a different name.` };
+            }
+        };
+     }, [memoizedIdList]);
+}
+
 // export function useAvailableSignatureOptionsData(env?: lang.FlowEnvironment): SelectOptionContent {
 //     return useMemo(() => {
 //         if (!env) {

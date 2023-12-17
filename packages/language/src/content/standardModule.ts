@@ -1,9 +1,9 @@
 import _ from "lodash";
 import { EnvSymbolRow, FlowModule } from "../types";
-import { typeConstructors } from "../typesystem/typeExpr";
+import { TExpr, typeConstructors } from "../typesystem/typeExpr";
 
 // const { varRow, simpleRow, outputRow, genParam } = shorthands;
-const { tapp, tarrow, tconst, trecord, tgeneric } = typeConstructors;
+const { tapp, tarrow, tconst, trecord, tgeneric, tvariant } = typeConstructors;
 
 // function buildFlow(flowId: string, signatures: FunctionSignature[]): FlowScope {
 //     const functions: Record<string, FunctionSignature> = {};
@@ -18,14 +18,32 @@ const { tapp, tarrow, tconst, trecord, tgeneric } = typeConstructors;
 // }
 
 const numberSymbols: EnvSymbolRow['symbols'] = {};
+const dataSymbols: EnvSymbolRow['symbols'] = {};
 
-const immediate = <T>(fun: () => T) => fun();
+// const immediate = <T>(fun: () => T) => fun();
 
 const primitives = {
     number: tconst('number'),
     string: tconst('string'),
     boolean: tconst('boolean'),
 }
+
+// const maybe = (ty: TExpr) => tvariant({ just: ty, nothing: trecord({}) });
+
+// dataSymbols['maybe'] = ({
+//     kind: 'function',
+//     parameters: {
+//         just: { id: 'just', defaultExprType: 'initializer' },
+//     },
+// });
+
+// dataSymbols['list'] = ({
+//     kind: 'function',
+//     type: immediate(() => {
+//         const a = tgeneric();
+//         return tarrow(trecord({ elements: tapp(tconst('list'), a) }), tapp(tconst('list'), a));
+//     })
+// })
 
 // signatures.push({
 //     id: 'add',
@@ -370,6 +388,7 @@ export const standardModule: FlowModule = {
         path: ['core'],
         symbols: {
             ..._.mapKeys(numberSymbols, (_, k) => `number/${k}`),
+            ..._.mapKeys(dataSymbols, (_, k) => `data/${k}`),
         }
     },
 };

@@ -38,9 +38,8 @@ const FlowJoint = ({ panelId, flowId, location }: Props) => {
 
     const isDroppableTarget = (
         actionState?.type === 'dragging-link' &&
-        actionState.draggingContext.fromJoint.nodeId !== location.nodeId &&
-        getJointDir(actionState.draggingContext.fromJoint) 
-            !== getJointDir(location)
+        // actionState.draggingContext.fromJoint.nodeId !== location.nodeId &&
+        getJointDir(actionState.draggingContext.fromJoint) !== getJointDir(location)
     );
 
     const droppableHandler = (e: React.DragEvent) => {

@@ -123,12 +123,12 @@ export const FlowNodeRowProblemMessage = ({ problem }: PropsWithChildren<Problem
 //     </>);
 // }
 
-interface FlowNodeHeaderToolTipProps {
+interface FlowCallHeaderToolTipProps {
     flowId: string;
     node: lang.CallNode;
     context: lang.CallNodeContext;
 }
-export const FlowNodeHeaderToolTipContent = ({ flowId, node, context }: FlowNodeHeaderToolTipProps) => {
+export const FlowCallHeaderToolTipContent = ({ flowId, node, context }: FlowCallHeaderToolTipProps) => {
     const signatureType = useTypeToString(flowId, context.signature?.type);
     const outputType = useTypeToString(flowId, context.outputType);
 
@@ -146,6 +146,45 @@ export const FlowNodeHeaderToolTipContent = ({ flowId, node, context }: FlowNode
                 <p>
                     Returned Type:&nbsp;<Bold $color={colors.alias}>{outputType}</Bold> <br/>
                 </p>
+            </ToolTip.SectionDiv> {
+                context.signature?.attributes.description &&
+                <ToolTip.SectionDiv>
+                    <p>{ context.signature?.attributes.description }</p>
+                </ToolTip.SectionDiv>
+            } {
+                context.problems.map((problem, index) => (
+                    <FlowNodeRowProblemMessage
+                        key={`${problem.message}:${index}`}
+                        problem={problem}
+                    />
+                ))
+            }
+        </>
+    );
+}
+
+interface FlowFunctionHeaderToolTipContentProps {
+    flowId: string;
+    node: lang.FunctionNode;
+    context: lang.FunctionNodeContext;
+}
+export const FlowFunctionHeaderToolTipContent = ({ flowId, node, context }: FlowFunctionHeaderToolTipContentProps) => {
+    const signatureType = useTypeToString(flowId, context.signature?.type);
+
+    return (
+        <>
+            <ToolTip.SectionDiv>
+                <p>
+                    Function Node&nbsp;
+                    <Bold $color={colors.specifier}>#{node.id}</Bold>
+                </p>
+                <p>
+                    {/* Function Path:&nbsp;<Bold $color={colors.title}>{signature}</Bold> <br/> */}
+                    Function Type:&nbsp;<Bold $color={colors.specifier}>{signatureType}</Bold> <br/>
+                </p>
+                {/* <p>
+                    Returned Type:&nbsp;<Bold $color={colors.alias}>{outputType}</Bold> <br/>
+                </p> */}
             </ToolTip.SectionDiv> {
                 context.signature?.attributes.description &&
                 <ToolTip.SectionDiv>

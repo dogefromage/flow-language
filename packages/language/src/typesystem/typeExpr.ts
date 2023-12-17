@@ -52,6 +52,10 @@ export interface TRecord {
     kind: 'RECORD';
     row: TExpr;
 }
+export interface TVariant {
+    kind: 'VARIANT';
+    row: TExpr;
+}
 export interface TRowEmpty {
     kind: 'ROWEMPTY';
 }
@@ -68,26 +72,42 @@ export type TExpr =
     | TArrow
     | TVar
     | TRecord
+    | TVariant
     | TRowEmpty
     | TRowExtend
 
-function trecord(mapT: Record<string, TExpr>, rest: TExpr = { kind: 'ROWEMPTY' }): TRecord {
+/**
+ * Converts all known keys of trecord to a map of texprs. If input is not a record, returns null.
+ */
+export function texprToMap(ty: TExpr): Record<string, TExpr> | null{
+    if (ty.kind !== 'RECORD') {
+        return null;
+    }
+    const map: Record<string, TExpr> = {};
+    let row = ty.row;
+    while (row.kind === 'ROWEXTEND') {
+        map[row.key] = row.field;
+        row = row.row;
+    }
+    return map;
+}
+
+
+function mapToRows(mapT: Record<string, TExpr>, rest: TExpr = { kind: 'ROWEMPTY' }): TExpr {
     let row = rest;
     for (const [key, field] of Object.entries(mapT)) {
         row = { kind: 'ROWEXTEND', key, field, row };
     }
-    return { kind: 'RECORD', row };
+    return row;
 }
 
 export const typeConstructors = {
     tconst: (name: string): TConst => ({ kind: 'CONST', name }),
     tapp: (head: TExpr, arg: TExpr): TApp => ({ kind: 'APP', head, arg }),
     tarrow: (param: TExpr, ret: TExpr): TArrow => ({ kind: 'ARROW', param, ret }),
-    trecord,
+    trecord: (mapT: Record<string, TExpr>, rest: TExpr = { kind: 'ROWEMPTY' }): TRecord => ({ kind: 'RECORD', row: mapToRows(mapT, rest) }),
+    tvariant: (mapT: Record<string, TExpr>, rest: TExpr = { kind: 'ROWEMPTY' }): TVariant => ({ kind: 'VARIANT', row: mapToRows(mapT, rest) }),
     tgeneric: newGenericVar,
-    // trecord: (row: TExpr): TRecord => ({ kind: 'RECORD', row }),
-    // trowempty: (): TRowEmpty => ({ kind: 'ROWEMPTY' }),
-    // trowextend: (key: string, field: TExpr, row: TExpr): TRowExtend => ({ kind: 'ROWEXTEND', key, field, row }),
 };
 
 
@@ -166,6 +186,8 @@ export function tyToString(ty: TExpr, ctx?: GenericNamingContext): string {
                 return `(${brk(f(ty.param))}) -> ${brk(f(ty.ret))}`;
             case 'RECORD':
                 return `{ ${f(ty.row)} }`;
+            case 'VARIANT':
+                return `⟨ ${f(ty.row)} ⟩`;
             case 'ROWEMPTY':
                 return '{}';
             case 'ROWEXTEND': {
@@ -187,7 +209,7 @@ export function tyToString(ty: TExpr, ctx?: GenericNamingContext): string {
                     case 'LINK':
                         return f(ty.ref.type);
                     case 'UNBOUND':
-                        return `_${ty.ref.id}`;
+                        return `_${ty.ref.id}@${ty.ref.level}`;
                 }
         }
         assert(0);
@@ -209,28 +231,28 @@ function brk(s: string): string {
     return s;
 }
 
-export class InferenceError extends Error {}
+export class UnificationError extends Error {}
 
-export class TypeEnvironment {
-    constructor(
-        private content: Record<string, TExpr> = {},
-    ) {}
+// export class TypeEnvironment {
+//     constructor(
+//         private content: Record<string, TExpr> = {},
+//     ) {}
 
-    has(name: string): boolean {
-        return this.content[name] != null;
-    }
+//     has(name: string): boolean {
+//         return this.content[name] != null;
+//     }
 
-    get(name: string): TExpr {
-        if (!this.has(name)) {
-            throw new InferenceError(`Type variable ${name} not found in env.`);
-        }
-        return this.content[name];
-    }
+//     get(name: string): TExpr {
+//         if (!this.has(name)) {
+//             throw new UnificationError(`Type variable ${name} not found in env.`);
+//         }
+//         return this.content[name];
+//     }
 
-    extend(name: string, ty: TExpr) {
-        return new TypeEnvironment({
-            ...this.content,
-            [name]: ty,
-        });
-    }
-}   
+//     extend(name: string, ty: TExpr) {
+//         return new TypeEnvironment({
+//             ...this.content,
+//             [name]: ty,
+//         });
+//     }
+// }   

@@ -17,6 +17,16 @@ export class OrderedGraph {
         nodes.forEach(node => this.adjacencyList.set(node, []));
     }
 
+    clone(): OrderedGraph {
+        const H = new OrderedGraph(Array.from(this.adjacencyList.keys()));
+        for (const [from, to] of this.adjacencyList.entries()) {
+            for (const u of to) {
+                H.addEdge(from, u);
+            }
+        }
+        return H;
+    }
+
     *vertices() {
         for (const node of this.adjacencyList.keys()) {
             yield node;
@@ -59,25 +69,21 @@ export class OrderedGraph {
     calculateReachability(): void {
         // TODO: This alg is very crude. O(n+m) should be achievable
         // calculate reachability for every node in the graph
+        this.reachability.clear();
         for (const node of this.adjacencyList.keys()) {
-            this.calculateReachabilityFrom(node);
-        }
-    }
-
-    private calculateReachabilityFrom(node: string): void {
-        // calculate reachability for a single node
-        const reachable = new Set<string>();
-        const toVisit = [node];
-        while (toVisit.length > 0) {
-            const current = toVisit.pop()!;
-            if (!reachable.has(current)) {
-                reachable.add(current);
-                for (const next of this.adjacencyList.get(current)!) {
-                    toVisit.push(next);
+            const reachable = new Set<string>();
+            const toVisit = [node];
+            while (toVisit.length > 0) {
+                const current = toVisit.pop()!;
+                if (!reachable.has(current)) {
+                    reachable.add(current);
+                    for (const next of this.adjacencyList.get(current)!) {
+                        toVisit.push(next);
+                    }
                 }
             }
+            this.reachability.set(node, reachable);
         }
-        this.reachability.set(node, reachable);
     }
 
     isReachable(from: string, to: string): boolean {
@@ -166,14 +172,23 @@ export class OrderedGraph {
 
     sortTopologically() {
         this.calculatePrePostOrderAndCycles();
-        if (this.cycles.length > 0) {
-            throw new Error(`Graph contains cycles. [${this.cycles.map(c => c.join(', ')).join('], [')}]`);
-        }
+        // if (this.cycles.length > 0) {
+        //     throw new Error(`Graph contains cycles. [${this.cycles.map(c => c.join(', ')).join('], [')}]`);
+        // }
 
         const topologicalSorting = Array.from(this.postOrder.entries())
             .sort(([ u, post_u ], [ v, post_v ]) => post_v - post_u)
             .map(([ u, post_u ]) => u);
 
         return topologicalSorting;
+    }
+
+    toString(): string {
+        const verts = [ ...this.adjacencyList.keys() ];
+        const adjacency = verts.map(vert => {
+            const edges = this.adjacencyList.get(vert)!;
+            return `${vert} -> { ${edges.join(', ')} }`
+        }).join('\n');
+        return `Directed graph:\n${adjacency}`; 
     }
 }

@@ -75,6 +75,7 @@ export interface MatchArmState {
 export interface CallNode {
     kind: 'call';
     id: string;
+    attributes: Record<string, string>;
     functionId: string;
     argumentMap: Obj<ArgumentRowState>;
     output: OutputRowState;
@@ -83,10 +84,12 @@ export interface CallNode {
 export interface FunctionNode {
     kind: 'function';
     id: string;
+    attributes: Record<string, string>;
     parameters: Obj<ParameterRowState>;
     result: ConnectionReferencePair;
     position: Vec2;
     width: number;
+    isExported: boolean;
 }
 // export interface MatchNode {
 //     kind: 'match';

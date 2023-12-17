@@ -1,5 +1,5 @@
 import { assert } from "../utils";
-import { InferenceError, TExpr, VarRefUnbound, newUnboundVar, tyToString } from "./typeExpr";
+import { UnificationError, TExpr, VarRefUnbound, newUnboundVar, tyToString } from "./typeExpr";
 
 export function unifyTypes(a: TExpr, b: TExpr) {
     if (a === b) {
@@ -54,19 +54,19 @@ export function unifyTypes(a: TExpr, b: TExpr) {
         let restRow1TVarUnboundRef = rest1.kind === 'VAR' && rest1.ref.kind === 'UNBOUND' ? rest1 : null;
         const rest2 = rewriteRow(b, key1, field1);
         if (restRow1TVarUnboundRef?.ref.kind === 'LINK') {
-            throw new InferenceError(`Recursive row types.`);
+            throw new UnificationError(`Recursive row types.`);
         }
         unifyTypes(rest1, rest2);
         return;
     }
 
-    throw new InferenceError(`Cannot unify ${tyToString(a)} with ${tyToString(b)}.`);
+    throw new UnificationError(`Cannot unify ${tyToString(a)} with ${tyToString(b)}.`);
 }
 
 
 function rewriteRow(row2: TExpr, key1: string, field1: TExpr): TExpr {
     if (row2.kind === 'ROWEMPTY') {
-        throw new InferenceError(`Could not find row '${key1}'.`);
+        throw new UnificationError(`Could not find row '${key1}'.`);
     }
     if (row2.kind === 'ROWEXTEND' && row2.key === key1) {
         unifyTypes(field1, row2.field);
@@ -101,7 +101,7 @@ function occursCheckAdjustLevels(ref: VarRefUnbound, ty: TExpr) {
         }
         if (ty.kind === 'VAR' && ty.ref.kind === 'GENERIC') {
             // generic must be instantiated when taken from env
-            assert(false);
+            assert(false, 'uninstantiated generic');
         }
         if (ty.kind === 'VAR' && ty.ref.kind === 'UNBOUND') {
             assert(ty.ref.id !== ref.id, 'Recursive types.');

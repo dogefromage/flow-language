@@ -17,7 +17,7 @@ import { ErrorUnderlineDiv } from './FlowNodeErrorWrapper';
 import { ArgumentRowBooleanInitializer, ArgumentRowNumberInitializer, ArgumentRowStringInitializer } from './FlowNodeRowInitializers';
 import { useSelectContextNode } from '../slices/contextSlice';
 import ToolTip from './ToolTip';
-import { FlowNodeHeaderToolTipContent } from './FlowNodeToolTips';
+import { FlowCallHeaderToolTipContent } from './FlowNodeToolTips';
 
 const FlowNodeCall = ({ panelId, flowId, nodeId }: FlowNodeProps) => {
     const dispatch = useAppDispatch();
@@ -114,17 +114,21 @@ const FlowNodeCall = ({ panelId, flowId, nodeId }: FlowNodeProps) => {
     }, { cursor: 'grab' });
 
     const dataProps = { [EDITOR_ITEM_ID_ATTR]: nodeId };
-    const dummyTy = lang.typeConstructors.tconst('number');
 
     const HeaderToolTip = useMemo(() => {
         return () => (
             flowId && node && context && 
-            <FlowNodeHeaderToolTipContent 
+            <FlowCallHeaderToolTipContent 
                 flowId={flowId} node={node} context={context} />
         );
     }, [ flowId, node, context ]);
 
     if (!node) return null;
+
+    const dummyTy = lang.typeConstructors.tconst('number');
+    const signatureTy = context?.signature?.type.kind === 'ARROW' && context.signature.type;
+    const outputTy = signatureTy ? signatureTy.ret : dummyTy;
+    const argMap = signatureTy ? lang.texprToMap(signatureTy.param) : null;
 
     return (
         <FlowNodeCallDiv
@@ -144,14 +148,16 @@ const FlowNodeCall = ({ panelId, flowId, nodeId }: FlowNodeProps) => {
                             <i>call</i>&nbsp;<b>{node.functionId.split('/').at(-1)}</b>
                         </FlowNodeRowNameP>
                     </FlowNodeNameWrapper>
-                    <FlowOutputRow flowId={flowId} nodeId={nodeId} panelId={panelId} row={node.output} ty={dummyTy} />
                 </ToolTip.Anchor>
             </ErrorUnderlineDiv>
-            {
-                Object.values(node.argumentMap).map(arg =>
-                    <FlowArgumentRowSwitch key={arg.id} flowId={flowId}
-                        nodeId={nodeId} panelId={panelId} row={arg} ty={dummyTy} />
-                )
+            <FlowOutputRow flowId={flowId} nodeId={nodeId} panelId={panelId} row={node.output} ty={outputTy} /> {
+                Object.values(node.argumentMap).map(arg => {
+                    const argType = argMap?.[arg.id] ?? dummyTy;
+                    return (
+                        <FlowArgumentRowSwitch key={arg.id} flowId={flowId}
+                            nodeId={nodeId} panelId={panelId} row={arg} ty={argType} />
+                    );
+                })
             }
             {catcher}
         </FlowNodeCallDiv>
@@ -242,8 +248,4 @@ function resolveConstantType(ty: lang.TExpr) {
     if (ty.kind === 'CONST') {
         return ty.name;
     }
-}
-
-function createCallNodeMainToolTip(node: lang.CallNode, context: lang.CallNodeContext) {
-    
 }

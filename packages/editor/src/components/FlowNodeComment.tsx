@@ -3,7 +3,7 @@ import React, { PropsWithChildren, useRef, useState } from 'react';
 import { v4 as uuidv4, v4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../redux/stateHooks';
 import { editorSetSelection, selectEditor } from '../slices/editorSlice';
-import { flowsMoveSelection, flowsResizeComment, flowsSetCommentAttribute, useSelectFlowNode } from '../slices/flowsSlice';
+import { flowsMoveSelection, flowsResizeComment, flowsSetSelectionAttribute, useSelectFlowNode } from '../slices/flowsSlice';
 import { EDITOR_ITEM_ID_ATTR, EDITOR_SELECTABLE_ITEM_CLASS, SelectionStatus, Size2, Vec2 } from '../types';
 import { assert } from '../utils';
 import { vectorScreenToWorld } from '../utils/planarCameraMath';
@@ -169,9 +169,9 @@ const FlowCommentText = ({ flowId, comment }: PropsWithChildren<FlowCommentTextP
 
     const onChange = (e: React.ChangeEvent) => {
         const newValue = (e.currentTarget as HTMLTextAreaElement).value;
-        dispatch(flowsSetCommentAttribute({
+        dispatch(flowsSetSelectionAttribute({
             flowId,
-            nodeId: comment.id,
+            selection: [ comment.id ],
             key: 'text',
             value: newValue,
             undo: {

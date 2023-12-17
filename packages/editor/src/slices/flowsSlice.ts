@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { Draft } from "immer";
+import { Draft, original } from "immer";
 import _ from "lodash";
 import * as lang from "noodle-language";
 import { useCallback } from "react";
@@ -30,30 +30,41 @@ function getNodeAs<T extends lang.FlowNode>(s: Draft<FlowsSliceState>, a: { payl
     return n as T;
 }
 
-function removeConnectionsToNodes(g: lang.FlowGraph, nodes: Set<string>) {
-    console.warn(`TODO`);
-    // for (const node of Object.values(g.nodes)) {
-    //     for (const [_, rowState] of Object.entries(node.inputs)) {
-    //         for (const [key, arg] of Object.entries(rowState.rowArguments)) {
-    //             if (nodes.has(arg.valueRef?.nodeId!)) {
-    //                 delete arg.valueRef;
-    //             }
-    //             if (nodes.has(arg.typeRef?.nodeId!)) {
-    //                 delete arg.typeRef;
-    //             }
-    //             if (!arg.valueRef && !arg.typeRef) {
-    //                 delete rowState.rowArguments[key];
-    //             }
-    //         }
-    //     }
-    // }
+function removeReferencesStartingWith(g: lang.FlowGraph, ...prefixes: string[]) {
+    for (const node of Object.values(g.nodes)) {
+        switch (node.kind) {
+            case 'call':
+                for (const arg of Object.values(node.argumentMap)) {
+                    for (const [key, pair] of Object.entries(arg.references)) {
+                        if (pair.typeRef && prefixes.some(p => lang.referenceDigest(pair.typeRef!).startsWith(p))) {
+                            delete pair.typeRef;
+                        }
+                        if (pair.valueRef && prefixes.some(p => lang.referenceDigest(pair.valueRef!).startsWith(p))) {
+                            delete pair.valueRef;
+                        }
+                        cleanupReferenceArgMap(arg.references, key);
+                    }
+                }
+                break;
+            case 'function':
+                if (node.result.typeRef && prefixes.some(p => lang.referenceDigest(node.result.typeRef!).startsWith(p))) {
+                    delete node.result.typeRef;
+                }
+                if (node.result.valueRef && prefixes.some(p => lang.referenceDigest(node.result.valueRef!).startsWith(p))) {
+                    delete node.result.valueRef;
+                }
+                cleanupReferenceSingle(node.result);
+                break;
+        }
+    }
 }
 
 function cleanupReferenceArgMap(rowArguments: Record<string, lang.ConnectionReferencePair>, accessor: string) {
     const value = rowArguments[accessor].valueRef;
     const type = rowArguments[accessor].typeRef;
     // merge into value and type
-    if (value && type && value === type) {
+    if (value && type &&
+        lang.referenceDigest(value) === lang.referenceDigest(type)) {
         delete rowArguments[accessor].typeRef;
     }
     // empty
@@ -111,13 +122,15 @@ export const flowsSlice = createSlice({
                 attributes: {},
                 nodes: {
                     a: {
-                        kind: 'call', id: 'a', functionId: 'core/number/add' as string, 
+                        attributes: {},
+                        kind: 'call', id: 'a', functionId: 'core/number/add' as string,
                         position: { x: 400, y: 200 }, argumentMap: { x: { id: 'x', exprType: 'initializer', references: {} } }, output: {}
                     },
 
-                    b: { 
-                        kind: 'call', id: 'b', functionId: 'core/number/number' as string, 
-                        position: { x: 1000, y: 200 }, argumentMap: {}, output: {} 
+                    b: {
+                        attributes: {},
+                        kind: 'call', id: 'b', functionId: 'core/number/number' as string,
+                        position: { x: 1000, y: 200 }, argumentMap: {}, output: {}
                     },
                 },
             }
@@ -145,6 +158,7 @@ export const flowsSlice = createSlice({
             const node: lang.FlowNode = {
                 kind: 'call',
                 id: nodeId,
+                attributes: {},
                 functionId: a.payload.signaturePath,
                 argumentMap: _.mapValues(a.payload.signature.parameters, param => {
                     const arg: lang.ArgumentRowState = {
@@ -188,21 +202,49 @@ export const flowsSlice = createSlice({
             const fun: lang.FunctionNode = {
                 kind: 'function',
                 id: nodeId,
+                attributes: {},
                 position: a.payload.position,
                 width: a.payload.width || FUNCTION_NODE_MIN_WIDTH,
                 parameters: {
-                    x: { id: 'x', constraint: {} },
+                    u: { id: 'u', constraint: {} },
                 },
                 result: {},
+                isExported: false,
             }
             g.nodes[fun.id] = fun;
+        },
+        setFunctionExported: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, nodeId: string, exported: boolean }>) => {
+            const fun = getNodeAs<lang.FunctionNode>(s, a, 'function');
+            fun.isExported = a.payload.exported;
+        },
+        addFunctionParameter: (s: Draft<FlowsSliceState>, a: UndoAction<{
+            flowId: string, nodeId: string, parameterId?: string, /* parameter: lang.ParameterRowState, */
+        }>) => {
+            const fun = getNodeAs<lang.FunctionNode>(s, a, 'function');
+            const parameterId = a.payload.parameterId || getNextId(Object.keys(fun.parameters));
+            if (fun.parameters[parameterId] != null) {
+                except(`Parameter with id=${parameterId} already in function ${a.payload.nodeId}.`);
+            }
+            fun.parameters[parameterId] = { id: parameterId, constraint: {} };
+        },
+        removeFunctionParameter: (s: Draft<FlowsSliceState>, a: UndoAction<{
+            flowId: string, nodeId: string, parameterId: string,
+        }>) => {
+            const g = getFlow(s, a);
+            const fun = getNodeAs<lang.FunctionNode>(s, a, 'function');
+            delete fun.parameters[a.payload.parameterId];
+            const paramRef: lang.ParameterRerefence = {
+                kind: 'parameter',
+                nodeId: a.payload.nodeId, parameter: a.payload.parameterId, __timestamp: 0
+            };
+            removeReferencesStartingWith(g, lang.referenceDigest(paramRef));
         },
         removeSelection: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, selection: lang.FlowSelection }>) => {
             const g = getFlow(s, a);
             for (const item of a.payload.selection.nodes) {
                 delete g.nodes[item];
             }
-            removeConnectionsToNodes(g, new Set(a.payload.selection.nodes));
+            removeReferencesStartingWith(g, ...a.payload.selection.nodes);
         },
         moveSelection: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, selection: lang.FlowSelection, delta: Vec2 }>) => {
             const g = getFlow(s, a);
@@ -225,9 +267,13 @@ export const flowsSlice = createSlice({
             const fun = getNodeAs<lang.FunctionNode>(s, a, 'function');
             fun.width = Math.max(FUNCTION_NODE_MIN_WIDTH, a.payload.width);
         },
-        setCommentAttribute: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, nodeId: string, key: string, value: string }>) => {
-            const comm = getNodeAs<lang.CommentNode>(s, a, 'comment');
-            comm.attributes[a.payload.key] = a.payload.value;
+        setSelectionAttribute: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, selection: string[], key: string, value: string }>) => {
+            const g = getFlow(s, a);
+            for (const nodeId of a.payload.selection) {
+                const node = g.nodes[nodeId];
+                if (!node) continue;
+                node.attributes[a.payload.key] = a.payload.value;
+            }
         },
         setCallArgumentRowValue: (s: Draft<FlowsSliceState>, a: UndoAction<{ flowId: string, nodeId: string, rowId: string, rowValue: lang.InitializerValue }>) => {
             const n = getNodeAs<lang.CallNode>(s, a, 'call');
@@ -243,7 +289,6 @@ export const flowsSlice = createSlice({
             syntax: lang.ReferenceSyntacticType,
         }>) => {
             const g = getFlow(s, a);
-
             let resolvedLocations = a.payload.locations.map(location => {
                 if (location.nodeId === '*') {
                     const lastCreatedId = lang.getLastestNodeId(...Object.keys(g.nodes));
@@ -259,16 +304,20 @@ export const flowsSlice = createSlice({
                 .find(l => getJointDir(l) === 'input');
             const referenceLocation = resolvedLocations
                 .find(l => getJointDir(l) === 'output');
-            if (!refereeLocation || !referenceLocation ||
-                refereeLocation.nodeId === referenceLocation.nodeId) {
-                except(`Could not establish connection between provided locations.`);
+            if (!refereeLocation || !referenceLocation) {
+                except(`Cannot connect provided joints.`);
             }
 
             const referee = getNode(s, {
                 payload: { nodeId: refereeLocation.nodeId, flowId: a.payload.flowId }
             });
 
-            const reference: lang.ConnectionReference = 
+            if (refereeLocation.nodeId === referenceLocation.nodeId &&
+                referee.kind !== 'function') {
+                except(`Cannot add self-connection to node of kind ${referee.kind}.`);
+            }
+
+            const reference: lang.ConnectionReference =
                 createConnectionReference(referenceLocation, getTimestamp());
 
             switch (refereeLocation.kind) {
@@ -363,11 +412,14 @@ export const {
     addCallNode: flowsAddCallNode,
     addCommentNode: flowsAddCommentNode,
     addFunctionNode: flowsAddFunctionNode,
+    addFunctionParameter: flowsAddFunctionParameter,
+    setFunctionExported: flowsSetFunctionExported,
+    removeFunctionParameter: flowsRemoveFunctionParameter,
     removeSelection: flowsRemoveSelection,
     moveSelection: flowsMoveSelection,
     resizeComment: flowsResizeComment,
     resizeFunction: flowsResizeFunction,
-    setCommentAttribute: flowsSetCommentAttribute,
+    setSelectionAttribute: flowsSetSelectionAttribute,
     addConnection: flowsAddConnection,
     removeConnection: flowsRemoveConnection,
     setCallArgumentRowValue: flowsSetCallArgumentRowValue,
